@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group4.controllers.AdminDashboardController">
+   <top>
+      <VBox alignment="CENTER" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: #2e86c1;" BorderPane.alignment="CENTER">
+         <children>
+            <Label text="Hall Management System" textFill="WHITE">
+               <font>
+                  <Font name="System Bold" size="24.0" />
+               </font>
+            </Label>
+            <Label text="Administrator Dashboard" textFill="WHITE">
+               <font>
+                  <Font size="18.0" />
+               </font>
+            </Label>
+         </children>
+      </VBox>
+   </top>
+   <center>
+      <VBox alignment="TOP_CENTER" prefHeight="200.0" prefWidth="100.0" spacing="15.0" BorderPane.alignment="CENTER">
+         <children>
+            <HBox alignment="CENTER_RIGHT" spacing="20.0">
+               <children>
+                  <HBox alignment="CENTER_LEFT" HBox.hgrow="ALWAYS">
+                     <children>
+                        <Label text="Filter by Role:">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Label>
+                        <ComboBox fx:id="roleFilterComboBox" prefWidth="150.0">
+                           <HBox.margin>
+                              <Insets left="10.0" />
+                           </HBox.margin>
+                        </ComboBox>
+                        <Button fx:id="refreshButton" mnemonicParsing="false" onAction="#handleRefresh" text="Refresh">
+                           <HBox.margin>
+                              <Insets left="20.0" />
+                           </HBox.margin>
+                        </Button>
+                     </children>
+                  </HBox>
+                  <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#handleLogout" prefHeight="30.0" prefWidth="100.0" text="Logout">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+               </children>
+               <VBox.margin>
+                  <Insets bottom="10.0" top="15.0" />
+               </VBox.margin>
+            </HBox>
+            <Label text="User Management">
+               <font>
+                  <Font name="System Bold" size="16.0" />
+               </font>
+            </Label>
+            <TableView fx:id="usersTable" prefHeight="350.0" prefWidth="750.0">
+               <columns>
+                  <TableColumn fx:id="userIdColumn" prefWidth="80.0" text="User ID" />
+                  <TableColumn fx:id="firstNameColumn" prefWidth="100.0" text="First Name" />
+                  <TableColumn fx:id="lastNameColumn" prefWidth="100.0" text="Last Name" />
+                  <TableColumn fx:id="roleColumn" prefWidth="80.0" text="Role" />
+                  <TableColumn fx:id="emailColumn" prefWidth="150.0" text="Email" />
+                  <TableColumn fx:id="contactNumberColumn" prefWidth="120.0" text="Contact" />
+                  <TableColumn fx:id="statusColumn" prefWidth="80.0" text="Status" />
+               </columns>
+            </TableView>
+            <HBox alignment="CENTER" spacing="20.0">
+               <children>
+                  <Button fx:id="addUserButton" mnemonicParsing="false" onAction="#handleAddUser" prefHeight="40.0" prefWidth="150.0" text="Add User">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="editUserButton" mnemonicParsing="false" onAction="#handleEditUser" prefHeight="40.0" prefWidth="150.0" text="Edit User">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+                  <Button fx:id="blockUserButton" mnemonicParsing="false" onAction="#handleToggleUserStatus" prefHeight="40.0" prefWidth="150.0" text="Block/Unblock User">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+               </children>
+               <VBox.margin>
+                  <Insets bottom="15.0" top="10.0" />
+               </VBox.margin>
+            </HBox>
+         </children>
+         <padding>
+            <Insets left="20.0" right="20.0" />
+         </padding>
+      </VBox>
+   </center>
+</BorderPane> 

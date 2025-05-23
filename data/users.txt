@@ -1,0 +1,4 @@
+USER-12345678|Admin|User|Admin|admin@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|1234567890|ACTIVE
+USER-23456789|Manager|User|Manager|manager@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|2345678901|ACTIVE
+USER-34567890|Scheduler|User|Scheduler|scheduler@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|3456789012|ACTIVE
+USER-45678901|Customer|User|Customer|customer@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|4567890123|ACTIVE
