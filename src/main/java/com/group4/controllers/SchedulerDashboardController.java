@@ -6,9 +6,8 @@ import com.group4.utils.SessionManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.stage.Stage;
+import com.group4.utils.ViewManager;
 
 import java.io.IOException;
 
@@ -39,11 +38,7 @@ public class SchedulerDashboardController {
         try {
             FXMLLoader loader = new FXMLLoader(App.class.getResource("view/HallManagement.fxml"));
             Parent root = loader.load();
-
-            Stage stage = (Stage) hallManagementButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
+            ViewManager.switchView(root);
         } catch (IOException e) {
             e.printStackTrace();
             // Show error message if needed
@@ -55,17 +50,14 @@ public class SchedulerDashboardController {
      */
     @FXML
     private void handleLogout() {
-        // Clear the session
-        SessionManager.getInstance().setCurrentUser(null);
-
         try {
+            // Clear the current user session
+            SessionManager.getInstance().logout();
+
+            // Load the login screen using ViewManager
             FXMLLoader loader = new FXMLLoader(App.class.getResource("view/Login.fxml"));
             Parent root = loader.load();
-
-            Stage stage = (Stage) logoutButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
+            ViewManager.switchView(root);
         } catch (IOException e) {
             e.printStackTrace();
             // Show error message if needed

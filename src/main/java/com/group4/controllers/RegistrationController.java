@@ -5,20 +5,17 @@ import com.group4.services.AuthenticationService;
 import com.group4.utils.TaskUtils;
 
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.Arrays;
+
+import com.group4.utils.ViewManager;
 
 /**
  * Controller for the registration screen.
@@ -37,8 +34,8 @@ public class RegistrationController {
     @FXML
     private TextField contactNumberField;
 
-    @FXML
-    private ComboBox<String> roleComboBox;
+    // Default role for new users is Customer
+    private static final String DEFAULT_ROLE = "Customer";
 
     @FXML
     private PasswordField passwordField;
@@ -63,11 +60,6 @@ public class RegistrationController {
     @FXML
     public void initialize() {
         authService = new AuthenticationService();
-
-        // Populate role dropdown
-        roleComboBox.setItems(FXCollections.observableArrayList(
-                Arrays.asList("Customer", "Scheduler", "Manager", "Admin")));
-        roleComboBox.setValue("Customer");
 
         // Add event listeners to clear error when user types
         firstNameField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -94,8 +86,8 @@ public class RegistrationController {
         String lastName = lastNameField.getText().trim();
         String email = emailField.getText().trim();
         String contactNumber = contactNumberField.getText().trim();
-        String role = roleComboBox.getValue();
         String password = passwordField.getText();
+        String role = DEFAULT_ROLE; // All new users are Customers
         String confirmPassword = confirmPasswordField.getText();
 
         // Validate inputs
@@ -168,11 +160,9 @@ public class RegistrationController {
         try {
             FXMLLoader loader = new FXMLLoader(App.class.getResource("view/Login.fxml"));
             Parent root = loader.load();
-
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
+            
+            // Use ViewManager to switch back to login view
+            ViewManager.switchView(root);
         } catch (IOException e) {
             e.printStackTrace();
             showError("Could not load login screen: " + e.getMessage());
@@ -208,7 +198,6 @@ public class RegistrationController {
         lastNameField.setDisable(disabled);
         emailField.setDisable(disabled);
         contactNumberField.setDisable(disabled);
-        roleComboBox.setDisable(disabled);
         passwordField.setDisable(disabled);
         confirmPasswordField.setDisable(disabled);
         registerButton.setDisable(disabled);

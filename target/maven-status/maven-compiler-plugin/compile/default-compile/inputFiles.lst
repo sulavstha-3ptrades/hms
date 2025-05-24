@@ -24,6 +24,7 @@
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/AvailabilityController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/TaskUtils.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/InvalidInputException.java
+/Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/Launcher.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/BookingConfirmationController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/SchedulerDashboardController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/services/AdminService.java
@@ -34,6 +35,7 @@
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/models/IssueStatus.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/models/Hall.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/TestApp.java
+/Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/ViewManager.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/LoginController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/ConsoleApp.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/SessionManager.java

@@ -10,6 +10,7 @@ public class Hall {
     private final ObjectProperty<HallType> type = new SimpleObjectProperty<>(this, "type", null);
     private final IntegerProperty capacity = new SimpleIntegerProperty(this, "capacity", 0);
     private final DoubleProperty ratePerHour = new SimpleDoubleProperty(this, "ratePerHour", 0.0);
+    private final ObjectProperty<BookingStatus> status = new SimpleObjectProperty<>(this, "status", BookingStatus.PENDING);
 
     /**
      * Default constructor
@@ -25,6 +26,7 @@ public class Hall {
         this.type.set(type);
         this.capacity.set(capacity);
         this.ratePerHour.set(ratePerHour);
+        this.status.set(BookingStatus.PENDING);
     }
 
     // Getters and Setters
@@ -77,13 +79,25 @@ public class Hall {
         return ratePerHour;
     }
 
+    public BookingStatus getStatus() {
+        return status.get();
+    }
+
+    public void setStatus(BookingStatus status) {
+        this.status.set(status);
+    }
+
+    public ObjectProperty<BookingStatus> statusProperty() {
+        return status;
+    }
+
     /**
      * Converts hall object to a delimited string representation
      * 
      * @return String representation of the hall
      */
     public String toDelimitedString() {
-        return getHallId() + "|" + getType().name() + "|" + getCapacity() + "|" + getRatePerHour();
+        return getHallId() + "|" + getType().name() + "|" + getCapacity() + "|" + getRatePerHour() + "|" + getStatus().name();
     }
 
     /**
@@ -94,13 +108,17 @@ public class Hall {
      */
     public static Hall fromDelimitedString(String data) {
         String[] parts = data.split("\\|");
-        if (parts.length == 4) {
-            return new Hall(
+        if (parts.length >= 4) {
+            Hall hall = new Hall(
                     parts[0], // hallId
                     HallType.valueOf(parts[1]), // type
                     Integer.parseInt(parts[2]), // capacity
                     Double.parseDouble(parts[3]) // ratePerHour
             );
+            if (parts.length > 4) {
+                hall.setStatus(BookingStatus.valueOf(parts[4])); // status
+            }
+            return hall;
         }
         return null;
     }

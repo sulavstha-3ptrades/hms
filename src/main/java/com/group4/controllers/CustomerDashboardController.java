@@ -12,13 +12,14 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.stage.Stage;
+import com.group4.utils.ViewManager;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -30,10 +31,13 @@ import java.time.format.DateTimeFormatter;
 public class CustomerDashboardController {
 
     @FXML
-    private Button bookHallButton;
+    private TabPane mainTabPane;
 
     @FXML
-    private Button viewBookingsButton;
+    private Tab myBookingsTab;
+
+    @FXML
+    private Tab bookHallTab;
 
     @FXML
     private Button logoutButton;
@@ -61,6 +65,9 @@ public class CustomerDashboardController {
 
     @FXML
     private Button cancelBookingButton;
+
+    @FXML
+    private Button refreshBookingsButton;
 
     private BookingService bookingService;
     private ObservableList<Booking> bookingsList = FXCollections.observableArrayList();
@@ -101,24 +108,7 @@ public class CustomerDashboardController {
                 error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load bookings: " + error.getMessage()));
     }
 
-    /**
-     * Handles the book hall button click.
-     */
-    @FXML
-    private void handleBookHall() {
-        try {
-            FXMLLoader loader = new FXMLLoader(App.class.getResource("view/HallBooking.fxml"));
-            Parent root = loader.load();
 
-            Stage stage = (Stage) bookHallButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load booking screen: " + e.getMessage());
-        }
-    }
 
     /**
      * Handles the view bookings button click.
@@ -175,17 +165,14 @@ public class CustomerDashboardController {
      */
     @FXML
     private void handleLogout() {
-        // Clear the session
-        SessionManager.getInstance().setCurrentUser(null);
-
         try {
+            // Clear the current user session
+            SessionManager.getInstance().logout();
+
+            // Load the login screen using ViewManager
             FXMLLoader loader = new FXMLLoader(App.class.getResource("view/Login.fxml"));
             Parent root = loader.load();
-
-            Stage stage = (Stage) logoutButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
+            ViewManager.switchView(root);
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load login screen: " + e.getMessage());

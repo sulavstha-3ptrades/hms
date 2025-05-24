@@ -1,0 +1,1 @@
+In customer insted of going to the another view, implent a tab bar and show all the things a customer can do there and selecting a tab should change only the grid not entire view.

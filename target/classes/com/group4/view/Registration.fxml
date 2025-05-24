@@ -2,7 +2,6 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
@@ -11,52 +10,70 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group4.controllers.RegistrationController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="600.0" stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group4.controllers.RegistrationController">
    <center>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="10.0" BorderPane.alignment="CENTER">
+      <VBox alignment="CENTER" maxWidth="450" BorderPane.alignment="CENTER">
          <children>
-            <Label text="Hall Management System" styleClass="header-label">
-               <font>
-                  <Font name="System Bold" size="24.0" />
-               </font>
-            </Label>
-            <Label text="Registration" styleClass="subheader-label">
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </Label>
-            <HBox alignment="CENTER" spacing="10.0">
+            <VBox alignment="CENTER" spacing="20.0" fillWidth="true" style="-fx-background-color: #f8f9fa; -fx-padding: 30px; -fx-background-radius: 10px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4);">
                <children>
-                  <TextField fx:id="firstNameField" promptText="First Name" prefWidth="180.0" />
-                  <TextField fx:id="lastNameField" promptText="Last Name" prefWidth="180.0" />
+                  <Label text="Hall Management System" styleClass="header-label">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Label>
+                  <Label text="Create Account" styleClass="subheader-label">
+                     <font>
+                        <Font size="18.0" />
+                     </font>
+                  </Label>
+            
+                  <!-- Name Fields -->
+                  <HBox alignment="CENTER" spacing="10.0" HBox.hgrow="ALWAYS">
+                     <children>
+                        <TextField fx:id="firstNameField" promptText="First Name" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                        <TextField fx:id="lastNameField" promptText="Last Name" HBox.hgrow="ALWAYS" maxWidth="1.7976931348623157E308" />
+                     </children>
+                     <padding>
+                        <Insets left="5.0" right="5.0" />
+                     </padding>
+                  </HBox>
+            
+                  <!-- Email and Contact Number -->
+                  <TextField fx:id="emailField" promptText="Email" maxWidth="1.7976931348623157E308" />
+                  <TextField fx:id="contactNumberField" promptText="Contact Number" maxWidth="1.7976931348623157E308" />
+                  
+                  <!-- Password Fields -->
+                  <PasswordField fx:id="passwordField" promptText="Password" maxWidth="1.7976931348623157E308" />
+                  <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password" maxWidth="1.7976931348623157E308" />
+                  
+                  <!-- Error Label -->
+                  <Label fx:id="errorLabel" styleClass="error-label" visible="false" />
+                  
+                  <!-- Register Button -->
+                  <Button fx:id="registerButton" onAction="#handleRegister" prefHeight="40.0" prefWidth="150.0" text="Register">
+                     <font>
+                        <Font size="14.0" />
+                     </font>
+                  </Button>
+                  
+                  <!-- Login Link -->
+                  <HBox alignment="CENTER" spacing="5">
+                     <children>
+                        <Label text="Already have an account?" />
+                        <Button fx:id="loginButton" onAction="#handleLoginClick" text="Login here" styleClass="link-button" />
+                     </children>
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                  </HBox>
                </children>
-               <VBox.margin>
-                  <Insets top="10.0" />
-               </VBox.margin>
-            </HBox>
-            <TextField fx:id="emailField" promptText="Email" prefWidth="370.0" />
-            <TextField fx:id="contactNumberField" promptText="Contact Number" prefWidth="370.0" />
-            <ComboBox fx:id="roleComboBox" promptText="Role" prefWidth="370.0" />
-            <PasswordField fx:id="passwordField" promptText="Password" prefWidth="370.0" />
-            <PasswordField fx:id="confirmPasswordField" promptText="Confirm Password" prefWidth="370.0" />
-            <Label fx:id="errorLabel" styleClass="error-label" visible="false" wrapText="true" maxWidth="370.0" />
-            <Button fx:id="registerButton" onAction="#handleRegister" prefHeight="40.0" prefWidth="150.0" text="Register">
-               <font>
-                  <Font size="14.0" />
-               </font>
-               <VBox.margin>
-                  <Insets top="10.0" />
-               </VBox.margin>
-            </Button>
-            <Label text="Already have an account?">
-               <VBox.margin>
-                  <Insets top="10.0" />
-               </VBox.margin>
-            </Label>
-            <Button fx:id="loginButton" onAction="#handleLoginClick" text="Login here" styleClass="link-button" />
+               <padding>
+                  <Insets bottom="25.0" left="30.0" right="30.0" top="25.0" />
+               </padding>
+            </VBox>
          </children>
          <padding>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            <Insets />
          </padding>
       </VBox>
    </center>

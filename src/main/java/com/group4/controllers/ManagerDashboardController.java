@@ -16,13 +16,12 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
-import javafx.stage.Stage;
+import com.group4.utils.ViewManager;
 
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
@@ -366,17 +365,14 @@ public class ManagerDashboardController {
      */
     @FXML
     private void handleLogout() {
-        // Clear the session
-        SessionManager.getInstance().setCurrentUser(null);
-
         try {
+            // Clear the current user session
+            SessionManager.getInstance().logout();
+
+            // Load the login screen using ViewManager
             FXMLLoader loader = new FXMLLoader(App.class.getResource("view/Login.fxml"));
             Parent root = loader.load();
-
-            Stage stage = (Stage) logoutButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
+            ViewManager.switchView(root);
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to load login screen: " + e.getMessage());
