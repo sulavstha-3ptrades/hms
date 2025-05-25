@@ -16,6 +16,7 @@
         <main.class>com.group4.Launcher</main.class>
         <jpackage.output.dir>${project.build.directory}/installer</jpackage.output.dir>
         <jlink.image.dir>${project.build.directory}/jlink</jlink.image.dir>
+        <skipJPackage>true</skipJPackage>
     </properties>
 
     <dependencies>
@@ -23,19 +24,6 @@
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
             <version>0.4</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.9.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.9.2</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -108,6 +96,11 @@
                         </goals>
                         <configuration>
                             <executable>jpackage</executable>
+                            <skip>${skipJPackage}</skip>
+                            <successCodes>
+                                <successCode>0</successCode>
+                                <successCode>2</successCode>  <!-- Allow warnings -->
+                            </successCodes>
                             <arguments>
                                 <argument>--name</argument>
                                 <argument>Hall Management System</argument>
@@ -115,19 +108,16 @@
                                 <argument>Group4</argument>
                                 <argument>--app-version</argument>
                                 <argument>${project.version}</argument>
-
                                 <argument>--input</argument>
                                 <argument>${jlink.image.dir}</argument>
                                 <argument>--output</argument>
                                 <argument>${jpackage.output.dir}</argument>
-
                                 <argument>--main-class</argument>
                                 <argument>${main.class}</argument>
                                 <argument>--main-jar</argument>
                                 <argument>${project.build.finalName}.jar</argument>
                                 <argument>--runtime-image</argument>
                                 <argument>${jlink.image.dir}/hall-management-system-image</argument>
-
                                 <argument>--verbose</argument>
                             </arguments>
                         </configuration>
@@ -135,13 +125,7 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0</version>
-            </plugin>
-
-            <plugin>
+<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.1</version>

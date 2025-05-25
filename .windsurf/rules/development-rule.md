@@ -1,0 +1,88 @@
+---
+trigger: always_on
+description: 
+globs: 
+---
+# Enterprise-Grade JavaFX Development Rules
+
+## 1. Code Consistency & Quality Enforcement
+
+### 1.1 Naming Conventions
+- **Rule**: Use `PascalCase` for classes, `camelCase` for methods/variables, and `UPPER_SNAKE_CASE` for constants.  
+  - *AI Action*: Flag deviations in PR reviews and auto-suggest corrections.
+
+### 1.2 Code Structure
+- **Rule**: Enforce **MVC pattern** (Models, Views, Controllers) with zero business logic in controllers.  
+  - *AI Action*: Detect logic leaks (e.g., file I/O in controllers) and suggest delegation to `Service` classes.
+
+
+
+## 2. Performance Optimization
+
+### 2.1 File I/O
+- **Rule**: Use `BufferedReader`/`BufferedWriter` with `try-with-resources` and `FileChannel` for atomic writes.  
+  - *AI Action*: Auto-replace unsafe file operations with thread-safe alternatives.
+
+### 2.2 UI Responsiveness
+- **Rule**: Offload file operations to `Task<Void>` threads to prevent UI freezing.  
+  - *AI Action*: Inject `Platform.runLater()` for UI updates and flag blocking calls.
+
+
+## 3. Enterprise UI Standards
+
+### 3.1 JPhonix Integration
+- **Rule**: Use `JFXButton`, `JFXToggle`, and animations (e.g., `FadeTransition`) for all UI components.  
+  - *AI Action*: Replace legacy Swing components (e.g., `JFrame`) with JavaFX equivalents.
+
+### 3.2 Responsive Design
+- **Rule**: Bind UI elements to `Scene` size for dynamic resizing.  
+  - *AI Action*: Suggest `VBox`/`HBox` constraints for adaptive layouts.
+
+
+
+## 4. Error Handling & Validation
+
+### 4.1 Input Sanitization
+- **Rule**: Validate inputs with regex (e.g., email, ISO 8601 datetime).  
+  - *AI Action*: Generate regex patterns for unsanitized fields.
+
+### 4.2 Exception Governance
+- **Rule**: Throw custom exceptions (e.g., `BookingConflictException`) with user-friendly alerts.  
+  - *AI Action*: Replace generic `Exception` catches with specific handlers.
+
+
+
+## 5. Scalability & Maintainability
+
+### 5.1 SOLID Compliance
+- **Rule**: Enforce Single Responsibility and Open/Closed principles (e.g., `FileStorageService` interface).  
+  - *AI Action*: Audit classes >300 lines and propose modularization.
+
+### 5.2 Dependency Injection
+- **Rule**: Use `Factory` patterns for service classes (e.g., `UserServiceFactory`).  
+  - *AI Action*: Identify tight coupling and inject dependencies via factories.
+
+
+
+## 6. Security Protocols
+
+### 6.1 Data Protection
+- **Rule**: Hash passwords with `BCrypt` and store as `hash|salt`.  
+  - *AI Action*: Block commits with plaintext passwords.
+
+### 6.2 File Permissions
+- **Rule**: Restrict write access using `File.setReadable(false)` for non-admin roles.  
+  - *AI Action*: Auto-add `SecurityManager` checks for file operations.
+
+
+
+## 7. Documentation & Debugging
+
+### 7.1 Self-Documenting Code
+- **Rule**: Write Javadoc for public methods (e.g., `@throws BookingConflictException`).  
+  - *AI Action*: Block merges if critical methods lack documentation.
+
+### 7.2 Logging
+- **Rule**: Use `java.util.logging` with severity levels (`SEVERE`, `WARNING`).  
+  - *AI Action*: Inject log statements for file I/O and user actions.
+

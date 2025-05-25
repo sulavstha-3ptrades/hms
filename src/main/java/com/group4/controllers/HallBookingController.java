@@ -7,8 +7,6 @@ import com.group4.models.HallType;
 import com.group4.services.AvailabilityService;
 import com.group4.services.HallService;
 import com.group4.utils.TaskUtils;
-import com.group4.App;
-
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -271,8 +269,8 @@ public class HallBookingController implements Initializable {
         }
 
         try {
-            // Load the booking confirmation dialog
-            URL fxmlUrl = App.class.getResource("view/BookingConfirmation.fxml");
+            // Load the booking confirmation dialog from resources
+            URL fxmlUrl = getClass().getResource("/com/group4/view/BookingConfirmation.fxml");
             if (fxmlUrl == null) {
                 showAlert("Error: Could not find the booking form template. Please contact system administrator.");
                 return;

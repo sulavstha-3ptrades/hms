@@ -1,0 +1,38 @@
+---
+trigger: always_on
+description: 
+globs: 
+---
+ # Development Journal Rules
+
+##  Purpose
+- In the **development-journal** maintained **by the AI** to help track progress, record milestones, and log important conversations.
+
+
+1. **Always Append, Never Delete**
+   - All new entries must be **appended** to the journal.
+   - **Do not delete or overwrite** any existing content, unless explicitly instructed.
+
+2. **Be Thorough**
+   - Provide **detailed and comprehensive** summaries.
+   - Include relevant code decisions, design discussions, feature updates, and key questions asked by the user.
+
+3. **Track Milestones**
+   - Clearly mark project milestones with headings.
+   - Include dates and a brief description of what was accomplished.
+
+4. **Log Conversations**
+   - Summarize any meaningful conversation related to development goals, blockers, or design rationale.
+   - Reference the user's intent or reasoning when relevant.
+
+5. **Auto-Reference on Session Start**
+   - On a new session or conversation, **read the journal automatically** to get project context.
+   - If unsure about the current state, ask the user or **reread the journal**.
+
+6. **Maintain Consistent Format**
+   - Use clear markdown sections (`##`, `###`) for readability.
+   - Separate journal entries by date.
+   - Use bullet points or numbered lists for structure when appropriate.
+    
+
+> ✅ Follow these rules consistently to improve long-term collaboration and development flow.
