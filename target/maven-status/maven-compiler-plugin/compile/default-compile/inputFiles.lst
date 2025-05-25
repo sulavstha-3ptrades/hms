@@ -6,10 +6,11 @@
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/services/HallService.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/ReceiptController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/TestBCrypt.java
+/Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/services/IBookingService.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/models/HallType.java
-/Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/models/BookingStatus.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/HallBookingController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/FileConstants.java
+/Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/DialogManager.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/models/Booking.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/FileHandler.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/module-info.java

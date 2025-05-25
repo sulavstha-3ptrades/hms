@@ -1,10 +1,10 @@
 package com.group4.controllers;
 
 import com.group4.models.Availability;
-import com.group4.models.BookingStatus;
 import com.group4.models.Hall;
 import com.group4.models.HallType;
 import com.group4.services.AvailabilityService;
+import com.group4.services.BookingService;
 import com.group4.services.HallService;
 import com.group4.utils.TaskUtils;
 import javafx.collections.FXCollections;
@@ -16,20 +16,24 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import javafx.application.Platform;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.DialogPane;
+import javafx.stage.Modality;
 
 /**
  * Controller for hall search and booking.
@@ -42,11 +46,7 @@ public class HallBookingController implements Initializable {
     @FXML
     private ComboBox<HallType> hallTypeComboBox;
 
-    @FXML
-    private ComboBox<BookingStatus> statusComboBox;
-
-    @FXML
-    private TableColumn<Hall, BookingStatus> statusColumn;
+    // Status-related fields removed
 
     @FXML
     private TextField capacityField;
@@ -71,6 +71,7 @@ public class HallBookingController implements Initializable {
 
     private final HallService hallService = new HallService();
     private final AvailabilityService availabilityService = new AvailabilityService();
+    private final BookingService bookingService = new BookingService();
     private ObservableList<Hall> allHalls = FXCollections.observableArrayList();
     private FilteredList<Hall> filteredHalls;
 
@@ -80,16 +81,13 @@ public class HallBookingController implements Initializable {
         hallTypeComboBox.setItems(FXCollections.observableArrayList(HallType.values()));
         hallTypeComboBox.getItems().add(0, null); // Add null option for "Any type"
 
-        // Initialize status combo box
-        statusComboBox.setItems(FXCollections.observableArrayList(BookingStatus.values()));
-        statusComboBox.getItems().add(0, null); // Add null option for "Any status"
+        // Status combo box removed
 
         // Initialize table columns
         hallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
         typeColumn.setCellValueFactory(cellData -> cellData.getValue().typeProperty());
         capacityColumn.setCellValueFactory(cellData -> cellData.getValue().capacityProperty().asObject());
         rateColumn.setCellValueFactory(cellData -> cellData.getValue().ratePerHourProperty().asObject());
-        statusColumn.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
 
         // Set up date picker constraints
         LocalDate today = LocalDate.now();
@@ -121,7 +119,7 @@ public class HallBookingController implements Initializable {
                     allHalls.addAll(halls);
                     filteredHalls = new FilteredList<>(allHalls);
                     hallTable.setItems(filteredHalls);
-                    
+
                     if (halls.isEmpty()) {
                         hallTable.setPlaceholder(new Label("No halls available in the system."));
                     }
@@ -145,18 +143,9 @@ public class HallBookingController implements Initializable {
             return;
         }
 
-        // Get search criteria
-        LocalDate searchDate = searchDatePicker.getValue();
-        LocalDate today = LocalDate.now();
-
-        // Validate search date
-        if (searchDate == null || searchDate.isBefore(today)) {
-            showAlert("Please select a valid date from today onwards.");
-            searchDatePicker.setValue(today);
-            return;
-        }
-
-        HallType hallType = hallTypeComboBox.getValue();
+        // Get filter values
+        LocalDate selectedDate = searchDatePicker.getValue();
+        HallType selectedType = hallTypeComboBox.getValue();
         int minCapacity = 0;
 
         try {
@@ -168,44 +157,42 @@ public class HallBookingController implements Initializable {
             return;
         }
 
+        // Validate search date
+        LocalDate today = LocalDate.now();
+        if (selectedDate == null || selectedDate.isBefore(today)) {
+            showAlert("Please select a valid date from today onwards.");
+            searchDatePicker.setValue(today);
+            return;
+        }
+
         // Build predicate for hall filtering
         final Predicate<Hall> initialPredicate = hall -> true; // Start with accepting all halls
 
         // Filter by hall type if selected
-        BookingStatus selectedStatus = statusComboBox.getValue();
-        final HallType selectedType = hallType;
-        
+        final HallType selectedTypeFinal = selectedType;
+
         // Apply hall type filter
         final Predicate<Hall> typeFilteredPredicate;
-        if (selectedType != null) {
-            typeFilteredPredicate = initialPredicate.and(hall -> hall.getType() == selectedType);
+        if (selectedTypeFinal != null) {
+            typeFilteredPredicate = initialPredicate.and(hall -> hall.getType() == selectedTypeFinal);
         } else {
             typeFilteredPredicate = initialPredicate;
-        }
-
-        // Apply status filter
-        final Predicate<Hall> statusFilteredPredicate;
-        if (selectedStatus != null) {
-            statusFilteredPredicate = typeFilteredPredicate.and(hall -> hall.getStatus() == selectedStatus);
-        } else {
-            statusFilteredPredicate = typeFilteredPredicate;
         }
 
         // Filter by minimum capacity
         final int selectedCapacity = minCapacity;
         final Predicate<Hall> capacityFilteredPredicate;
         if (selectedCapacity > 0) {
-            capacityFilteredPredicate = statusFilteredPredicate.and(hall -> hall.getCapacity() >= selectedCapacity);
+            capacityFilteredPredicate = typeFilteredPredicate.and(hall -> hall.getCapacity() >= selectedCapacity);
         } else {
-            capacityFilteredPredicate = statusFilteredPredicate;
+            capacityFilteredPredicate = typeFilteredPredicate;
         }
 
         // Apply hall type and capacity filters
         filteredHalls.setPredicate(capacityFilteredPredicate);
 
         // If date is selected, check availability
-        if (searchDate != null) {
-            final LocalDate selectedDate = searchDate;
+        if (selectedDate != null) {
             final Predicate<Hall> finalPredicate = capacityFilteredPredicate;
 
             // Create task to check availability for filtered halls
@@ -236,7 +223,7 @@ public class HallBookingController implements Initializable {
                         Predicate<Hall> availabilityPredicate = finalPredicate
                                 .and(hall -> availableHallIds.contains(hall.getHallId()));
                         filteredHalls.setPredicate(availabilityPredicate);
-                        
+
                         // Show message if no halls are available
                         if (hallTable.getItems().isEmpty()) {
                             hallTable.setPlaceholder(new Label("No halls available for the selected criteria."));
@@ -253,59 +240,143 @@ public class HallBookingController implements Initializable {
      */
     @FXML
     private void handleSelectHall(ActionEvent event) {
-        Hall selectedHall = hallTable.getSelectionModel().getSelectedItem();
-        if (selectedHall == null) {
-            showAlert("Please select a hall.");
-            return;
-        }
-
-        // Validate booking date
-        LocalDate bookingDate = searchDatePicker.getValue();
-        LocalDate today = LocalDate.now();
-        if (bookingDate == null || bookingDate.isBefore(today)) {
-            showAlert("Cannot book a hall for past dates. Please select a valid date.");
-            searchDatePicker.setValue(today);
-            return;
-        }
-
         try {
-            // Load the booking confirmation dialog from resources
-            URL fxmlUrl = getClass().getResource("/com/group4/view/BookingConfirmation.fxml");
-            if (fxmlUrl == null) {
-                showAlert("Error: Could not find the booking form template. Please contact system administrator.");
+            Hall selectedHall = hallTable.getSelectionModel().getSelectedItem();
+            if (selectedHall == null) {
+                showAlert("Please select a hall from the table.");
                 return;
             }
 
-            FXMLLoader loader = new FXMLLoader(fxmlUrl);
-            Parent root;
-            try {
-                root = loader.load();
-            } catch (IOException e) {
-                showAlert("Error loading booking form: " + e.getMessage() + 
-                         "\n\nPlease ensure the application is properly installed and try again.");
+            // Validate booking date
+            LocalDate bookingDate = searchDatePicker.getValue();
+            LocalDate today = LocalDate.now();
+
+            if (bookingDate == null) {
+                showAlert("Please select a booking date.");
                 return;
             }
 
-            // Get the controller and set the hall
-            BookingConfirmationController controller = loader.getController();
-            if (controller == null) {
-                showAlert("Error: Could not initialize the booking form. Please contact system administrator.");
+            if (bookingDate.isBefore(today)) {
+                showAlert("Cannot book a hall for past dates. Please select today or a future date.");
+                searchDatePicker.setValue(today);
                 return;
             }
-            controller.setHall(selectedHall);
 
-            // Show the dialog
-            Stage bookingStage = new Stage();
-            bookingStage.initModality(Modality.APPLICATION_MODAL);
-            bookingStage.setTitle("Book Hall - " + selectedHall.getHallId());
-            bookingStage.setScene(new Scene(root));
-            bookingStage.showAndWait();
+            // Load the booking confirmation dialog using the new dialog-specific FXML
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/com/group4/view/BookingConfirmationDialog.fxml"));
+            Parent dialogRoot = loader.load();
 
-            // Refresh the hall list after booking
-            loadHalls();
+            // Get the controller and set booking details
+            BookingConfirmationController dialogController = loader.getController();
+            if (dialogController == null) {
+                showAlert("Error: Could not initialize the booking confirmation dialog controller.");
+                return;
+            }
+
+            // Set booking details with start time slightly in the future to avoid validation errors
+            // Add 1 minute to current time and reset seconds/nanos to avoid "Start time cannot be in the past" error
+            LocalTime startTime = LocalTime.now().plusMinutes(1).withSecond(0).withNano(0);
+            LocalTime endTime = startTime.plusHours(1);
+            double estimatedCost = selectedHall.getRatePerHour();
+
+            // Set all booking details at once using the new method
+            dialogController.setBookingDetails(
+                    selectedHall,
+                    bookingDate,
+                    startTime,
+                    endTime,
+                    estimatedCost);
+
+            // Create and configure the dialog
+            Dialog<ButtonType> bookingDialog = new Dialog<>();
+            bookingDialog.setDialogPane((DialogPane) dialogRoot);
+            bookingDialog.setTitle("Book Hall - " + selectedHall.getHallId());
+            
+            // Customize button text
+            Button okButton = (Button) bookingDialog.getDialogPane().lookupButton(ButtonType.OK);
+            if (okButton != null) {
+                okButton.setText("Confirm Booking");
+                okButton.getStyleClass().add("confirm-button");
+            }
+            
+            Button cancelButton = (Button) bookingDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
+            if (cancelButton != null) {
+                cancelButton.setText("Cancel");
+            }
+
+            // Show the dialog and wait for user response
+            Optional<ButtonType> result = bookingDialog.showAndWait();
+
+            // Process the result
+            if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.OK_DONE) {
+                // Get special requests if any
+                String specialRequests = dialogController.getSpecialRequests();
+                
+                // Get user-selected date and times
+                LocalDate selectedDate = dialogController.getSelectedDate();
+                LocalTime selectedStartTime = dialogController.getSelectedStartTime();
+                LocalTime selectedEndTime = dialogController.getSelectedEndTime();
+                
+                // Validate selections
+                if (selectedDate == null || selectedStartTime == null || selectedEndTime == null) {
+                    showAlert("Please select a valid date and time for your booking.");
+                    return;
+                }
+                
+                // Create booking in the database with user-selected values
+                LocalDateTime startDateTime = LocalDateTime.of(selectedDate, selectedStartTime);
+                LocalDateTime endDateTime = LocalDateTime.of(selectedDate, selectedEndTime);
+                
+                // Get current user ID from session and hall ID
+                String hallId = selectedHall.getHallId();
+                
+                // Check if the hall is available for the selected time slot
+                boolean isAvailable = TaskUtils.executeTask(bookingService.isHallAvailable(hallId, startDateTime, endDateTime));
+                if (!isAvailable) {
+                    showAlert("This time slot is already booked. Please select a different time.");
+                    return;
+                }
+                
+                // Execute the booking creation task
+                // Note: BookingService.createBooking automatically gets the current user ID from SessionManager
+                TaskUtils.executeTaskWithProgress(
+                    bookingService.createBooking(hallId, startDateTime, endDateTime),
+                    booking -> {
+                        Platform.runLater(() -> {
+                            // Process booking with specialRequests and other details
+                            showAlert("Booking confirmed for Hall " + selectedHall.getHallId() +
+                                    "\nBooking ID: " + booking.getBookingId() +
+                                    "\nDate: " + selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")) +
+                                    "\nTime: " + selectedStartTime.format(DateTimeFormatter.ofPattern("h:mm a")) + " - " +
+                                    selectedEndTime.format(DateTimeFormatter.ofPattern("h:mm a")) +
+                                    "\nTotal Cost: $" + String.format("%.2f", booking.getTotalCost()) +
+                                    "\nSpecial Requests: " +
+                                    (specialRequests == null || specialRequests.trim().isEmpty() ? "None" : specialRequests));
+                            
+                            // Refresh the hall list to show updated availability
+                            loadHalls();
+                        });
+                    },
+                    error -> {
+                        Platform.runLater(() -> {
+                            showAlert("Error creating booking: " + error.getMessage());
+                        });
+                    }
+                );
+            } else {
+                System.out.println("Booking Cancelled.");
+            }
+        } catch (IOException e) {
+            String errorMsg = "Error processing your booking: " + e.getMessage();
+            showAlert(errorMsg);
+            System.err.println(errorMsg);
+            e.printStackTrace();
         } catch (Exception e) {
-            showAlert("An unexpected error occurred while opening the booking form: " + 
-                     e.getMessage() + "\n\nPlease try again or contact system administrator if the problem persists.");
+            String errorMsg = "An unexpected error occurred: " + e.getMessage();
+            showAlert(errorMsg);
+            System.err.println(errorMsg);
+            e.printStackTrace();
         }
     }
 
@@ -318,21 +389,39 @@ public class HallBookingController implements Initializable {
     private void handleReset(ActionEvent event) {
         searchDatePicker.setValue(LocalDate.now());
         hallTypeComboBox.setValue(null);
-        statusComboBox.setValue(null);
         capacityField.clear();
         filteredHalls.setPredicate(hall -> true);
     }
 
     /**
-     * Shows an alert dialog.
+     * Shows an alert dialog with the specified message.
      * 
-     * @param message the message to show
+     * @param message the message to display
      */
     private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Hall Booking System");
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+
+            // Set the alert to be always on top
+            alert.initModality(Modality.APPLICATION_MODAL);
+
+            // Add custom styles if available
+            try {
+                DialogPane dialogPane = alert.getDialogPane();
+                URL stylesheet = getClass().getResource("/com/group4/styles/dialogs.css");
+                if (stylesheet != null) {
+                    dialogPane.getStylesheets().add(stylesheet.toExternalForm());
+                    dialogPane.getStyleClass().add("dialog-pane");
+                }
+            } catch (Exception e) {
+                // Ignore style loading errors
+                System.err.println("Warning: Could not load dialog styles: " + e.getMessage());
+            }
+
+            alert.showAndWait();
+        });
     }
 }

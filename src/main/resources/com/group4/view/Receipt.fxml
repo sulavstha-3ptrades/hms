@@ -41,9 +41,8 @@
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="300.0" />
               </columnConstraints>
               <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -80,11 +79,7 @@
                         <Font name="System Bold" size="12.0" />
                      </font>
                   </Label>
-                  <Label text="Status:" GridPane.rowIndex="6">
-                     <font>
-                        <Font name="System Bold" size="12.0" />
-                     </font>
-                  </Label>
+                  <!-- Status row removed -->
                   <Label fx:id="bookingIdLabel" text="BOOK-12345678" GridPane.columnIndex="1" />
                   <Label fx:id="hallIdLabel" text="HALL-1234" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                   <Label fx:id="customerIdLabel" text="USER-1234" GridPane.columnIndex="1" GridPane.rowIndex="2" />
@@ -95,7 +90,7 @@
                         <Font name="System Bold" size="14.0" />
                      </font>
                   </Label>
-                  <Label fx:id="statusLabel" text="CONFIRMED" GridPane.columnIndex="1" GridPane.rowIndex="6" />
+                  <!-- Status label removed -->
                </children>
                <VBox.margin>
                   <Insets left="30.0" right="30.0" />

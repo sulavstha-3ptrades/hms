@@ -15,7 +15,6 @@ public class Booking {
     private final ObjectProperty<LocalDateTime> startDateTime = new SimpleObjectProperty<>(this, "startDateTime", null);
     private final ObjectProperty<LocalDateTime> endDateTime = new SimpleObjectProperty<>(this, "endDateTime", null);
     private final DoubleProperty totalCost = new SimpleDoubleProperty(this, "totalCost", 0.0);
-    private final ObjectProperty<BookingStatus> status = new SimpleObjectProperty<>(this, "status", null);
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -30,14 +29,13 @@ public class Booking {
      */
     public Booking(String bookingId, String customerId, String hallId,
             LocalDateTime startDateTime, LocalDateTime endDateTime,
-            double totalCost, BookingStatus status) {
+            double totalCost) {
         this.bookingId.set(bookingId);
         this.customerId.set(customerId);
         this.hallId.set(hallId);
         this.startDateTime.set(startDateTime);
         this.endDateTime.set(endDateTime);
         this.totalCost.set(totalCost);
-        this.status.set(status);
     }
 
     // Getters and Setters
@@ -89,13 +87,7 @@ public class Booking {
         this.totalCost.set(totalCost);
     }
 
-    public BookingStatus getStatus() {
-        return status.get();
-    }
 
-    public void setStatus(BookingStatus status) {
-        this.status.set(status);
-    }
 
     // JavaFX property getters
     public StringProperty bookingIdProperty() {
@@ -122,9 +114,7 @@ public class Booking {
         return totalCost;
     }
 
-    public ObjectProperty<BookingStatus> statusProperty() {
-        return status;
-    }
+
 
     /**
      * Converts booking object to a delimited string representation
@@ -135,7 +125,7 @@ public class Booking {
         return getBookingId() + "|" + getCustomerId() + "|" + getHallId() + "|" +
                 getStartDateTime().format(DATE_TIME_FORMATTER) + "|" +
                 getEndDateTime().format(DATE_TIME_FORMATTER) + "|" +
-                getTotalCost() + "|" + getStatus().name();
+                getTotalCost();
     }
 
     /**
@@ -146,15 +136,14 @@ public class Booking {
      */
     public static Booking fromDelimitedString(String data) {
         String[] parts = data.split("\\|");
-        if (parts.length == 7) {
+        if (parts.length == 6) {
             return new Booking(
                     parts[0], // bookingId
                     parts[1], // customerId
                     parts[2], // hallId
                     LocalDateTime.parse(parts[3], DATE_TIME_FORMATTER), // startDateTime
                     LocalDateTime.parse(parts[4], DATE_TIME_FORMATTER), // endDateTime
-                    Double.parseDouble(parts[5]), // totalCost
-                    BookingStatus.valueOf(parts[6]) // status
+                    Double.parseDouble(parts[5]) // totalCost
             );
         }
         return null;

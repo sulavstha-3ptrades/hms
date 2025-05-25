@@ -76,6 +76,8 @@ public class FilePermissionManager {
                 return filePath.contains("halls.txt") || filePath.contains("availability_schedule.txt")
                         || filePath.contains("maintenance_schedule.txt");
             case "CUSTOMER":
+                // Allow customers to write to the bookings file
+                return filePath.contains("bookings.txt");
             default:
                 return false;
         }

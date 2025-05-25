@@ -31,8 +31,7 @@ public class ReceiptController {
     @FXML
     private Label totalCostLabel;
 
-    @FXML
-    private Label statusLabel;
+    // Status field removed
 
     @FXML
     private Button closeButton;
@@ -55,7 +54,6 @@ public class ReceiptController {
         startDateTimeLabel.setText(booking.getStartDateTime().format(DATETIME_FORMATTER));
         endDateTimeLabel.setText(booking.getEndDateTime().format(DATETIME_FORMATTER));
         totalCostLabel.setText(String.format("$%.2f", booking.getTotalCost()));
-        statusLabel.setText(booking.getStatus().toString());
     }
 
     /**

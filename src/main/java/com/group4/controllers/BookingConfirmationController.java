@@ -2,289 +2,483 @@ package com.group4.controllers;
 
 import com.group4.models.Booking;
 import com.group4.models.Hall;
-import com.group4.models.User;
 import com.group4.services.BookingService;
-import com.group4.utils.SessionManager;
-import com.group4.utils.TaskUtils;
-
-import javafx.concurrent.Task;
-import javafx.event.ActionEvent;
+import com.group4.utils.FileConstants;
+import com.group4.utils.FileHandler;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.net.URL;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Duration;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * Controller for booking confirmation.
+ * Controller for the booking confirmation dialog.
+ * Handles UI logic and field bindings for the booking confirmation dialog.
+ * This controller is specifically scoped to handle dialog UI elements and data
+ * presentation.
  */
 public class BookingConfirmationController implements Initializable {
 
     @FXML
-    private Label hallIdLabel;
-
-    @FXML
-    private Label hallTypeLabel;
-
-    @FXML
-    private Label capacityLabel;
-
-    @FXML
-    private Label rateLabel;
-
+    private Label hallNameLabel;
     @FXML
     private DatePicker bookingDatePicker;
-
     @FXML
-    private ComboBox<String> startTimeComboBox;
-
+    private ComboBox<String> startHourComboBox;
     @FXML
-    private ComboBox<String> endTimeComboBox;
-
+    private ComboBox<String> startMinuteComboBox;
+    @FXML
+    private ComboBox<String> startAmPmComboBox;
+    @FXML
+    private ComboBox<String> endHourComboBox;
+    @FXML
+    private ComboBox<String> endMinuteComboBox;
+    @FXML
+    private ComboBox<String> endAmPmComboBox;
     @FXML
     private Label durationLabel;
-
     @FXML
-    private Label totalCostLabel;
-
+    private Label costLabel;
     @FXML
-    private Button confirmButton;
+    private TextArea specialRequests;
 
-    @FXML
-    private Button cancelButton;
-
-    private Hall selectedHall;
-    private final BookingService bookingService = new BookingService();
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
-    private LocalDateTime startDateTime;
-    private LocalDateTime endDateTime;
+    private Hall currentHall;
+    private BookingService bookingService;
+    private List<BookingTimeSlot> bookedTimeSlots;
+    private static final Logger LOGGER = Logger.getLogger(BookingConfirmationController.class.getName());
+    
+    /**
+     * Inner class to represent a booked time slot for a hall
+     */
+    private static class BookingTimeSlot {
+        private LocalTime startTime;
+        private LocalTime endTime;
+        private String bookingId;
+        
+        public BookingTimeSlot(LocalTime startTime, LocalTime endTime, String bookingId) {
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.bookingId = bookingId;
+        }
+        
+        public LocalTime getStartTime() {
+            return startTime;
+        }
+        
+        public LocalTime getEndTime() {
+            return endTime;
+        }
+        
+        public String getBookingId() {
+            return bookingId;
+        }
+        
+        /**
+         * Checks if this time slot overlaps with the specified time range
+         * 
+         * @param start The start time to check
+         * @param end The end time to check
+         * @return true if there is an overlap, false otherwise
+         */
+        public boolean overlaps(LocalTime start, LocalTime end) {
+            return !(end.isBefore(startTime) || start.isAfter(endTime));
+        }
+        
+        @Override
+        public String toString() {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
+            return startTime.format(formatter) + " - " + endTime.format(formatter) + " (" + bookingId + ")"; 
+        }
+    }
 
     @Override
-    public void initialize(URL url, ResourceBundle resourceBundle) {
-        // Initialize time combo boxes with business hours (8 AM - 6 PM)
-        populateTimeComboBoxes();
+    public void initialize(URL url, ResourceBundle rb) {
+        // Initialize services
+        bookingService = new BookingService();
+        bookedTimeSlots = new ArrayList<>();
+        
+        // Initialize time selection ComboBoxes
+        initializeTimeComboBoxes();
 
-        // Add listeners for time selection to calculate duration and cost
-        startTimeComboBox.getSelectionModel().selectedItemProperty().addListener(
-                (observable, oldValue, newValue) -> calculateDurationAndCost());
+        // Add listeners to update duration and cost when time selection changes
+        addTimeChangeListeners();
 
-        endTimeComboBox.getSelectionModel().selectedItemProperty().addListener(
-                (observable, oldValue, newValue) -> calculateDurationAndCost());
-
-        bookingDatePicker.valueProperty().addListener(
-                (observable, oldValue, newValue) -> calculateDurationAndCost());
-
-        // Set default date to today
-        bookingDatePicker.setValue(LocalDate.now());
-    }
-
-    /**
-     * Sets the hall to book.
-     * 
-     * @param hall the hall to book
-     */
-    public void setHall(Hall hall) {
-        this.selectedHall = hall;
-
-        // Display hall details
-        hallIdLabel.setText(hall.getHallId());
-        hallTypeLabel.setText(hall.getType().toString());
-        capacityLabel.setText(String.valueOf(hall.getCapacity()));
-        rateLabel.setText(String.format("$%.2f per hour", hall.getRatePerHour()));
-    }
-
-    /**
-     * Populates the time combo boxes with business hours (8 AM - 6 PM).
-     */
-    private void populateTimeComboBoxes() {
-        // Business hours: 8 AM - 6 PM
-        LocalTime startTime = LocalTime.of(8, 0);
-        LocalTime endTime = LocalTime.of(18, 0);
-
-        // Create time slots at hourly intervals
-        while (!startTime.isAfter(endTime)) {
-            String timeStr = startTime.format(TIME_FORMATTER);
-            startTimeComboBox.getItems().add(timeStr);
-
-            // End time combo box should not include the first time slot
-            if (!startTime.equals(startTime.withHour(8).withMinute(0))) {
-                endTimeComboBox.getItems().add(timeStr);
-            }
-
-            startTime = startTime.plusHours(1);
-        }
-
-        // Add the last end time (6 PM)
-        endTimeComboBox.getItems().add(endTime.format(TIME_FORMATTER));
-
-        // Set default selections
-        startTimeComboBox.getSelectionModel().select(0); // 8 AM
-        endTimeComboBox.getSelectionModel().select(2); // 10 AM (2 hour booking by default)
-    }
-
-    /**
-     * Calculates the booking duration and total cost.
-     */
-    private void calculateDurationAndCost() {
-        if (selectedHall == null || bookingDatePicker.getValue() == null ||
-                startTimeComboBox.getValue() == null || endTimeComboBox.getValue() == null) {
-            return;
-        }
-
-        try {
-            LocalDate bookingDate = bookingDatePicker.getValue();
-
-            // Parse times
-            LocalTime startTime = LocalTime.parse(startTimeComboBox.getValue(), TIME_FORMATTER);
-            LocalTime endTime = LocalTime.parse(endTimeComboBox.getValue(), TIME_FORMATTER);
-
-            // Create full date-time
-            startDateTime = LocalDateTime.of(bookingDate, startTime);
-            endDateTime = LocalDateTime.of(bookingDate, endTime);
-
-            // Calculate duration in hours
-            if (startDateTime.isBefore(endDateTime)) {
-                Duration duration = Duration.between(startDateTime, endDateTime);
-                long hours = duration.toHours();
-
-                durationLabel.setText(String.format("%d hours", hours));
-
-                // Calculate total cost
-                double totalCost = selectedHall.getRatePerHour() * hours;
-                totalCostLabel.setText(String.format("$%.2f", totalCost));
-
-                // Enable confirm button if all is well
-                confirmButton.setDisable(false);
-            } else {
-                durationLabel.setText("Invalid time selection");
-                totalCostLabel.setText("$0.00");
-                confirmButton.setDisable(true);
-            }
-        } catch (Exception e) {
-            durationLabel.setText("Error calculating duration");
-            totalCostLabel.setText("$0.00");
-            confirmButton.setDisable(true);
-        }
-    }
-
-    /**
-     * Handles the confirm booking button click.
-     * 
-     * @param event the action event
-     */
-    @FXML
-    private void handleConfirmBooking(ActionEvent event) {
-        if (selectedHall == null || startDateTime == null || endDateTime == null
-                || startDateTime.isAfter(endDateTime)) {
-            showAlert(Alert.AlertType.ERROR, "Invalid Booking", "Please select valid date and time for booking.");
-            return;
-        }
-
-        // Calculate total cost
-        Duration duration = Duration.between(startDateTime, endDateTime);
-        long hours = duration.toHours();
-        double totalCost = selectedHall.getRatePerHour() * hours;
-
-        // Get current user from session
-        User currentUser = SessionManager.getInstance().getCurrentUser();
-        if (currentUser == null) {
-            showAlert(Alert.AlertType.ERROR, "Authentication Error", "You must be logged in to make a booking.");
-            return;
-        }
-
-        // Create the booking
-        Task<Booking> bookingTask = new Task<Booking>() {
+        // Set minimum date to today
+        bookingDatePicker.setDayCellFactory(picker -> new DateCell() {
             @Override
-            protected Booking call() throws Exception {
-                // Create booking using the available method
-                Task<Booking> createTask = bookingService.createBooking(selectedHall.getHallId(), startDateTime,
-                        endDateTime);
-                return TaskUtils.executeTask(createTask);
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                setDisable(empty || date.isBefore(LocalDate.now()));
             }
+        });
+        
+        // Add listener to date picker to check availability when date changes
+        bookingDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null && currentHall != null) {
+                loadBookedTimeSlots(currentHall.getHallId(), newValue);
+            }
+        });
+    }
+
+    /**
+     * Initializes the time selection ComboBoxes with appropriate values.
+     */
+    private void initializeTimeComboBoxes() {
+        // Hours (12-hour format)
+        ObservableList<String> hours = FXCollections.observableArrayList();
+        for (int i = 1; i <= 12; i++) {
+            hours.add(String.format("%d", i));
+        }
+        startHourComboBox.setItems(hours);
+        endHourComboBox.setItems(hours);
+
+        // Minutes (in 5-minute increments)
+        ObservableList<String> minutes = FXCollections.observableArrayList();
+        for (int i = 0; i < 60; i += 5) {
+            minutes.add(String.format("%02d", i));
+        }
+        startMinuteComboBox.setItems(minutes);
+        endMinuteComboBox.setItems(minutes);
+
+        // AM/PM
+        ObservableList<String> amPm = FXCollections.observableArrayList("AM", "PM");
+        startAmPmComboBox.setItems(amPm);
+        endAmPmComboBox.setItems(amPm);
+    }
+
+    /**
+     * Adds change listeners to time selection controls to update duration and cost.
+     */
+    private void addTimeChangeListeners() {
+        ChangeListener<Object> timeChangeListener = (observable, oldValue, newValue) -> {
+            updateDurationAndCost();
         };
 
-        TaskUtils.executeTaskWithProgress(bookingTask,
-                booking -> {
-                    if (booking != null) {
-                        showReceipt(booking);
-                        closeWindow();
-                    } else {
-                        showAlert(Alert.AlertType.ERROR, "Booking Error",
-                                "Failed to create booking. The hall may not be available at the selected time.");
-                    }
-                },
-                error -> showAlert(Alert.AlertType.ERROR, "Booking Error",
-                        "Failed to create booking: " + error.getMessage()));
+        startHourComboBox.getSelectionModel().selectedItemProperty().addListener(timeChangeListener);
+        startMinuteComboBox.getSelectionModel().selectedItemProperty().addListener(timeChangeListener);
+        startAmPmComboBox.getSelectionModel().selectedItemProperty().addListener(timeChangeListener);
+        endHourComboBox.getSelectionModel().selectedItemProperty().addListener(timeChangeListener);
+        endMinuteComboBox.getSelectionModel().selectedItemProperty().addListener(timeChangeListener);
+        endAmPmComboBox.getSelectionModel().selectedItemProperty().addListener(timeChangeListener);
     }
 
     /**
-     * Handles the cancel button click.
+     * Loads all booked time slots for the specified hall and date.
      * 
-     * @param event the action event
+     * @param hallId The ID of the hall
+     * @param date The date to check
      */
-    @FXML
-    private void handleCancel(ActionEvent event) {
-        closeWindow();
-    }
-
-    /**
-     * Shows the booking receipt.
-     * 
-     * @param booking the booking to show
-     */
-    private void showReceipt(Booking booking) {
+    private void loadBookedTimeSlots(String hallId, LocalDate date) {
+        bookedTimeSlots.clear();
+        
         try {
-            // Load the receipt FXML
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/Receipt.fxml"));
-            Parent root = loader.load();
-
-            // Get the controller and set the booking
-            ReceiptController controller = loader.getController();
-            controller.setBooking(booking);
-
-            // Create a new stage for the receipt
-            Stage receiptStage = new Stage();
-            receiptStage.initModality(Modality.APPLICATION_MODAL);
-            receiptStage.setTitle("Booking Receipt");
-            receiptStage.setScene(new Scene(root));
-            receiptStage.showAndWait();
+            // Read all bookings from the file
+            List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
+            
+            for (String line : lines) {
+                try {
+                    Booking booking = Booking.fromDelimitedString(line);
+                    
+                    if (booking != null && 
+                        booking.getHallId().equals(hallId)) {
+                        
+                        // Check if the booking is on the selected date
+                        LocalDate bookingDate = booking.getStartDateTime().toLocalDate();
+                        
+                        if (bookingDate.equals(date)) {
+                            // Add this time slot to the list of booked slots
+                            BookingTimeSlot slot = new BookingTimeSlot(
+                                booking.getStartDateTime().toLocalTime(),
+                                booking.getEndDateTime().toLocalTime(),
+                                booking.getBookingId()
+                            );
+                            bookedTimeSlots.add(slot);
+                            LOGGER.info("Found booked time slot: " + slot);
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.log(Level.WARNING, "Error parsing booking: " + line, e);
+                }
+            }
+            
+            // Update UI to show booked time slots
+            updateTimeSelectionUI();
+            
         } catch (IOException e) {
-            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load receipt: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error reading bookings file", e);
+        }
+    }
+    
+    /**
+     * Updates the time selection UI to reflect booked time slots.
+     */
+    private void updateTimeSelectionUI() {
+        // Reset all time selection controls to default style
+        resetTimeControlStyles();
+        
+        // Check if current selection conflicts with any booked slots
+        checkAndUpdateTimeConflicts();
+    }
+    
+    /**
+     * Resets all time selection controls to default style.
+     */
+    private void resetTimeControlStyles() {
+        startHourComboBox.setStyle("");
+        startMinuteComboBox.setStyle("");
+        startAmPmComboBox.setStyle("");
+        endHourComboBox.setStyle("");
+        endMinuteComboBox.setStyle("");
+        endAmPmComboBox.setStyle("");
+    }
+    
+    /**
+     * Checks if the current time selection conflicts with any booked slots and updates UI accordingly.
+     */
+    private void checkAndUpdateTimeConflicts() {
+        LocalTime startTime = getSelectedStartTime();
+        LocalTime endTime = getSelectedEndTime();
+        
+        if (startTime != null && endTime != null) {
+            boolean hasConflict = false;
+            
+            for (BookingTimeSlot slot : bookedTimeSlots) {
+                if (slot.overlaps(startTime, endTime)) {
+                    hasConflict = true;
+                    break;
+                }
+            }
+            
+            if (hasConflict) {
+                // Mark time controls with conflict style
+                String conflictStyle = "-fx-border-color: red; -fx-border-width: 2px;";
+                startHourComboBox.setStyle(conflictStyle);
+                startMinuteComboBox.setStyle(conflictStyle);
+                startAmPmComboBox.setStyle(conflictStyle);
+                endHourComboBox.setStyle(conflictStyle);
+                endMinuteComboBox.setStyle(conflictStyle);
+                endAmPmComboBox.setStyle(conflictStyle);
+                
+                // Show conflict tooltip
+                Tooltip tooltip = new Tooltip("This time slot conflicts with an existing booking");
+                startHourComboBox.setTooltip(tooltip);
+                startMinuteComboBox.setTooltip(tooltip);
+                startAmPmComboBox.setTooltip(tooltip);
+                endHourComboBox.setTooltip(tooltip);
+                endMinuteComboBox.setTooltip(tooltip);
+                endAmPmComboBox.setTooltip(tooltip);
+            } else {
+                // Clear tooltips
+                startHourComboBox.setTooltip(null);
+                startMinuteComboBox.setTooltip(null);
+                startAmPmComboBox.setTooltip(null);
+                endHourComboBox.setTooltip(null);
+                endMinuteComboBox.setTooltip(null);
+                endAmPmComboBox.setTooltip(null);
+            }
+        }
+    }
+    
+    /**
+     * Updates the duration and cost based on the selected start and end times.
+     * Also checks for time conflicts with existing bookings.
+     */
+    private void updateDurationAndCost() {
+        LocalTime startTime = getSelectedStartTime();
+        LocalTime endTime = getSelectedEndTime();
+
+        if (startTime != null && endTime != null && currentHall != null) {
+            // Ensure end time is after start time
+            if (endTime.isBefore(startTime) || endTime.equals(startTime)) {
+                // If end time is before or equal to start time, set end time to start time + 1
+                // hour
+                endTime = startTime.plusHours(1);
+                updateEndTimeControls(endTime);
+            }
+
+            // Calculate and set duration
+            long durationMinutes = Duration.between(startTime, endTime).toMinutes();
+            double durationHours = durationMinutes / 60.0;
+            durationLabel.setText(String.format("%.1f hours", durationHours));
+
+            // Calculate and set cost
+            double cost = currentHall.getRatePerHour() * durationHours;
+            costLabel.setText(String.format("$%.2f", cost));
+            
+            // Check for conflicts with existing bookings
+            checkAndUpdateTimeConflicts();
         }
     }
 
     /**
-     * Closes the current window.
+     * Gets the selected start time from the ComboBoxes.
+     * 
+     * @return The selected start time, or null if selection is incomplete
      */
-    private void closeWindow() {
-        Stage stage = (Stage) cancelButton.getScene().getWindow();
-        stage.close();
+    public LocalTime getSelectedStartTime() {
+        String hour = startHourComboBox.getValue();
+        String minute = startMinuteComboBox.getValue();
+        String amPm = startAmPmComboBox.getValue();
+
+        if (hour != null && minute != null && amPm != null) {
+            int h = Integer.parseInt(hour);
+            int m = Integer.parseInt(minute);
+
+            // Convert to 24-hour format
+            if (amPm.equals("PM") && h < 12) {
+                h += 12;
+            } else if (amPm.equals("AM") && h == 12) {
+                h = 0;
+            }
+
+            return LocalTime.of(h, m);
+        }
+
+        return null;
     }
 
     /**
-     * Shows an alert dialog.
+     * Gets the selected end time from the ComboBoxes.
      * 
-     * @param alertType the type of alert
-     * @param title     the alert title
-     * @param message   the alert message
+     * @return The selected end time, or null if selection is incomplete
      */
-    private void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    public LocalTime getSelectedEndTime() {
+        String hour = endHourComboBox.getValue();
+        String minute = endMinuteComboBox.getValue();
+        String amPm = endAmPmComboBox.getValue();
+
+        if (hour != null && minute != null && amPm != null) {
+            int h = Integer.parseInt(hour);
+            int m = Integer.parseInt(minute);
+
+            // Convert to 24-hour format
+            if (amPm.equals("PM") && h < 12) {
+                h += 12;
+            } else if (amPm.equals("AM") && h == 12) {
+                h = 0;
+            }
+
+            return LocalTime.of(h, m);
+        }
+
+        return null;
+    }
+
+    /**
+     * Updates the end time ComboBoxes to reflect the given time.
+     * 
+     * @param endTime The end time to set
+     */
+    private void updateEndTimeControls(LocalTime endTime) {
+        int hour = endTime.getHour();
+        String amPm = "AM";
+
+        // Convert to 12-hour format
+        if (hour >= 12) {
+            amPm = "PM";
+            if (hour > 12) {
+                hour -= 12;
+            }
+        } else if (hour == 0) {
+            hour = 12;
+        }
+
+        endHourComboBox.setValue(String.valueOf(hour));
+        endMinuteComboBox.setValue(String.format("%02d", endTime.getMinute()));
+        endAmPmComboBox.setValue(amPm);
+    }
+
+    /**
+     * Sets the booking details to be displayed in the dialog.
+     * 
+     * @param hall      The hall being booked
+     * @param date      The booking date
+     * @param startTime The start time of the booking
+     * @param endTime   The end time of the booking
+     * @param cost      The total cost of the booking
+     */
+    public void setBookingDetails(Hall hall, LocalDate date, LocalTime startTime, LocalTime endTime, double cost) {
+        if (hall == null || date == null || startTime == null || endTime == null) {
+            throw new IllegalArgumentException("All booking details must be provided");
+        }
+
+        // Store the hall for cost calculations
+        this.currentHall = hall;
+
+        // Set hall name
+        hallNameLabel.setText(hall.getHallId());
+
+        // Set date
+        bookingDatePicker.setValue(date);
+
+        // Set time values in ComboBoxes
+        setTimeControls(startTime, endTime);
+
+        // Calculate and set duration
+        long durationMinutes = Duration.between(startTime, endTime).toMinutes();
+        double durationHours = durationMinutes / 60.0;
+        durationLabel.setText(String.format("%.1f hours", durationHours));
+
+        // Set cost
+        costLabel.setText(String.format("$%.2f", cost));
+    }
+
+    /**
+     * Sets the time selection controls to the specified start and end times.
+     * 
+     * @param startTime The start time to set
+     * @param endTime   The end time to set
+     */
+    private void setTimeControls(LocalTime startTime, LocalTime endTime) {
+        // Set start time controls
+        int startHour = startTime.getHour();
+        String startAmPm = "AM";
+
+        if (startHour >= 12) {
+            startAmPm = "PM";
+            if (startHour > 12) {
+                startHour -= 12;
+            }
+        } else if (startHour == 0) {
+            startHour = 12;
+        }
+
+        startHourComboBox.setValue(String.valueOf(startHour));
+        startMinuteComboBox.setValue(String.format("%02d", startTime.getMinute()));
+        startAmPmComboBox.setValue(startAmPm);
+
+        // Set end time controls
+        updateEndTimeControls(endTime);
+    }
+
+    /**
+     * Gets the selected booking date.
+     * 
+     * @return The selected booking date
+     */
+    public LocalDate getSelectedDate() {
+        return bookingDatePicker.getValue();
+    }
+
+    /**
+     * Gets any special requests entered by the user.
+     * 
+     * @return The special requests text
+     */
+    public String getSpecialRequests() {
+        return specialRequests.getText();
     }
 }

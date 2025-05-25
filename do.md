@@ -1,16 +1,63 @@
-## **Customer Features**
+### 🎯 Objective
 
-### Hall Search & Filter
+Refactor the `BookingConfirmationController` to act as a **dedicated dialog controller** for the booking confirmation flow, ensuring **clean separation of concerns** and **explicit data binding** between controllers.
 
-- UI: TableView with filters (date, hall type, capacity).
-- Load data from `halls.txt` and cross-reference `availability_schedule.txt`.
+---
 
-### Booking Workflow
+### 🔧 Refactoring Steps
 
-- **Step 1**: Select hall and datetime (validate against business hours 8 AM–6 PM).
-- **Step 2**: Calculate cost (`ratePerHour * duration`).
-- **Step 3**: Simulate payment (dummy button), generate receipt (JFrame).
+1. **Rename the FXML File**
 
-### 6.3 Booking Cancellation
+   - Rename `BookingConfirmation.fxml` → `BookingConfirmationDialog.fxml` to clearly indicate that it represents a dialog.
 
-- Check if cancellation is >3 days before event; update `status` in `bookings.txt`.
+2. **Make `BookingConfirmationController` Dialog-Specific**
+   - Scope the controller **only** to handle dialog UI logic and field bindings.
+   - Define `@FXML` bindings for the dialog elements:
+     - `Label hallNameLabel`
+     - `Label dateLabel`
+     - `Label timeLabel`
+     - `Label durationLabel`
+     - `Label costLabel`
+     - `TextArea specialRequests`
+
+---
+
+### 🔁 Data Flow Integration
+
+In `HallBookingController.java`:
+
+```java
+FXMLLoader loader = new FXMLLoader(fxmlUrl);
+Parent dialogRoot = loader.load();
+
+BookingConfirmationController dialogController = loader.getController();
+if (dialogController == null) {
+    showAlert("Error: Could not initialize the booking confirmation dialog controller.");
+    return;
+}
+
+// Set booking details
+dialogController.setBookingDetails(
+    selectedHall,
+    bookingDate,
+    LocalTime.now(),
+    LocalTime.now().plusHours(1),
+    50.0
+);
+
+// Show the dialog
+Dialog<ButtonType> bookingDialog = new Dialog<>();
+bookingDialog.setDialogPane((DialogPane) dialogRoot);
+bookingDialog.setTitle("Book Hall - " + selectedHall.getHallId());
+
+Optional<ButtonType> result = bookingDialog.showAndWait();
+if (result.isPresent() && result.get().getButtonData() == ButtonType.OK_DONE.getButtonData()) {
+    System.out.println("Booking Confirmed!");
+    String specialReqs = dialogController.getSpecialRequests();
+    // Process booking with specialReqs and other details
+} else {
+    System.out.println("Booking Cancelled.");
+}
+
+loadHalls(); // Refresh the hall list
+```

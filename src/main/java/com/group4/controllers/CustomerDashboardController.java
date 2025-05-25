@@ -2,7 +2,6 @@ package com.group4.controllers;
 
 import com.group4.App;
 import com.group4.models.Booking;
-import com.group4.models.BookingStatus;
 import com.group4.services.BookingService;
 import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
@@ -17,8 +16,10 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import com.group4.utils.ViewManager;
 
 import java.io.IOException;
@@ -60,8 +61,7 @@ public class CustomerDashboardController {
     @FXML
     private TableColumn<Booking, Double> totalCostColumn;
 
-    @FXML
-    private TableColumn<Booking, BookingStatus> statusColumn;
+    // Status column removed
 
     @FXML
     private Button cancelBookingButton;
@@ -83,10 +83,35 @@ public class CustomerDashboardController {
         // Initialize table columns
         bookingIdColumn.setCellValueFactory(cellData -> cellData.getValue().bookingIdProperty());
         hallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
-        startDateTimeColumn.setCellValueFactory(cellData -> cellData.getValue().startDateTimeProperty());
-        endDateTimeColumn.setCellValueFactory(cellData -> cellData.getValue().endDateTimeProperty());
+        
+        // Format date/time columns
+        startDateTimeColumn.setCellValueFactory(new PropertyValueFactory<>("startDateTime"));
+        startDateTimeColumn.setCellFactory(column -> new TableCell<Booking, LocalDateTime>() {
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("");
+                } else {
+                    setText(item.format(DATETIME_FORMATTER));
+                }
+            }
+        });
+        
+        endDateTimeColumn.setCellValueFactory(new PropertyValueFactory<>("endDateTime"));
+        endDateTimeColumn.setCellFactory(column -> new TableCell<Booking, LocalDateTime>() {
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("");
+                } else {
+                    setText(item.format(DATETIME_FORMATTER));
+                }
+            }
+        });
+        
         totalCostColumn.setCellValueFactory(cellData -> cellData.getValue().totalCostProperty().asObject());
-        statusColumn.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
 
         // Load customer bookings
         loadCustomerBookings();
@@ -130,11 +155,7 @@ public class CustomerDashboardController {
             return;
         }
 
-        // Check if booking is already cancelled
-        if (selectedBooking.getStatus() == BookingStatus.CANCELED) {
-            showAlert(Alert.AlertType.WARNING, "Already Cancelled", "This booking has already been cancelled.");
-            return;
-        }
+        // Status check removed
 
         // Show confirmation dialog
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);

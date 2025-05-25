@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+
+<DialogPane fx:controller="com.group4.controllers.BookingConfirmationController"
+    xmlns:fx="http://javafx.com/fxml"
+    stylesheets="@../css/styles.css">
+
+    <!-- Dialog Header -->
+    <header>
+        <VBox spacing="10">
+            <Text styleClass="dialog-title" text="Confirm Booking" />
+            <Separator />
+        </VBox>
+    </header>
+
+    <!-- Dialog Content -->
+    <content>
+        <VBox spacing="15" styleClass="dialog-content">
+            <!-- Booking Details Section -->
+            <VBox spacing="10" styleClass="booking-details">
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="NEVER" halignment="RIGHT" />
+                        <ColumnConstraints hgrow="ALWAYS" halignment="LEFT" />
+                    </columnConstraints>
+
+                    <!-- Hall Name -->
+                    <Label text="Hall:" styleClass="dialog-label" GridPane.rowIndex="0"
+                        GridPane.columnIndex="0" />
+                    <Label fx:id="hallNameLabel" styleClass="dialog-value" GridPane.rowIndex="0"
+                        GridPane.columnIndex="1" />
+
+                    <!-- Booking Date -->
+                    <Label text="Date:" styleClass="dialog-label" GridPane.rowIndex="1"
+                        GridPane.columnIndex="0" />
+                    <DatePicker fx:id="bookingDatePicker" styleClass="dialog-control" 
+                        GridPane.rowIndex="1" GridPane.columnIndex="1" />
+
+                    <!-- Start Time -->
+                    <Label text="Start Time:" styleClass="dialog-label" GridPane.rowIndex="2"
+                        GridPane.columnIndex="0" />
+                    <HBox spacing="5" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                        <ComboBox fx:id="startHourComboBox" prefWidth="80" promptText="Hour" />
+                        <ComboBox fx:id="startMinuteComboBox" prefWidth="80" promptText="Minute" />
+                        <ComboBox fx:id="startAmPmComboBox" prefWidth="80" promptText="AM/PM" />
+                    </HBox>
+                    
+                    <!-- End Time -->
+                    <Label text="End Time:" styleClass="dialog-label" GridPane.rowIndex="3"
+                        GridPane.columnIndex="0" />
+                    <HBox spacing="5" GridPane.rowIndex="3" GridPane.columnIndex="1">
+                        <ComboBox fx:id="endHourComboBox" prefWidth="80" promptText="Hour" />
+                        <ComboBox fx:id="endMinuteComboBox" prefWidth="80" promptText="Minute" />
+                        <ComboBox fx:id="endAmPmComboBox" prefWidth="80" promptText="AM/PM" />
+                    </HBox>
+
+                    <!-- Duration -->
+                    <Label text="Duration:" styleClass="dialog-label" GridPane.rowIndex="4"
+                        GridPane.columnIndex="0" />
+                    <Label fx:id="durationLabel" styleClass="dialog-value" GridPane.rowIndex="4"
+                        GridPane.columnIndex="1" />
+
+                    <!-- Total Cost -->
+                    <Label text="Total Cost:" styleClass="dialog-label" GridPane.rowIndex="5"
+                        GridPane.columnIndex="0" />
+                    <Label fx:id="costLabel" styleClass="dialog-value dialog-amount"
+                        GridPane.rowIndex="5" GridPane.columnIndex="1" />
+                </GridPane>
+            </VBox>
+
+            <Separator styleClass="section-separator" />
+
+            <!-- Special Requests Section -->
+            <VBox spacing="5" styleClass="special-requests">
+                <Label text="Additional Requirements" styleClass="dialog-section-title" />
+                <TextArea fx:id="specialRequests"
+                    styleClass="dialog-text-area"
+                    promptText="Any special requirements or notes..."
+                    wrapText="true"
+                    prefRowCount="3" />
+            </VBox>
+        </VBox>
+    </content>
+
+    <!-- Use standard button types without customization in FXML -->
+    <buttonTypes>
+        <ButtonType fx:constant="OK" />
+        <ButtonType fx:constant="CANCEL" />
+    </buttonTypes>
+</DialogPane>

@@ -66,7 +66,6 @@
                       <TableColumn fx:id="startDateTimeColumn" prefWidth="150.0" text="Start Date &amp; Time" />
                       <TableColumn fx:id="endDateTimeColumn" prefWidth="150.0" text="End Date &amp; Time" />
                       <TableColumn fx:id="totalCostColumn" prefWidth="100.0" text="Total Cost" />
-                      <TableColumn fx:id="statusColumn" prefWidth="100.0" text="Status" />
                     </columns>
                   </TableView>
                   <Button fx:id="cancelBookingButton" mnemonicParsing="false" onAction="#handleCancelBooking" prefHeight="40.0" prefWidth="180.0" text="Cancel Selected Booking">
