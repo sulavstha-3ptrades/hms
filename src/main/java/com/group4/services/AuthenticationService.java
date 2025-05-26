@@ -43,7 +43,7 @@ public class AuthenticationService {
                     if (user != null) {
                         LOGGER.fine("User parsed: " + user.getEmail() + ", status: " + user.getStatus());
 
-                        if (user.getEmail().equals(email) && user.getStatus().equals("ACTIVE")) {
+                        if (user.getEmail().equalsIgnoreCase(email) && user.getStatus().equalsIgnoreCase("ACTIVE")) {
                             LOGGER.info("Found matching user: " + user.getEmail());
                             LOGGER.info("Stored password hash: " + user.getPassword());
 

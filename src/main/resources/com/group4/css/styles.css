@@ -1,7 +1,8 @@
 /* Global Styles */
 .root {
-    -fx-font-family: "Roboto", sans-serif;
-    -fx-background-color: white;
+    -fx-font-family: 'Roboto', sans-serif;
+    -fx-background-color: #f5f5f5;
+    -fx-cursor: default;
 }
 
 /* Button Styles */
@@ -12,10 +13,16 @@
     -fx-padding: 10px;
     -fx-background-radius: 3px;
     -fx-cursor: hand;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 2, 2);
 }
 
 .button:hover {
-    -fx-background-color: #3498db;
+    -fx-background-color: #2980b9;
+}
+
+.button:pressed {
+    -fx-background-color: #2472a4;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 3, 3);
 }
 
 /* Text Field Styles */
@@ -39,6 +46,27 @@
 
 .combo-box:focused {
     -fx-border-color: #3498db;
+}
+
+/* Toast Notifications */
+.toast {
+    -fx-padding: 15px;
+    -fx-background-radius: 5px;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 10, 0, 0, 2);
+}
+
+.success-toast {
+    -fx-background-color: #4CAF50;
+}
+
+.error-toast {
+    -fx-background-color: #f44336;
+}
+
+.info-toast {
+    -fx-background-color: #2196F3;
 }
 
 /* Label Styles */
@@ -66,6 +94,167 @@
 
 .link-button:hover {
     -fx-text-fill: #3498db;
-    -fx-background-color: transparent;
     -fx-underline: true;
-} 
+}
+
+/* Profile Section Styles */
+.profile-section {
+    -fx-cursor: hand;
+    -fx-padding: 10px;
+    -fx-background-radius: 5px;
+}
+
+.profile-section:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Edit Profile Form Styles */
+.edit-profile-container {
+    -fx-padding: 0;
+    -fx-background-color: #f5f7fa;
+    -fx-spacing: 10px;
+}
+
+.form-container {
+    -fx-background-color: white;
+    -fx-padding: 35px 40px;
+    -fx-background-radius: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 15, 0, 0, 5);
+    -fx-min-width: 500px;
+    -fx-max-width: 700px;
+    -fx-spacing: 25px;
+    -fx-border-color: #e9ecef;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-vgap: 15px;
+    -fx-hgap: 15px;
+}
+
+.title-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a237e;
+    -fx-padding: 0 0 25px 0;
+    -fx-font-family: 'Roboto', sans-serif;
+}
+
+.form-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #4a4a4a;
+    -fx-padding: 5px 0 8px 3px;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Roboto', sans-serif;
+}
+
+.form-field {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 6px;
+    -fx-padding: 12px 15px;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+    -fx-font-family: 'Roboto', sans-serif;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.02), 3, 0, 0, 1);
+}
+
+.form-field:focused {
+    -fx-border-color: #3f51b5;
+    -fx-effect: dropshadow(gaussian, rgba(63,81,181,0.15), 8, 0, 0, 3);
+}
+
+.form-field:hover {
+    -fx-border-color: #9fa8da;
+}
+
+.profile-image-container {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 2, 4);
+    -fx-background-radius: 50%;
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.password-section {
+    -fx-padding: 20px;
+    -fx-background-color: #f8f9ff;
+    -fx-background-radius: 10px;
+    -fx-border-color: #e8eaf6;
+    -fx-border-width: 1px;
+    -fx-border-radius: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(63,81,181,0.05), 5, 0, 0, 2);
+    -fx-transition: all 0.3s ease;
+}
+
+.password-section .title {
+    -fx-text-fill: #3f51b5;
+    -fx-font-weight: 600;
+}
+
+.password-section .arrow {
+    fill: #3f51b5;
+    -fx-fill: #3f51b5;
+}
+
+.button-bar {
+    padding: 25px 0 0 0;
+    -fx-padding: 25px 0 0 0;
+    spacing: 15px;
+    -fx-spacing: 15px;
+    alignment: CENTER;
+    -fx-alignment: CENTER;
+}
+
+.primary-button {
+    -fx-background-color: #3f51b5;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-padding: 12px 30px;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-effect: dropshadow(gaussian, rgba(63,81,181,0.2), 8, 0, 2, 3);
+    -fx-font-family: 'Roboto', sans-serif;
+    -fx-min-width: 160px;
+}
+
+.primary-button:hover {
+    -fx-background-color: #303f9f;
+    -fx-effect: dropshadow(gaussian, rgba(63,81,181,0.3), 10, 0, 3, 5);
+}
+
+.primary-button:pressed {
+    -fx-translate-y: 1px;
+    -fx-effect: dropshadow(gaussian, rgba(63,81,181,0.2), 5, 0, 1, 2);
+}
+
+.secondary-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #5c6bc0;
+    -fx-border-color: #5c6bc0;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 6px;
+    -fx-padding: 10px 30px;
+    -fx-font-weight: 500;
+    -fx-cursor: hand;
+    -fx-transition: all 0.2s ease;
+    -fx-min-width: 160px;
+}
+
+.secondary-button:hover {
+    -fx-background-color: #f8f9fa;
+    -fx-text-fill: #2c3e50;
+}
+
+.error-message {
+    -fx-text-fill: #e53935;
+    -fx-font-size: 13px;
+    -fx-padding: 10px 15px;
+    -fx-background-color: #ffebee;
+    -fx-background-radius: 6px;
+    -fx-border-color: #ffcdd2;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-max-width: 100%;
+    -fx-wrap-text: true;
+    -fx-alignment: CENTER;
+}

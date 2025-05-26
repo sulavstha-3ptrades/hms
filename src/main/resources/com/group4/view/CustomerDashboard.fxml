@@ -11,14 +11,30 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.layout.Priority?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group4.controllers.CustomerDashboardController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" stylesheets="../../css/styles.css" xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group4.controllers.CustomerDashboardController">
    <top>
-      <HBox style="-fx-background-color: #2e86c1;" BorderPane.alignment="CENTER" alignment="CENTER" minHeight="100.0">
+      <HBox style="-fx-background-color: #2e86c1;" BorderPane.alignment="CENTER" alignment="CENTER_LEFT" minHeight="100.0" spacing="20">
          <padding>
             <Insets bottom="15.0" left="25.0" right="25.0" top="15.0" />
          </padding>
          <children>
+            <!-- User Profile Section - Clickable -->
+            <HBox alignment="CENTER_LEFT" spacing="10" onMouseClicked="#handleProfileSectionClick" styleClass="profile-section">
+               <ImageView fx:id="profileImageView" fitHeight="60.0" fitWidth="60.0" pickOnBounds="true" preserveRatio="true">
+                  <image>
+                     <Image url="@../../../../../images/default-avatar.jpg" />
+                  </image>
+               </ImageView>
+               <VBox alignment="CENTER_LEFT" spacing="2">
+                  <Label fx:id="userNameLabel" style="-fx-text-fill: white; -fx-font-weight: bold;" text="Loading..." />
+                  <Label fx:id="userRoleLabel" style="-fx-text-fill: #e0e0e0; -fx-font-size: 12px;" text="Loading..." />
+               </VBox>
+            </HBox>
+            
             <HBox alignment="CENTER" HBox.hgrow="ALWAYS">
                <children>
                   <VBox alignment="CENTER">
@@ -39,7 +55,7 @@
             </HBox>
             <HBox alignment="CENTER_RIGHT">
                <children>
-                  <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#handleLogout" prefHeight="35.0" prefWidth="100.0" style="-fx-background-color: #e74c3c;" text="Logout" textFill="WHITE">
+                  <Button fx:id="logoutButton" mnemonicParsing="false" onAction="#handleLogout" prefHeight="35.0" prefWidth="100.0" style="-fx-background-color: #e74c3c; -fx-background-radius: 5;" text="Logout" textFill="WHITE">
                      <font>
                         <Font size="14.0" />
                      </font>
@@ -85,6 +101,11 @@
           <Tab fx:id="bookHallTab" text="Book a Hall">
             <content>
               <fx:include source="HallBooking.fxml" />
+            </content>
+          </Tab>
+          <Tab fx:id="myProfileTab" text="My Profile">
+            <content>
+              <fx:include source="ProfileView.fxml" />
             </content>
           </Tab>
         </tabs>

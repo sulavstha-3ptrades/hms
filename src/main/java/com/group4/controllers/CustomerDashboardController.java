@@ -20,7 +20,11 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import com.group4.utils.ViewManager;
+import com.group4.models.User;
+import javafx.scene.control.Label;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -39,6 +43,9 @@ public class CustomerDashboardController {
 
     @FXML
     private Tab bookHallTab;
+    
+    @FXML
+    private Tab myProfileTab;
 
     @FXML
     private Button logoutButton;
@@ -48,6 +55,15 @@ public class CustomerDashboardController {
 
     @FXML
     private TableColumn<Booking, String> bookingIdColumn;
+    
+    @FXML
+    private ImageView profileImageView;
+    
+    @FXML
+    private Label userNameLabel;
+    
+    @FXML
+    private Label userRoleLabel;
 
     @FXML
     private TableColumn<Booking, String> hallIdColumn;
@@ -78,6 +94,11 @@ public class CustomerDashboardController {
      */
     @FXML
     public void initialize() {
+        // Load and display current user information
+        loadCurrentUserInfo();
+        
+        // Set up the profile image view
+        setupProfileImageView();
         bookingService = new BookingService();
 
         // Initialize table columns
@@ -118,6 +139,77 @@ public class CustomerDashboardController {
     }
 
     /**
+     * Loads and displays the current user's information in the header.
+     */
+    private void loadCurrentUserInfo() {
+        try {
+            // Get the current user from the session
+            User currentUser = SessionManager.getInstance().getCurrentUser();
+            if (currentUser != null) {
+                // Set user name and role
+                userNameLabel.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
+                userRoleLabel.setText(currentUser.getRole());
+                
+                // Load profile picture
+                try {
+                    String profilePicPath = currentUser.getProfilePicture();
+                    // Load image from classpath
+                    Image profileImage = new Image(
+                        getClass().getResourceAsStream(profilePicPath),
+                        60, 60, true, true
+                    );
+                    profileImageView.setImage(profileImage);
+                } catch (Exception e) {
+                    System.err.println("Error loading profile image: " + e.getMessage());
+                    // Fall back to default avatar
+                    loadDefaultAvatar();
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error loading user info: " + e.getMessage());
+            e.printStackTrace();
+            loadDefaultAvatar();
+        }
+    }
+    
+    /**
+     * Loads the default avatar image.
+     */
+    private void loadDefaultAvatar() {
+        try {
+            Image defaultAvatar = new Image(
+                getClass().getResourceAsStream("/com/group4/assets/images/users/default-avatar.jpg"),
+                60, 60, true, true
+            );
+            profileImageView.setImage(defaultAvatar);
+        } catch (Exception e) {
+            System.err.println("Error loading default avatar: " + e.getMessage());
+            // If we can't load the default avatar, set a blank image to avoid NPE
+            profileImageView.setImage(null);
+        }
+    }
+    
+    /**
+     * Sets up the profile image view with a circular mask and click handler.
+     */
+    private void setupProfileImageView() {
+        // Make the image view circular
+        profileImageView.setClip(new javafx.scene.shape.Circle(30, 30, 30));
+        
+        // Add hover effect
+        profileImageView.setOnMouseEntered(e -> {
+            profileImageView.setStyle("-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.8), 10, 0, 0, 0);");
+        });
+        
+        profileImageView.setOnMouseExited(e -> {
+            profileImageView.setStyle("-fx-effect: null;");
+        });
+        
+        // Add click handler to open profile
+        profileImageView.setOnMouseClicked(e -> handleProfileSectionClick());
+    }
+
+    /**
      * Loads bookings for the current customer.
      */
     private void loadCustomerBookings() {
@@ -143,41 +235,53 @@ public class CustomerDashboardController {
     private void handleViewBookings() {
         loadCustomerBookings();
     }
-
+    
     /**
      * Handles the cancel booking button click.
      */
     @FXML
     private void handleCancelBooking() {
+        // Get the selected booking
         Booking selectedBooking = bookingsTable.getSelectionModel().getSelectedItem();
         if (selectedBooking == null) {
             showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a booking to cancel.");
             return;
         }
 
-        // Status check removed
-
         // Show confirmation dialog
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Cancel Booking");
         confirm.setHeaderText("Are you sure you want to cancel this booking?");
-        confirm.setContentText(
-                "Cancellation policy: Bookings can only be cancelled if they are more than 3 days before the start date.");
+        confirm.setContentText("This action cannot be undone.");
 
-        if (confirm.showAndWait().get() == ButtonType.OK) {
-            TaskUtils.executeTaskWithProgress(
+        confirm.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.OK) {
+                TaskUtils.executeTaskWithProgress(
                     bookingService.cancelBooking(selectedBooking.getBookingId()),
                     success -> {
                         if (success) {
                             showAlert(Alert.AlertType.INFORMATION, "Success", "Booking cancelled successfully.");
                             loadCustomerBookings(); // Refresh the list
                         } else {
-                            showAlert(Alert.AlertType.ERROR, "Error",
-                                    "Could not cancel booking. Ensure it's more than 3 days before the start date.");
+                            showAlert(Alert.AlertType.ERROR, "Error", "Could not cancel booking. Please try again later.");
                         }
                     },
-                    error -> showAlert(Alert.AlertType.ERROR, "Error",
-                            "Failed to cancel booking: " + error.getMessage()));
+                    error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to cancel booking: " + error.getMessage())
+                );
+            }
+        });
+    }
+    
+    /**
+     * Handles the click event on the profile section in the header.
+     * Navigates to the profile tab.
+     */
+    @FXML
+    private void handleProfileSectionClick() {
+        if (myProfileTab != null) {
+            mainTabPane.getSelectionModel().select(myProfileTab);
+        } else {
+            System.err.println("Profile tab is not initialized");
         }
     }
 
