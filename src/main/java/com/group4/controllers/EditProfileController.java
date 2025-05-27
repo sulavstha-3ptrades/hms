@@ -14,10 +14,12 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
-import javafx.stage.Window;
 import java.io.*;
-import java.nio.file.*;
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.regex.Pattern;
 
 /**
@@ -42,6 +44,8 @@ public class EditProfileController {
     private PasswordField confirmPasswordField;
     @FXML
     private ImageView profileImageView;
+    @FXML
+    private ProgressIndicator imageProgress;
     @FXML
     private Label errorLabel;
     @FXML
@@ -76,6 +80,9 @@ public class EditProfileController {
             passwordField.setDisable(disable);
             confirmPasswordField.setDisable(disable);
         });
+        
+        // Make current password field required
+        currentPasswordField.getStyleClass().add("required-field");
     }
 
     /**
@@ -102,7 +109,7 @@ public class EditProfileController {
             loadProfileImage();
         }
     }
-    
+
     /**
      * Loads the profile image, falling back to default if needed
      */
@@ -110,7 +117,7 @@ public class EditProfileController {
         try {
             String imagePath = currentUser.getProfilePicture();
             Image profileImage = null;
-            
+
             // Try to load the user's profile image if it exists
             if (imagePath != null && !imagePath.trim().isEmpty()) {
                 try {
@@ -122,7 +129,7 @@ public class EditProfileController {
                         // Try as a relative path
                         profileImage = new Image(getClass().getResourceAsStream("/" + imagePath));
                     }
-                    
+
                     // If loading as resource failed, try as a file
                     if (profileImage == null || profileImage.isError()) {
                         File imageFile = new File(imagePath);
@@ -134,7 +141,7 @@ public class EditProfileController {
                     System.err.println("Error loading profile image from path " + imagePath + ": " + e.getMessage());
                 }
             }
-            
+
             // If we still don't have an image, load the default
             if (profileImage == null || profileImage.isError()) {
                 profileImage = loadDefaultImage();
@@ -143,7 +150,7 @@ public class EditProfileController {
                     currentUser.setProfilePicture("/com/group4/assets/images/users/default-avatar.jpg");
                 }
             }
-            
+
             // Set the image in the view
             if (profileImage != null) {
                 profileImageView.setImage(profileImage);
@@ -162,6 +169,18 @@ public class EditProfileController {
      * @return true if validation passes, false otherwise
      */
     private boolean validateInput() {
+        // Check if current password is provided
+        if (currentPasswordField.getText().trim().isEmpty()) {
+            showError("Current password is required to make any changes");
+            return false;
+        }
+        
+        // Verify current password
+        if (!userService.verifyPassword(currentUser.getUserId(), currentPasswordField.getText().trim())) {
+            showError("Current password is incorrect");
+            return false;
+        }
+
         // Basic field validation
         if (firstNameField.getText().trim().isEmpty() ||
                 lastNameField.getText().trim().isEmpty() ||
@@ -183,16 +202,10 @@ public class EditProfileController {
             return false;
         }
 
-        // Password change validation (only if current password is provided)
-        if (!currentPasswordField.getText().trim().isEmpty()) {
+        // Password change validation
+        if (!passwordField.getText().trim().isEmpty()) {
             String newPassword = passwordField.getText().trim();
             String confirmPassword = confirmPasswordField.getText().trim();
-
-            // Verify current password
-            if (!userService.verifyPassword(currentUser.getUserId(), currentPasswordField.getText().trim())) {
-                showError("Current password is incorrect");
-                return false;
-            }
 
             if (newPassword.isEmpty() || confirmPassword.isEmpty()) {
                 showError("Please fill in all password fields");
@@ -275,7 +288,7 @@ public class EditProfileController {
                         + getFileExtension(file);
                 String relativePath = "images/users/" + fileName;
                 File destFile = new File(usersDir, fileName);
-                
+
                 // Copy the file
                 Files.copy(file.toPath(), destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 
@@ -294,14 +307,28 @@ public class EditProfileController {
     }
 
     /**
+     * Validates an image file
+     */
+    private boolean validateImageFile(File file) {
+        if (file == null) {
+            return false;
+        }
+        String name = file.getName().toLowerCase();
+        return name.endsWith(".png") || name.endsWith(".jpg") || 
+               name.endsWith(".jpeg") || name.endsWith(".gif");
+    }
+
+    // Image compression methods removed as they're not used in the current implementation
+    
+    /**
      * Gets the file extension from a file
      */
     private String getFileExtension(File file) {
         String name = file.getName();
         int lastDot = name.lastIndexOf('.');
-        return lastDot == -1 ? "" : name.substring(lastDot + 1);
+        return lastDot == -1 ? "" : name.substring(lastDot + 1).toLowerCase();
     }
-    
+
     /**
      * Loads the default profile image
      */
@@ -314,7 +341,8 @@ public class EditProfileController {
                 return new Image(defaultImageStream);
             } else {
                 // Fallback to file system if not found in resources
-                File defaultImageFile = new File("src/main/resources/com/group4/assets/images/users/default-avatar.jpg");
+                File defaultImageFile = new File(
+                        "src/main/resources/com/group4/assets/images/users/default-avatar.jpg");
                 if (defaultImageFile.exists()) {
                     return new Image(defaultImageFile.toURI().toString());
                 }
@@ -342,44 +370,95 @@ public class EditProfileController {
         }
 
         try {
-            // Update user details
-            currentUser.setFirstName(firstNameField.getText().trim());
-            currentUser.setLastName(lastNameField.getText().trim());
-            currentUser.setEmail(emailField.getText().trim());
-            currentUser.setContactNumber(contactNumberField.getText().trim());
-
-            // Update password if changed
-            if (!currentPasswordField.getText().trim().isEmpty()) {
-                currentUser.setPassword(passwordField.getText().trim());
-            }
-
-            // Update profile picture if changed, otherwise keep the existing one
-            if (tempProfileImagePath != null && !tempProfileImagePath.isEmpty()) {
-                currentUser.setProfilePicture(tempProfileImagePath);
-            } else if (currentUser.getProfilePicture() == null || currentUser.getProfilePicture().trim().isEmpty()) {
-                // If no image was selected and there's no existing image, set the default
-                currentUser.setProfilePicture("/com/group4/assets/images/users/default-avatar.jpg");
-            }
-
-            // Save to database
-            boolean success = userService.updateUser(currentUser);
-            if (success) {
-                showToast("Profile updated successfully!", "success-toast");
-                // Close the window after a short delay to show the toast
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(1500);
-                        Platform.runLater(this::closeWindow);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+            // Show progress indicator
+            imageProgress.setVisible(true);
+            imageProgress.setProgress(-1); // Indeterminate progress
+            
+            // Save in background to avoid UI freeze
+            new Thread(() -> {
+                try {
+                    // Update user details
+                    Platform.runLater(() -> {
+                        currentUser.setFirstName(firstNameField.getText().trim());
+                        currentUser.setLastName(lastNameField.getText().trim());
+                        currentUser.setEmail(emailField.getText().trim());
+                        currentUser.setContactNumber(contactNumberField.getText().trim());
+                        
+                        // Update password if changed
+                        if (!currentPasswordField.getText().trim().isEmpty()) {
+                            currentUser.setPassword(passwordField.getText().trim());
+                        }
+                    });
+                    
+                    // Handle profile picture if changed
+                    if (tempProfileImagePath != null && !tempProfileImagePath.isEmpty()) {
+                        File tempImageFile = new File(tempProfileImagePath);
+                        if (tempImageFile.exists()) {
+                            // This is a temporary file from compression, move it to the user's directory
+                            File usersDir = new File("src/main/resources/com/group4/assets/images/users/");
+                            if (!usersDir.exists()) {
+                                usersDir.mkdirs();
+                            }
+                            
+                            // Generate unique filename
+                            String fileName = "user_" + currentUser.getUserId() + "_" + 
+                                           System.currentTimeMillis() + "." + 
+                                           getFileExtension(tempImageFile);
+                            
+                            File destFile = new File(usersDir, fileName);
+                            
+                            // Copy the file
+                            Files.copy(tempImageFile.toPath(), destFile.toPath(), 
+                                     StandardCopyOption.REPLACE_EXISTING);
+                            
+                            // Update the profile picture path
+                            String relativePath = "/com/group4/assets/images/users/" + fileName;
+                            currentUser.setProfilePicture(relativePath);
+                            
+                            // Delete the temp file
+                            tempImageFile.delete();
+                        }
+                    } else if (currentUser.getProfilePicture() == null || 
+                              currentUser.getProfilePicture().trim().isEmpty()) {
+                        // If no image was selected and there's no existing image, set the default
+                        currentUser.setProfilePicture("/com/group4/assets/images/users/default-avatar.jpg");
                     }
-                }).start();
-            } else {
-                showToast("Failed to update profile. Please try again.", "error-toast");
-            }
+
+                    // Save to database
+                    boolean success = userService.updateUser(currentUser);
+                    
+                    // Update UI on the JavaFX Application Thread
+                    Platform.runLater(() -> {
+                        imageProgress.setVisible(false);
+                        
+                        if (success) {
+                            showToast("Profile updated successfully!", "success-toast");
+                            // Close the window after a short delay to show the toast
+                            new Thread(() -> {
+                                try {
+                                    Thread.sleep(1500);
+                                    Platform.runLater(this::closeWindow);
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }).start();
+                        } else {
+                            showToast("Failed to update profile. Please try again.", "error-toast");
+                        }
+                    });
+                    
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Platform.runLater(() -> {
+                        imageProgress.setVisible(false);
+                        showToast("An error occurred: " + e.getMessage(), "error-toast");
+                    });
+                }
+            }).start();
         } catch (Exception e) {
             e.printStackTrace();
-            showToast("An error occurred: " + e.getMessage(), "error-toast");
+            imageProgress.setVisible(false);
+            showError("Failed to start profile update: " + e.getMessage());
         }
     }
 
@@ -387,16 +466,93 @@ public class EditProfileController {
      * Closes the edit profile window
      */
     @FXML
+    private void updateProfilePicture() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Select Profile Picture");
+        fileChooser.getExtensionFilters().addAll(
+            new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
+        );
+        
+        File selectedFile = fileChooser.showOpenDialog(profileImageView.getScene().getWindow());
+        if (selectedFile != null) {
+            try {
+                if (!validateImageFile(selectedFile)) {
+                    showError("Invalid image file. Please select a valid image file (PNG, JPG, JPEG, GIF).");
+                    return;
+                }
+                
+                // Show progress
+                imageProgress.setVisible(true);
+                imageProgress.setProgress(-1);
+                
+                // Process image in background
+                new Thread(() -> {
+                    try {
+                        // Compress the image
+                        File compressedFile = File.createTempFile("img_", ".png");
+                        ImageIO.write(ImageIO.read(selectedFile), "png", compressedFile);
+                        
+                        // Update the UI on the JavaFX Application Thread
+                        Platform.runLater(() -> {
+                            try {
+                                // Update the temp profile image path
+                                tempProfileImagePath = compressedFile.getAbsolutePath();
+                                
+                                // Update the image view
+                                Image newImage = new Image(compressedFile.toURI().toString());
+                                profileImageView.setImage(newImage);
+                                
+                                // Hide progress
+                                imageProgress.setVisible(false);
+                                
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                showError("Error updating profile picture: " + e.getMessage());
+                                imageProgress.setVisible(false);
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        Platform.runLater(() -> {
+                            showError("Error processing image: " + e.getMessage());
+                            imageProgress.setVisible(false);
+                        });
+                    }
+                }).start();
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                showError("Error loading image: " + e.getMessage());
+                imageProgress.setVisible(false);
+            }
+        }
+    }
+    
+    @FXML
+    private void removeProfilePicture() {
+        // Set to default image
+        Image defaultImage = loadDefaultImage();
+        if (defaultImage != null) {
+            profileImageView.setImage(defaultImage);
+            tempProfileImagePath = null;
+            currentUser.setProfilePicture("/com/group4/assets/images/users/default-avatar.jpg");
+            showToast("Profile picture removed", "success-toast");
+        } else {
+            showError("Could not load default profile picture");
+        }
+    }
+    
+    @FXML
     private void closeWindow() {
         Stage stage = (Stage) cancelButton.getScene().getWindow();
         stage.close();
     }
-    
+
     /**
      * Shows a toast message to the user.
      * 
      * @param message The message to display
-     * @param type The type of toast (success-toast, error-toast, etc.)
+     * @param type    The type of toast (success-toast, error-toast, etc.)
      */
     private void showToast(String message, String type) {
         // Create a new stage for the toast
@@ -404,43 +560,42 @@ public class EditProfileController {
         toastStage.initOwner(profileImageView.getScene().getWindow());
         toastStage.setResizable(false);
         toastStage.initStyle(StageStyle.TRANSPARENT);
-        
+
         // Create and style the label
         Label toastLabel = new Label(message);
         toastLabel.getStyleClass().addAll("toast", type);
-        
+
         // Create the scene with a transparent background
         StackPane root = new StackPane(toastLabel);
         root.setStyle("-fx-background-color: transparent;");
         Scene scene = new Scene(root);
-        
+
         // Apply the stylesheet
         try {
             scene.getStylesheets().add(getClass().getResource("/com/group4/css/styles.css").toExternalForm());
         } catch (Exception e) {
             // Fallback to inline styles if stylesheet loading fails
             toastLabel.setStyle(
-                "-fx-padding: 15px;" +
-                "-fx-background-radius: 5;" +
-                "-fx-background-color: " + (type.equals("error-toast") ? "#ff4444" : "#4CAF50") + ";" +
-                "-fx-text-fill: white;" +
-                "-fx-font-size: 14px;"
-            );
+                    "-fx-padding: 15px;" +
+                            "-fx-background-radius: 5;" +
+                            "-fx-background-color: " + (type.equals("error-toast") ? "#ff4444" : "#4CAF50") + ";" +
+                            "-fx-text-fill: white;" +
+                            "-fx-font-size: 14px;");
         }
-        
+
         toastStage.setScene(scene);
-        
+
         // Position the toast at the bottom center of the window
         Window window = profileImageView.getScene().getWindow();
         double centerX = window.getX() + (window.getWidth() / 2) - 150;
         double bottomY = window.getY() + window.getHeight() - 100;
-        
+
         toastStage.setX(centerX);
         toastStage.setY(bottomY);
-        
+
         // Show the toast
         toastStage.show();
-        
+
         // Auto-close the toast after 3 seconds
         new Thread(() -> {
             try {

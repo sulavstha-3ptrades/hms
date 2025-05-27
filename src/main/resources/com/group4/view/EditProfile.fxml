@@ -17,17 +17,25 @@
             <!-- Profile Picture Section -->
             <VBox alignment="CENTER" spacing="15">
                <StackPane styleClass="profile-image-container">
-                  <ImageView fx:id="profileImageView" fitHeight="200" fitWidth="200" 
-                     styleClass="profile-image" preserveRatio="true" smooth="true" 
-                     pickOnBounds="true" onMouseClicked="#changeProfilePicture">
+                  <ImageView fx:id="profileImageView" fitHeight="200" fitWidth="200"
+                     styleClass="profile-image" preserveRatio="true" smooth="true"
+                     pickOnBounds="false">
                      <image>
                         <Image url="@../images/default-avatar.png" backgroundLoading="true" />
                      </image>
                      <StackPane.margin>
-                        <Insets top="0" right="0" bottom="0" left="0"/>
+                        <Insets top="0" right="0" bottom="0" left="0" />
                      </StackPane.margin>
                   </ImageView>
+                  <ProgressIndicator fx:id="imageProgress" visible="false"
+                     styleClass="image-progress" />
                </StackPane>
+               <VBox alignment="CENTER" spacing="5">
+                  <Hyperlink text="Update Profile Picture" styleClass="profile-link"
+                     onAction="#updateProfilePicture" />
+                  <Hyperlink text="Delete Profile Picture" styleClass="delete-link"
+                     onAction="#removeProfilePicture" />
+               </VBox>
             </VBox>
 
             <!-- User Details Form -->
@@ -38,6 +46,9 @@
                      <ColumnConstraints hgrow="ALWAYS" minWidth="250" prefWidth="350" />
                   </columnConstraints>
                   <rowConstraints>
+                     <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
+                     <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
+                     <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
                      <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
@@ -65,37 +76,24 @@
                   <TextField fx:id="contactNumberField" styleClass="form-field"
                      GridPane.rowIndex="3" GridPane.columnIndex="1" />
 
-                  <!-- Password Update Section (Collapsible) -->
-                  <TitledPane text="Change Password" collapsible="true" animated="true"
-                     expanded="false" styleClass="password-section" GridPane.columnSpan="2"
-                     GridPane.rowIndex="4">
-                     <GridPane hgap="20" vgap="15">
-                        <columnConstraints>
-                           <ColumnConstraints hgrow="NEVER" minWidth="150" prefWidth="200" />
-                           <ColumnConstraints hgrow="ALWAYS" minWidth="250" prefWidth="350" />
-                        </columnConstraints>
-                        <rowConstraints>
-                           <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
-                           <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
-                           <RowConstraints minHeight="40" prefHeight="40" vgrow="SOMETIMES" />
-                        </rowConstraints>
+                  <!-- Password Update Section -->
+                  <Label text="Current Password" styleClass="form-label" GridPane.rowIndex="4"
+                     GridPane.columnIndex="0" />
+                  <PasswordField fx:id="currentPasswordField" styleClass="form-field"
+                     GridPane.rowIndex="4" GridPane.columnIndex="1"
+                     promptText="Enter current password" disable="false" editable="true" />
 
-                        <Label text="Current Password" styleClass="form-label" GridPane.rowIndex="0"
-                           GridPane.columnIndex="0" />
-                        <PasswordField fx:id="currentPasswordField" styleClass="form-field"
-                           GridPane.rowIndex="0" GridPane.columnIndex="1" />
+                  <Label text="New Password" styleClass="form-label" GridPane.rowIndex="5"
+                     GridPane.columnIndex="0" />
+                  <PasswordField fx:id="passwordField" styleClass="form-field"
+                     GridPane.rowIndex="5" GridPane.columnIndex="1" promptText="Enter new password"
+                     disable="false" editable="true" />
 
-                        <Label text="New Password" styleClass="form-label" GridPane.rowIndex="1"
-                           GridPane.columnIndex="0" />
-                        <PasswordField fx:id="passwordField" styleClass="form-field"
-                           GridPane.rowIndex="1" GridPane.columnIndex="1" />
-
-                        <Label text="Confirm Password" styleClass="form-label" GridPane.rowIndex="2"
-                           GridPane.columnIndex="0" />
-                        <PasswordField fx:id="confirmPasswordField" styleClass="form-field"
-                           GridPane.rowIndex="2" GridPane.columnIndex="1" />
-                     </GridPane>
-                  </TitledPane>
+                  <Label text="Confirm Password" styleClass="form-label" GridPane.rowIndex="6"
+                     GridPane.columnIndex="0" />
+                  <PasswordField fx:id="confirmPasswordField" styleClass="form-field"
+                     GridPane.rowIndex="6" GridPane.columnIndex="1" promptText="Confirm new password"
+                     disable="false" editable="true" />
                </GridPane>
 
                <!-- Action Buttons -->
@@ -106,10 +104,13 @@
                      text="Cancel" styleClass="secondary-button" />
                </HBox>
 
-               <Label fx:id="errorLabel" styleClass="error-message" visible="false" managed="false" />
+               <VBox alignment="CENTER" style="-fx-padding: 10 0 0 0;" fillWidth="true">
+                  <Label fx:id="errorLabel" styleClass="error-message" visible="false" managed="false" 
+                     wrapText="true" textAlignment="CENTER" 
+                     alignment="CENTER" maxWidth="500" />
+               </VBox>
             </VBox>
          </VBox>
       </ScrollPane>
    </center>
-
 </BorderPane>

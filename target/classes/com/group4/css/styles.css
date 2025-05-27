@@ -87,14 +87,22 @@
 /* Link Button Style */
 .link-button {
     -fx-background-color: transparent;
+    -fx-background-radius: 0;
     -fx-text-fill: #2e86c1;
     -fx-padding: 0;
     -fx-border-width: 0;
+    -fx-cursor: hand;
 }
 
 .link-button:hover {
+    -fx-background-color: transparent;
     -fx-text-fill: #3498db;
     -fx-underline: true;
+}
+
+.link-button:pressed {
+    -fx-background-color: transparent;
+    -fx-text-fill: #2e86c1;
 }
 
 /* Profile Section Styles */
@@ -248,13 +256,55 @@
 .error-message {
     -fx-text-fill: #e53935;
     -fx-font-size: 13px;
-    -fx-padding: 10px 15px;
+    -fx-padding: 12px 20px;
     -fx-background-color: #ffebee;
     -fx-background-radius: 6px;
     -fx-border-color: #ffcdd2;
     -fx-border-width: 1px;
     -fx-border-radius: 6px;
-    -fx-max-width: 100%;
+    -fx-max-width: 500px;
     -fx-wrap-text: true;
-    -fx-alignment: CENTER;
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+    -fx-content-display: center;
+}
+
+/* Profile Link Styles */
+.profile-link, .delete-link {
+    -fx-background-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 5px 0;
+    -fx-cursor: hand;
+    -fx-font-size: 14px;
+    -fx-text-fill: #2e86c1;
+    -fx-underline: false;
+    -fx-alignment: center;
+}
+
+.profile-link:hover, .delete-link:hover {
+    -fx-text-fill: #1a5276;
+    -fx-underline: true;
+}
+
+.delete-link {
+    -fx-text-fill: #e74c3c;
+}
+
+.delete-link:hover {
+    -fx-text-fill: #c0392b;
+}
+
+/* Required field styling */
+.required-field:empty {
+    -fx-border-color: #e74c3c;
+    -fx-border-width: 0 0 1 0;
+    border-color: #e74c3c;
+    border-width: 0 0 1px 0;
+}
+
+.required-field:filled {
+    -fx-border-color: #2ecc71;
+    -fx-border-width: 0 0 1 0;
+    border-color: #2ecc71;
+    border-width: 0 0 1px 0;
 }

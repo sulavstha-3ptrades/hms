@@ -23,7 +23,6 @@ com/group4/controllers/ProfileController.class
 com/group4/services/BookingService$1.class
 com/group4/services/IBookingService.class
 com/group4/utils/PasswordUtils.class
-module-info.class
 com/group4/services/HallService$2.class
 com/group4/TestApp.class
 com/group4/services/IssueService$5.class
@@ -44,6 +43,7 @@ com/group4/models/Issue.class
 com/group4/services/HallService$7.class
 com/group4/services/AuthenticationService$3.class
 com/group4/controllers/HallBookingController$1.class
+com/group4/services/PasswordResetService.class
 com/group4/services/AdminService.class
 com/group4/controllers/ManagerDashboardController.class
 com/group4/controllers/LoginController.class
@@ -62,6 +62,7 @@ com/group4/services/HallService.class
 com/group4/models/Availability.class
 com/group4/services/IssueService$6.class
 com/group4/App.class
+com/group4/controllers/ForgotPasswordController.class
 com/group4/utils/FileConstants.class
 com/group4/controllers/AvailabilityController$1.class
 com/group4/models/HallType.class

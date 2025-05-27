@@ -105,6 +105,20 @@ public class LoginController {
     }
 
     /**
+     * Handles the forgot password link click.
+     * Navigates to the forgot password screen.
+     */
+    @FXML
+    private void handleForgotPassword() {
+        try {
+            ViewManager.switchToView("com/group4/view/ForgotPassword.fxml");
+        } catch (IOException e) {
+            e.printStackTrace();
+            showError("Could not load forgot password screen: " + e.getMessage());
+        }
+    }
+    
+    /**
      * Handles the register button click.
      * Navigates to the registration screen.
      */

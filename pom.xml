@@ -20,6 +20,22 @@
     </properties>
 
     <dependencies>
+        <!-- JavaFX Dependencies -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.mindrot</groupId>
             <artifactId>jbcrypt</artifactId>
@@ -46,9 +62,21 @@
                     <mainClass>${main.class}</mainClass>
                     <options>
                         <option>--add-modules</option>
-                        <option>javafx.controls,javafx.fxml,javafx.graphics,javafx.base</option>
+                        <option>javafx.controls,javafx.fxml,javafx.graphics,javafx.base,javafx.swing</option>
+                        <option>--add-exports</option>
+                        <option>javafx.graphics/com.sun.javafx.application=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>java.base/java.lang=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>java.base/java.io=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>java.desktop/javax.imageio=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>java.desktop/com.sun.imageio.plugins.jpeg=ALL-UNNAMED</option>
                         <option>--add-opens</option>
                         <option>java.base/java.lang.reflect=ALL-UNNAMED</option>
+                        <option>--add-opens</option>
+                        <option>javafx.graphics/javafx.scene.image=ALL-UNNAMED</option>
                     </options>
                 </configuration>
                 <executions>

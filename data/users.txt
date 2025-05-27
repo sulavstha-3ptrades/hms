@@ -1,4 +1,4 @@
-USER-12345678|Admin|User|Admin|admin@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|1234567890|ACTIVE|/com/group4/assets/images/users/user_USER-12345678_1748289253368.png
+USER-12345678|Admin|User|Admin|admin@example.com|$2a$12$UBQRsy9napz05Hx9MRe5Q./gcjV1C98NuhGq3yxwXebTlKxhS0O.K|1234567890|ACTIVE|/com/group4/assets/images/users/user_USER-12345678_1748328640368.png
 USER-23456789|Manager|User|Manager|manager@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|2345678901|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
 USER-34567890|Scheduler|User|Scheduler|scheduler@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|3456789012|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
 USER-45678901|Customer|User|Customer|customer@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|4567890123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg

@@ -69,6 +69,26 @@ public class UserService {
         }
         return null;
     }
+
+    /**
+     * Retrieves a user by their email address.
+     *
+     * @param email The email address of the user to find
+     * @return The User object if found, null otherwise
+     */
+    public User getUserByEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return null;
+        }
+        
+        List<User> users = getAllUsers();
+        for (User user : users) {
+            if (email.equalsIgnoreCase(user.getEmail())) {
+                return user;
+            }
+        }
+        return null;
+    }
     
     /**
      * Retrieves all users from the data store.
