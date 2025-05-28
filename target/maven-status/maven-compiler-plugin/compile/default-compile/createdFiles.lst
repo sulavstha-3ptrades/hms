@@ -106,6 +106,7 @@ com/group4/controllers/CustomerDashboardController.class
 com/group4/models/Hall.class
 com/group4/utils/DialogManager.class
 com/group4/models/IssueStatus.class
+com/group4/controllers/AdminDashboardController$1.class
 com/group4/utils/BookingConflictException.class
 com/group4/services/UserService.class
 com/group4/models/User.class

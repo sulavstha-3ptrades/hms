@@ -21,7 +21,7 @@
                      styleClass="profile-image" preserveRatio="true" smooth="true"
                      pickOnBounds="false">
                      <image>
-                        <Image url="@../images/default-avatar.png" backgroundLoading="true" />
+                        <Image url="@../../assets/images/users/default-avatar.jpg" backgroundLoading="true" />
                      </image>
                      <StackPane.margin>
                         <Insets top="0" right="0" bottom="0" left="0" />

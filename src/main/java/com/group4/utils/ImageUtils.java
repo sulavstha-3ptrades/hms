@@ -12,12 +12,16 @@ public class ImageUtils {
     private static final Logger logger = Logger.getLogger(ImageUtils.class.getName());
     
     // Default avatar path (relative to resources)
-    public static final String DEFAULT_AVATAR_PATH = "/images/default-avatar.jpg";
-    // Directory for user-uploaded images (relative to resources)
-    public static final String USER_IMAGES_DIR = "src/main/resources/com/group4/assets/images/users/";
+    public static final String DEFAULT_AVATAR_PATH = "/com/group4/assets/images/users/default-avatar.jpg";
+    
+    // Directory for user-uploaded images (absolute path)
+    public static final String USER_IMAGES_DIR = "/Users/work/Developer/Java/hall_management_system/src/main/resources/com/group4/assets/images/users";
     
     // Base path for resources (used in the application)
     private static final String RESOURCES_BASE = "/com/group4/assets/images/users/";
+    
+    // Relative path from resources root
+    private static final String RELATIVE_IMAGES_DIR = "com/group4/assets/images/users";
     // Maximum file size for profile pictures (5MB)
     public static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;
     
@@ -235,26 +239,18 @@ public class ImageUtils {
      * Creates the directory if it doesn't exist.
      * @return File object representing the directory, or null if creation failed
      */
-    private static File getProfileImagesDirectory() {
+    public static File getProfileImagesDirectory() {
         try {
-            // First try the development location (src/main/resources/...)
-            File devDir = new File("src/main/resources" + USER_IMAGES_DIR);
-            
-            // Create parent directories if they don't exist
-            if (!devDir.exists()) {
-                if (!devDir.mkdirs()) {
-                    logger.warning("Failed to create development directory: " + devDir.getAbsolutePath());
-                    // Fall back to user's home directory
-                    File homeDir = new File(System.getProperty("user.home"), ".hall_management" + USER_IMAGES_DIR);
-                    if (!homeDir.exists() && !homeDir.mkdirs()) {
-                        logger.severe("Failed to create home directory: " + homeDir.getAbsolutePath());
-                        return null;
-                    }
-                    return homeDir;
+            File imagesDir = new File(USER_IMAGES_DIR);
+            if (!imagesDir.exists()) {
+                boolean created = imagesDir.mkdirs();
+                if (!created) {
+                    logger.severe("Failed to create directory: " + imagesDir.getAbsolutePath());
+                    return null;
                 }
-                return devDir;
             }
-            return devDir;
+            logger.info("Using profile images directory: " + imagesDir.getAbsolutePath());
+            return imagesDir;
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error getting profile images directory", e);
             return null;

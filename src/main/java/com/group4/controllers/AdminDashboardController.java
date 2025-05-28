@@ -19,21 +19,22 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.stage.StageStyle;
-
-import java.util.Comparator;
-import javafx.stage.Window;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.stage.Window;
 import javafx.application.Platform;
 
 import com.group4.utils.ImageUtils;
@@ -46,6 +47,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,12 +101,16 @@ public class AdminDashboardController {
     
     // Profile components
     @FXML private ImageView profileImageView;
+    @FXML private ImageView profileImageLarge;
     @FXML private Label userNameLabel;
     @FXML private Label userRoleLabel;
     @FXML private Label profileFullName;
     @FXML private Label profileEmail;
     @FXML private Label profileRole;
-    @FXML private ImageView profileImageLarge;
+    @FXML private Label profileContact;
+    @FXML private Label profileUsername;
+    @FXML private Label profileEmailField;
+    @FXML private Label profileContactField;
     @FXML private TabPane tabPane;
     
     // Hall Management components
@@ -382,13 +388,35 @@ public class AdminDashboardController {
      */
     private void initializeProfileImage() {
         try {
+            // Force reload the current user data to get the latest profile picture
+            if (currentUser != null) {
+                currentUser = userService.getUserById(currentUser.getUserId());
+            }
+            
             String imagePath = (currentUser != null) ? currentUser.getProfilePicture() : null;
+            logger.info("Loading profile image from path: " + imagePath);
+            
+            // Clear the image cache first
+            if (profileImageView != null) {
+                profileImageView.setImage(null);
+            }
+            
+            // Load the new image
             Image image = ImageUtils.loadImage(imagePath);
             setProfileImages(image);
+            
+            // Force a UI refresh
+            if (profileImageView != null) {
+                profileImageView.setImage(image);
+            }
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Error initializing profile image", e);
             // Even if there's an error, the loadImage method will return the default avatar
-            setProfileImages(ImageUtils.loadDefaultAvatar());
+            Image defaultAvatar = ImageUtils.loadDefaultAvatar();
+            setProfileImages(defaultAvatar);
+            if (profileImageView != null) {
+                profileImageView.setImage(defaultAvatar);
+            }
         }
     }
     
@@ -573,6 +601,17 @@ public class AdminDashboardController {
     @FXML
     private void handleEditProfile() {
         try {
+            // Store the current user data before showing the dialog
+            User originalUser = new User();
+            originalUser.setUserId(currentUser.getUserId());
+            originalUser.setFirstName(currentUser.getFirstName());
+            originalUser.setLastName(currentUser.getLastName());
+            originalUser.setEmail(currentUser.getEmail());
+            originalUser.setContactNumber(currentUser.getContactNumber());
+            originalUser.setRole(currentUser.getRole());
+            originalUser.setStatus(currentUser.getStatus());
+            originalUser.setProfilePicture(currentUser.getProfilePicture());
+            
             // Load the edit profile view
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/EditProfile.fxml"));
             Parent root = loader.load();
@@ -580,60 +619,183 @@ public class AdminDashboardController {
             // Get the controller and pass the current user data
             Object controller = loader.getController();
             if (controller instanceof EditProfileController) {
-                ((EditProfileController) controller).setUserData(currentUser);
+                EditProfileController editController = (EditProfileController) controller;
+                editController.setUserData(currentUser);
                 
-                // Create the scene and apply styles
-                Scene scene = new Scene(root);
-                
-                // Apply the main stylesheet
-                try {
-                    String css = getClass().getResource("/com/group4/css/styles.css").toExternalForm();
-                    scene.getStylesheets().add(css);
-                } catch (Exception e) {
-                    System.err.println("Warning: Could not load stylesheet: " + e.getMessage());
-                }
-                
-                // Show the edit profile dialog
+                // Create and show the dialog
                 Stage stage = new Stage();
                 stage.setTitle("Edit Profile");
-                stage.setScene(scene);
+                stage.setScene(new Scene(root));
+                stage.initModality(Modality.APPLICATION_MODAL);
+                
+                // Show the dialog and wait for it to close
                 stage.showAndWait();
                 
-                // Refresh profile data after editing
-                loadCurrentUser();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Error", "Invalid profile editor implementation");
+                // After dialog is closed, refresh the current user data
+                User updatedUser = userService.getUserById(currentUser.getUserId());
+                if (updatedUser != null) {
+                    // Check if any profile data has changed
+                    boolean profileChanged = !originalUser.equals(updatedUser);
+                    
+                    if (profileChanged) {
+                        // Update the current user reference
+                        currentUser = updatedUser;
+                        
+                        // Update the session user if it's the same user
+                        if (SessionManager.getInstance().getCurrentUser().getUserId().equals(currentUser.getUserId())) {
+                            SessionManager.getInstance().setCurrentUser(currentUser);
+                        }
+                        
+                        // Force update the UI
+                        Platform.runLater(() -> {
+                            try {
+                                // Clear existing images
+                                if (profileImageView != null) {
+                                    profileImageView.setImage(null);
+                                }
+                                if (profileImageLarge != null) {
+                                    profileImageLarge.setImage(null);
+                                }
+                                
+                                // Force garbage collection
+                                System.gc();
+                                
+                                // Add a small delay to ensure the UI has time to update
+                                new java.util.Timer().schedule(
+                                    new java.util.TimerTask() {
+                                        @Override
+                                        public void run() {
+                                            Platform.runLater(() -> {
+                                                try {
+                                                    // Reload the profile image with cache busting
+                                                    String imagePath = currentUser.getProfilePicture();
+                                                    String timestamp = "?t=" + System.currentTimeMillis();
+                                                    logger.info("Reloading profile image from: " + imagePath + timestamp);
+                                                    
+                                                    // Load the image
+                                                    Image newImage = ImageUtils.loadImage(imagePath);
+                                                    
+                                                    // Update UI elements
+                                                    updateProfileUI();
+                                                    
+                                                    // Set the new images after UI is updated
+                                                    if (profileImageView != null) {
+                                                        profileImageView.setImage(newImage);
+                                                    }
+                                                    if (profileImageLarge != null) {
+                                                        profileImageLarge.setImage(newImage);
+                                                    }
+                                                    
+                                                    logger.info("Profile UI refreshed successfully");
+                                                    
+                                                    // Show success message
+                                                    showToast("Profile updated successfully!", "success-toast");
+                                                    
+                                                } catch (Exception e) {
+                                                    logger.log(Level.SEVERE, "Error updating profile UI:", e);
+                                                    // Fall back to default avatar on error
+                                                    Image defaultAvatar = ImageUtils.loadDefaultAvatar();
+                                                    if (profileImageView != null) profileImageView.setImage(defaultAvatar);
+                                                    if (profileImageLarge != null) profileImageLarge.setImage(defaultAvatar);
+                                                    
+                                                    showToast("Error updating profile: " + e.getMessage(), "error-toast");
+                                                }
+                                            });
+                                        }
+                                    },
+                                    100 // 100ms delay
+                                );
+                                
+                            } catch (Exception e) {
+                                logger.log(Level.SEVERE, "Error in profile update handler:", e);
+                                showToast("Error updating profile: " + e.getMessage(), "error-toast");
+                            }
+                        });
+                    }
+                } else {
+                    logger.warning("Failed to load updated user data");
+                    showToast("Failed to load updated profile data", "error-toast");
+                }
             }
-            
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error opening edit profile dialog:", e);
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to open edit profile: " + e.getMessage());
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Unexpected error in handleEditProfile:", e);
+            showAlert(Alert.AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());
         }
     }
-    
     /**
      * Updates the profile UI with current user data.
      */
     private void updateProfileUI() {
         if (currentUser != null) {
+            // Update header labels
             if (userNameLabel != null) {
                 userNameLabel.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
             }
             if (userRoleLabel != null) {
                 userRoleLabel.setText(currentUser.getRole());
             }
+            
+            // Update profile tab fields
             if (profileFullName != null) {
                 profileFullName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
             }
             if (profileEmail != null) {
                 profileEmail.setText(currentUser.getEmail());
+                if (profileEmailField != null) {
+                    profileEmailField.setText(currentUser.getEmail());
+                }
             }
             if (profileRole != null) {
                 profileRole.setText(currentUser.getRole());
             }
+            if (profileContact != null) {
+                profileContact.setText(currentUser.getContactNumber());
+                if (profileContactField != null) {
+                    profileContactField.setText(currentUser.getContactNumber());
+                }
+            }
             
-            // Update profile image
-            initializeProfileImage();
+            // Update profile images
+            Platform.runLater(() -> {
+                try {
+                    // Reload the user to get the latest data
+                    currentUser = userService.getUserById(currentUser.getUserId());
+                    
+                    // Load and set the profile images
+                    String imagePath = currentUser.getProfilePicture();
+                    logger.info("Updating profile UI with image path: " + imagePath);
+                    
+                    // Clear existing images
+                    if (profileImageView != null) {
+                        profileImageView.setImage(null);
+                    }
+                    if (profileImageLarge != null) {
+                        profileImageLarge.setImage(null);
+                    }
+                    
+                    // Load and set new images
+                    Image image = ImageUtils.loadImage(imagePath);
+                    if (profileImageView != null) {
+                        profileImageView.setImage(image);
+                    }
+                    if (profileImageLarge != null) {
+                        profileImageLarge.setImage(image);
+                    }
+                    
+                    logger.info("Profile images updated successfully");
+                } catch (Exception e) {
+                    logger.log(Level.SEVERE, "Error updating profile UI:", e);
+                    // Fall back to default avatar if there's an error
+                    Image defaultAvatar = ImageUtils.loadDefaultAvatar();
+                    if (profileImageView != null) profileImageView.setImage(defaultAvatar);
+                    if (profileImageLarge != null) profileImageLarge.setImage(defaultAvatar);
+                }
+            });
+        } else {
+            logger.warning("Current user is null in updateProfileUI");
         }
     }
     
