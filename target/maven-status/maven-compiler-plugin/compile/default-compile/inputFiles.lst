@@ -46,6 +46,7 @@
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/InvalidInputException.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/SchedulerDashboardController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/services/AdminService.java
+/Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/AppInitializer.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/ManagerDashboardController.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/services/UserService.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/models/Issue.java

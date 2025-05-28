@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import com.group4.utils.ViewManager;
+import com.group4.utils.AppInitializer;
 
 /**
  * JavaFX App
@@ -30,6 +31,10 @@ public class App extends Application {
     public void start(Stage stage) throws IOException {
         Platform.setImplicitExit(true);
         LOGGER.info("Starting Hall Management System application");
+        
+        // Initialize application directories and files with proper permissions
+        LOGGER.info("Initializing application resources...");
+        AppInitializer.initialize();
 
         // Load the login screen
         FXMLLoader loader = new FXMLLoader(App.class.getResource("view/Login.fxml"));
