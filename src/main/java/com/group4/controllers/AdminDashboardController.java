@@ -1,8 +1,14 @@
 package com.group4.controllers;
 
 import com.group4.App;
+import com.group4.models.Hall;
+import com.group4.models.HallAvailability;
+import com.group4.models.Maintenance;
 import com.group4.models.User;
 import com.group4.services.AdminService;
+import com.group4.services.HallAvailabilityService;
+import com.group4.services.HallService;
+import com.group4.services.MaintenanceService;
 import com.group4.services.UserService;
 import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
@@ -10,32 +16,37 @@ import com.group4.utils.ViewManager;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.StageStyle;
+
+import java.util.Comparator;
 import javafx.stage.Window;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.application.Platform;
 
 import com.group4.utils.ImageUtils;
-import java.util.logging.Level;
+import javafx.beans.property.SimpleStringProperty;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-
-/**
- * Controller for the Admin Dashboard.
- */
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -95,10 +106,38 @@ public class AdminDashboardController {
     @FXML private Label profileRole;
     @FXML private ImageView profileImageLarge;
     @FXML private TabPane tabPane;
+    
+    // Hall Management components
+    @FXML private TableView<Hall> hallsTable;
+    @FXML private TableColumn<Hall, String> hallIdColumn;
+    @FXML private TableColumn<Hall, String> hallTypeColumn;
+    @FXML private TableColumn<Hall, Integer> capacityColumn;
+    @FXML private TableColumn<Hall, Double> rateColumn;
+    @FXML private Button addHallButton;
+    @FXML private Button editHallButton;
+    @FXML private Button deleteHallButton;
+    @FXML private Button setAvailabilityButton;
+    @FXML private Button quickMaintenanceButton;
+    
+    // Maintenance components
+    @FXML private TableView<Maintenance> maintenanceTable;
+    @FXML private TableColumn<Maintenance, String> maintenanceIdColumn;
+    @FXML private TableColumn<Maintenance, String> maintenanceHallIdColumn;
+    @FXML private TableColumn<Maintenance, String> maintenanceDescriptionColumn;
+    @FXML private TableColumn<Maintenance, String> maintenanceStartColumn;
+    @FXML private TableColumn<Maintenance, String> maintenanceEndColumn;
+    @FXML private Button addMaintenanceButton;
+    @FXML private Button editMaintenanceButton;
+    @FXML private Button deleteMaintenanceButton;
 
     private AdminService adminService;
     private UserService userService;
+    private HallService hallService;
+    private MaintenanceService maintenanceService;
+    private HallAvailabilityService hallAvailabilityService;
     private ObservableList<User> usersList = FXCollections.observableArrayList();
+    private ObservableList<Hall> hallsList = FXCollections.observableArrayList();
+    private ObservableList<Maintenance> maintenanceList = FXCollections.observableArrayList();
     private User currentUser;
 
     /**
@@ -108,6 +147,9 @@ public class AdminDashboardController {
     public void initialize() {
         adminService = new AdminService();
         userService = new UserService();
+        hallService = new HallService();
+        maintenanceService = new MaintenanceService();
+        hallAvailabilityService = new HallAvailabilityService();
 
         // Load current user data
         loadCurrentUser();
@@ -115,6 +157,25 @@ public class AdminDashboardController {
         // Initialize profile tab
         initializeProfileTab();
 
+        // Initialize user management tab
+        initializeUserManagementTab();
+
+        // Initialize hall management tab
+        initializeHallManagementTab();
+
+        // Load all data
+        loadAllUsers();
+        loadAllHalls();
+        loadAllMaintenance();
+
+        // Initialize profile image
+        initializeProfileImage();
+    }
+
+    /**
+     * Initializes the user management tab.
+     */
+    private void initializeUserManagementTab() {
         // Initialize table columns using direct property references
         userIdColumn.setCellValueFactory(cellData -> cellData.getValue().userIdProperty());
         firstNameColumn.setCellValueFactory(cellData -> cellData.getValue().firstNameProperty());
@@ -135,12 +196,65 @@ public class AdminDashboardController {
                 filterUsersByRole(newValue);
             }
         });
-
-        // Load all users
-        loadAllUsers();
-
-        // Initialize profile image
-        initializeProfileImage();
+    }
+    
+    /**
+     * Initializes the hall management tab.
+     */
+    private void initializeHallManagementTab() {
+        // Initialize hall table columns
+        hallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
+        hallTypeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getType().toString()));
+        capacityColumn.setCellValueFactory(cellData -> cellData.getValue().capacityProperty().asObject());
+        rateColumn.setCellValueFactory(cellData -> cellData.getValue().ratePerHourProperty().asObject());
+        
+        // Set hall table data source
+        hallsTable.setItems(hallsList);
+        
+        // Add hall table selection listener
+        hallsTable.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    boolean hallSelected = newValue != null;
+                    editHallButton.setDisable(!hallSelected);
+                    deleteHallButton.setDisable(!hallSelected);
+                    setAvailabilityButton.setDisable(!hallSelected);
+                    quickMaintenanceButton.setDisable(!hallSelected);
+                });
+        
+        // Initialize maintenance table columns
+        maintenanceIdColumn.setCellValueFactory(cellData -> cellData.getValue().maintenanceIdProperty());
+        maintenanceHallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
+        maintenanceDescriptionColumn.setCellValueFactory(cellData -> cellData.getValue().descriptionProperty());
+        
+        // Format date-time columns
+        maintenanceStartColumn.setCellValueFactory(cellData -> {
+            LocalDateTime startTime = cellData.getValue().getStartTime();
+            return new SimpleStringProperty(startTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        });
+        
+        maintenanceEndColumn.setCellValueFactory(cellData -> {
+            LocalDateTime endTime = cellData.getValue().getEndTime();
+            return new SimpleStringProperty(endTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+        });
+        
+        // Set maintenance table data source
+        maintenanceTable.setItems(maintenanceList);
+        
+        // Add maintenance table selection listener
+        maintenanceTable.getSelectionModel().selectedItemProperty().addListener(
+                (observable, oldValue, newValue) -> {
+                    boolean maintenanceSelected = newValue != null;
+                    editMaintenanceButton.setDisable(!maintenanceSelected);
+                    deleteMaintenanceButton.setDisable(!maintenanceSelected);
+                });
+        
+        // Disable buttons initially
+        editHallButton.setDisable(true);
+        deleteHallButton.setDisable(true);
+        setAvailabilityButton.setDisable(true);
+        quickMaintenanceButton.setDisable(true);
+        editMaintenanceButton.setDisable(true);
+        deleteMaintenanceButton.setDisable(true);
     }
 
     /**
@@ -155,6 +269,32 @@ public class AdminDashboardController {
                     filterUsersByRole(roleFilterComboBox.getValue());
                 },
                 error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load users: " + error.getMessage()));
+    }
+    
+    /**
+     * Loads all halls from the database.
+     */
+    private void loadAllHalls() {
+        TaskUtils.executeTaskWithProgress(
+                hallService.getAllHalls(),
+                halls -> {
+                    hallsList.clear();
+                    hallsList.addAll(halls);
+                },
+                error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load halls: " + error.getMessage()));
+    }
+    
+    /**
+     * Loads all maintenance schedules from the database.
+     */
+    private void loadAllMaintenance() {
+        TaskUtils.executeTaskWithProgress(
+                maintenanceService.getAllMaintenanceSchedules(),
+                maintenance -> {
+                    maintenanceList.clear();
+                    maintenanceList.addAll(maintenance);
+                },
+                error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load maintenance schedules: " + error.getMessage()));
     }
 
     /**
@@ -675,6 +815,547 @@ public class AdminDashboardController {
                             (user == null ? "Failed to create user: " : "Failed to update user: ")
                                     + error.getMessage()));
         });
+    }
+
+    /**
+     * Handles the add hall button click.
+     */
+    @FXML
+    private void handleAddHall() {
+        try {
+            // Load the add hall form
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/AddHallForm.fxml"));
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Add New Hall");
+            dialog.setDialogPane(loader.load());
+            
+            // Get the controller
+            AddHallFormController controller = loader.getController();
+            
+            // Get the dialog pane and buttons
+            DialogPane dialogPane = dialog.getDialogPane();
+            ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+            dialogPane.getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+            
+            // Get the save button and disable it initially
+            Button saveButton = (Button) dialogPane.lookupButton(saveButtonType);
+            saveButton.setDisable(true);
+            
+            // Add validation listeners to enable/disable save button
+            Runnable validateForm = () -> {
+                boolean isValid = controller.isFormValid();
+                saveButton.setDisable(!isValid);
+            };
+            
+            controller.getHallTypeComboBox().valueProperty().addListener((obs, oldVal, newVal) -> validateForm.run());
+            controller.getCapacityField().textProperty().addListener((obs, oldVal, newVal) -> validateForm.run());
+            controller.getRatePerHourField().textProperty().addListener((obs, oldVal, newVal) -> validateForm.run());
+            
+            // Initial validation
+            validateForm.run();
+            
+            // Show the dialog and process the result
+            Optional<ButtonType> result = dialog.showAndWait();
+            
+            result.ifPresent(buttonType -> {
+                if (buttonType != saveButtonType) {
+                    return;
+                }
+                
+                Hall newHall = controller.getHall();
+                if (newHall == null) {
+                    return;
+                }
+                if (newHall != null) {
+                    // Create a task to add the hall
+                    Task<Hall> addHallTask = hallService.addHall(
+                        newHall.getType(),
+                        newHall.getCapacity(),
+                        newHall.getRatePerHour()
+                    );
+                    
+                    // Handle successful addition
+                    addHallTask.setOnSucceeded(event -> {
+                        Hall addedHall = addHallTask.getValue();
+                        if (addedHall != null) {
+                            Platform.runLater(() -> {
+                                showToast("Hall added successfully!", "success-toast");
+                                // Add the new hall to the table
+                                hallsList.add(addedHall);
+                                // Sort the list to maintain order
+                                hallsList.sort(Comparator.comparing(Hall::getHallId));
+                                // Refresh the table
+                                hallsTable.refresh();
+                            });
+                        } else {
+                            Platform.runLater(() -> 
+                                showAlert(Alert.AlertType.ERROR, "Error", 
+                                    "Failed to add hall. The hall may already exist.")
+                            );
+                        }
+                    });
+                    
+                    // Handle addition failure
+                    addHallTask.setOnFailed(event -> {
+                        Platform.runLater(() -> {
+                            Throwable ex = addHallTask.getException();
+                            String errorMessage = ex != null ? ex.getMessage() : "Unknown error";
+                            showAlert(Alert.AlertType.ERROR, "Error", 
+                                "Error adding hall: " + errorMessage);
+                        });
+                    });
+                    
+                    // Start the task in a new thread
+                    new Thread(addHallTask, "Add-Hall-Task").start();
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Error loading add hall form: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handles the edit hall button click.
+     */
+    @FXML
+    private void handleEditHall() {
+        Hall selectedHall = hallsTable.getSelectionModel().getSelectedItem();
+        if (selectedHall == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a hall to edit.");
+            return;
+        }
+
+        try {
+            // Create and configure the dialog first
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Edit Hall");
+            
+            // Load the AddHallForm FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/AddHallForm.fxml"));
+            Parent root = loader.load();
+            
+            // Set the content in the dialog pane
+            dialog.getDialogPane().setContent(root);
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            
+            // Get the controller and initialize it with the selected hall's data
+            // This is done after the dialog pane is set up
+            AddHallFormController controller = loader.getController();
+            controller.initEditMode(selectedHall);
+            
+            // Set the dialog in the controller if needed
+            try {
+                Method setDialogMethod = controller.getClass().getMethod("setDialog", Dialog.class);
+                setDialogMethod.invoke(controller, dialog);
+            } catch (Exception e) {
+                // Method not found or invocation failed, which is fine
+                logger.log(Level.WARNING, "Could not set dialog on controller", e);
+            }
+
+            // Set the result converter to return the hall if the form is valid
+            dialog.setResultConverter(buttonType -> {
+                if (buttonType == ButtonType.OK && controller.isFormValid()) {
+                    return buttonType;
+                }
+                return null;
+            });
+
+            // Show the dialog and wait for user action
+            Optional<ButtonType> result = dialog.showAndWait();
+
+            // Handle the result
+            result.ifPresent(buttonType -> {
+                if (buttonType == ButtonType.OK) {
+                    // Get the updated hall data from the form
+                    Hall updatedHall = controller.getHall();
+                    if (updatedHall != null) {
+                        // Update the hall in the database
+                        Task<Boolean> updateTask = hallService.updateHall(updatedHall);
+                        updateTask.setOnSucceeded(e -> {
+                            if (updateTask.getValue()) {
+                                // Refresh the halls table
+                                loadAllHalls();
+                                showAlert(Alert.AlertType.INFORMATION, "Success", "Hall updated successfully!");
+                            } else {
+                                showAlert(Alert.AlertType.ERROR, "Error", "Failed to update hall. Please try again.");
+                            }
+                        });
+                        updateTask.setOnFailed(e -> {
+                            showAlert(Alert.AlertType.ERROR, "Error", "Failed to update hall: " + 
+                                (updateTask.getException() != null ? updateTask.getException().getMessage() : "Unknown error"));
+                        });
+                        new Thread(updateTask).start();
+                    }
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Error opening edit form: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Handles the delete hall button click.
+     */
+    @FXML
+    private void handleDeleteHall() {
+        Hall selectedHall = hallsTable.getSelectionModel().getSelectedItem();
+        if (selectedHall == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a hall to delete.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Delete");
+        confirm.setHeaderText("Are you sure you want to delete this hall?");
+        confirm.setContentText("Hall ID: " + selectedHall.getHallId() + "\nType: " + selectedHall.getType());
+
+        if (confirm.showAndWait().get() == ButtonType.OK) {
+            TaskUtils.executeTaskWithProgress(
+                    hallService.deleteHall(selectedHall.getHallId()),
+                    success -> {
+                        if (success) {
+                            Platform.runLater(() -> {
+                                showAlert(Alert.AlertType.INFORMATION, "Success", "Hall deleted successfully.");
+                                loadAllHalls();
+                            });
+                        } else {
+                            Platform.runLater(() -> {
+                                showAlert(Alert.AlertType.ERROR, "Error", "Failed to delete hall.");
+                            });
+                        }
+                    },
+                    error -> Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Error", "Error deleting hall: " + error.getMessage());
+                    }));
+        }
+    }
+
+    /**
+     * Handles the set availability button click.
+     */
+    @FXML
+    private void handleSetAvailability() {
+        Hall selectedHall = hallsTable.getSelectionModel().getSelectedItem();
+        if (selectedHall == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a hall to set availability.");
+            return;
+        }
+
+        showAvailabilityDialog(selectedHall);
+    }
+
+    /**
+     * Shows the availability dialog for a hall.
+     * 
+     * @param hall The hall to set availability for
+     */
+    private void showAvailabilityDialog(Hall hall) {
+        // Create the dialog
+        Dialog<HallAvailability> dialog = new Dialog<>();
+        dialog.setTitle("Set Hall Availability");
+        dialog.setHeaderText("Set availability for hall: " + hall.getHallId());
+
+        // Set the button types
+        ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
+
+        // Create the form fields
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new javafx.geometry.Insets(20, 150, 10, 10));
+
+        // Create date-time pickers for start and end times
+        DatePicker startDatePicker = new DatePicker(LocalDate.now());
+        ComboBox<String> startHourComboBox = new ComboBox<>();
+        for (int i = 0; i < 24; i++) {
+            startHourComboBox.getItems().add(String.format("%02d:00", i));
+        }
+        startHourComboBox.setValue("09:00");
+
+        DatePicker endDatePicker = new DatePicker(LocalDate.now());
+        ComboBox<String> endHourComboBox = new ComboBox<>();
+        for (int i = 0; i < 24; i++) {
+            endHourComboBox.getItems().add(String.format("%02d:00", i));
+        }
+        endHourComboBox.setValue("17:00");
+
+        ComboBox<String> statusComboBox = new ComboBox<>();
+        statusComboBox.getItems().addAll("AVAILABLE", "UNAVAILABLE");
+        statusComboBox.setValue("AVAILABLE");
+
+        // Add fields to the grid
+        grid.add(new Label("Start Date:"), 0, 0);
+        grid.add(startDatePicker, 1, 0);
+        grid.add(new Label("Start Time:"), 0, 1);
+        grid.add(startHourComboBox, 1, 1);
+        grid.add(new Label("End Date:"), 0, 2);
+        grid.add(endDatePicker, 1, 2);
+        grid.add(new Label("End Time:"), 0, 3);
+        grid.add(endHourComboBox, 1, 3);
+        grid.add(new Label("Status:"), 0, 4);
+        grid.add(statusComboBox, 1, 4);
+
+        dialog.getDialogPane().setContent(grid);
+
+        // Convert the result to an availability record when the save button is clicked
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == saveButtonType) {
+                try {
+                    // Parse the date and time values
+                    LocalDate startDate = startDatePicker.getValue();
+                    String[] startTimeParts = startHourComboBox.getValue().split(":");
+                    LocalDateTime startDateTime = startDate.atTime(Integer.parseInt(startTimeParts[0]), 0);
+
+                    LocalDate endDate = endDatePicker.getValue();
+                    String[] endTimeParts = endHourComboBox.getValue().split(":");
+                    LocalDateTime endDateTime = endDate.atTime(Integer.parseInt(endTimeParts[0]), 0);
+
+                    // Validate that end time is after start time
+                    if (!endDateTime.isAfter(startDateTime)) {
+                        showAlert(Alert.AlertType.WARNING, "Invalid Time Range", "End time must be after start time.");
+                        return null;
+                    }
+
+                    // Create the availability record
+                    return new HallAvailability("", hall.getHallId(), startDateTime, endDateTime, statusComboBox.getValue());
+                } catch (Exception e) {
+                    showAlert(Alert.AlertType.WARNING, "Invalid Input", "Please enter valid date and time values.");
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        // Show the dialog and process the result
+        Optional<HallAvailability> result = dialog.showAndWait();
+        result.ifPresent(availability -> {
+            TaskUtils.executeTaskWithProgress(
+                    hallAvailabilityService.addAvailability(
+                            availability.getHallId(),
+                            availability.getStartTime(),
+                            availability.getEndTime(),
+                            availability.getStatus()),
+                    newAvailability -> {
+                        Platform.runLater(() -> {
+                            showAlert(Alert.AlertType.INFORMATION, "Success", "Hall availability set successfully.");
+                        });
+                    },
+                    error -> Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Error", "Error setting hall availability: " + error.getMessage());
+                    }));
+        });
+    }
+
+    /**
+     * Handles the add maintenance button click.
+     */
+    @FXML
+    private void handleAddMaintenance() {
+        Hall selectedHall = hallsTable.getSelectionModel().getSelectedItem();
+        if (selectedHall == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a hall to schedule maintenance.");
+            return;
+        }
+
+        showMaintenanceDialog(selectedHall, null);
+    }
+
+    /**
+     * Handles the edit maintenance button click.
+     */
+    @FXML
+    private void handleEditMaintenance() {
+        Maintenance selectedMaintenance = maintenanceTable.getSelectionModel().getSelectedItem();
+        if (selectedMaintenance == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a maintenance schedule to edit.");
+            return;
+        }
+
+        // Find the hall for this maintenance
+        TaskUtils.executeTaskWithProgress(
+                hallService.getHallById(selectedMaintenance.getHallId()),
+                hall -> {
+                    if (hall != null) {
+                        Platform.runLater(() -> showMaintenanceDialog(hall, selectedMaintenance));
+                    } else {
+                        Platform.runLater(() -> {
+                            showAlert(Alert.AlertType.ERROR, "Error", "Could not find the hall for this maintenance schedule.");
+                        });
+                    }
+                },
+                error -> Platform.runLater(() -> {
+                    showAlert(Alert.AlertType.ERROR, "Error", "Error loading hall: " + error.getMessage());
+                }));
+    }
+    @FXML
+    private void handleDeleteMaintenance() {
+        Maintenance selectedMaintenance = maintenanceTable.getSelectionModel().getSelectedItem();
+        if (selectedMaintenance == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a maintenance schedule to delete.");
+            return;
+        }
+
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Confirm Delete");
+        confirm.setHeaderText("Are you sure you want to delete this maintenance schedule?");
+        confirm.setContentText("Maintenance ID: " + selectedMaintenance.getMaintenanceId() + 
+                              "\nHall ID: " + selectedMaintenance.getHallId() + 
+                              "\nDescription: " + selectedMaintenance.getDescription());
+
+        if (confirm.showAndWait().get() == ButtonType.OK) {
+            TaskUtils.executeTaskWithProgress(
+                    maintenanceService.deleteMaintenance(selectedMaintenance.getMaintenanceId()),
+                    success -> {
+                        if (success) {
+                            Platform.runLater(() -> {
+                                showAlert(Alert.AlertType.INFORMATION, "Success", "Maintenance schedule deleted successfully.");
+                                loadAllMaintenance();
+                            });
+                        } else {
+                            Platform.runLater(() -> {
+                                showAlert(Alert.AlertType.ERROR, "Error", "Failed to delete maintenance schedule.");
+                            });
+                        }
+                    },
+                    error -> Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Error", "Error deleting maintenance schedule: " + error.getMessage());
+                    }));
+        }
+    }
+
+    /**
+     * Shows the maintenance dialog for a hall.
+     * 
+     * @param hall The hall to schedule maintenance for
+     * @param maintenance The maintenance schedule to edit, or null to add a new one
+     */
+    private void showMaintenanceDialog(Hall hall, Maintenance maintenance) {
+        boolean isEditMode = maintenance != null;
+        // Create a final reference that can be used in the lambda
+        final Maintenance[] finalMaintenanceRef = {maintenance};
+
+        // Create the dialog
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle(isEditMode ? "Edit Maintenance Schedule" : "Schedule Maintenance");
+        dialog.setHeaderText((isEditMode ? "Edit maintenance for" : "Schedule maintenance for") + " hall: " + hall.getHallId());
+
+        try {
+            // Load the FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/MaintenanceForm.fxml"));
+            Parent root = loader.load();
+            
+            // Get the controller and set the hall
+            MaintenanceFormController controller = loader.getController();
+            controller.setHall(hall);
+            
+            // If editing, set the maintenance data
+            if (isEditMode) {
+                controller.initializeWithMaintenance(maintenance);
+            }
+            
+            // Set the dialog content
+            dialog.getDialogPane().setContent(root);
+            
+            // Add buttons
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            
+            // Set the result converter to handle the OK button
+            dialog.setResultConverter(buttonType -> {
+                if (buttonType == ButtonType.OK) {
+                    try {
+                        // Get the maintenance data from the form
+                        String description = controller.getDescription();
+                        LocalDateTime startDateTime = controller.getStartDateTime();
+                        LocalDateTime endDateTime = controller.getEndDateTime();
+                        
+                        // Validate the input
+                        if (description == null || description.trim().isEmpty()) {
+                            showAlert(Alert.AlertType.WARNING, "Invalid Input", "Please enter a description.");
+                            return null;
+                        }
+                        
+                        if (startDateTime == null || endDateTime == null) {
+                            showAlert(Alert.AlertType.WARNING, "Invalid Input", "Please select valid start and end times.");
+                            return null;
+                        }
+                        
+                        if (!endDateTime.isAfter(startDateTime)) {
+                            showAlert(Alert.AlertType.WARNING, "Invalid Time Range", "End time must be after start time.");
+                            return null;
+                        }
+                        
+                        // Create or update the maintenance object
+                        if (isEditMode) {
+                            finalMaintenanceRef[0].setDescription(description);
+                            finalMaintenanceRef[0].setStartTime(startDateTime);
+                            finalMaintenanceRef[0].setEndTime(endDateTime);
+                            return ButtonType.OK;
+                        } else {
+                            // Create a new maintenance object
+                            finalMaintenanceRef[0] = new Maintenance(
+                                "", 
+                                hall.getHallId(), 
+                                description, 
+                                startDateTime, 
+                                endDateTime
+                            );
+                            return ButtonType.OK;
+                        }
+                    } catch (Exception e) {
+                        showAlert(Alert.AlertType.ERROR, "Error", "An error occurred: " + e.getMessage());
+                        return null;
+                    }
+                }
+                return null;
+            });
+
+            // Show the dialog and process the result
+            Optional<ButtonType> result = dialog.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                if (isEditMode) {
+                    // Update existing maintenance schedule
+                    TaskUtils.executeTaskWithProgress(
+                            maintenanceService.updateMaintenance(finalMaintenanceRef[0]),
+                            success -> {
+                                if (success) {
+                                    Platform.runLater(() -> {
+                                        showAlert(Alert.AlertType.INFORMATION, "Success", "Maintenance schedule updated successfully.");
+                                        loadAllMaintenance();
+                                    });
+                                } else {
+                                    Platform.runLater(() -> {
+                                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to update maintenance schedule.");
+                                    });
+                                }
+                            },
+                            error -> Platform.runLater(() -> {
+                                showAlert(Alert.AlertType.ERROR, "Error", "Error updating maintenance schedule: " + error.getMessage());
+                            }));
+                } else {
+                    // Add new maintenance schedule
+                    TaskUtils.executeTaskWithProgress(
+                            maintenanceService.addMaintenance(
+                                    finalMaintenanceRef[0].getHallId(),
+                                    finalMaintenanceRef[0].getDescription(),
+                                    finalMaintenanceRef[0].getStartTime(),
+                                    finalMaintenanceRef[0].getEndTime()),
+                            newMaintenance -> {
+                                Platform.runLater(() -> {
+                                    showAlert(Alert.AlertType.INFORMATION, "Success", "Maintenance schedule added successfully.");
+                                    loadAllMaintenance();
+                                });
+                            },
+                            error -> Platform.runLater(() -> {
+                                showAlert(Alert.AlertType.ERROR, "Error", "Error adding maintenance schedule: " + error.getMessage());
+                            }));
+                }
+            }
+        } catch (IOException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load maintenance form: " + e.getMessage());
+        }
     }
 
     /**

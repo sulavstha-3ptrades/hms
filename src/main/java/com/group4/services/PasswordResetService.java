@@ -1,6 +1,5 @@
 package com.group4.services;
 
-import java.util.UUID;
 import com.group4.models.User;
 import org.mindrot.jbcrypt.BCrypt;
 import java.util.logging.Logger;
@@ -10,8 +9,6 @@ import java.util.logging.Logger;
  */
 public class PasswordResetService {
     private static final Logger LOGGER = Logger.getLogger(PasswordResetService.class.getName());
-    private static final long RESET_TOKEN_EXPIRY_HOURS = 24; // Token expires in 24 hours
-
     private final UserService userService;
 
     public PasswordResetService() {
@@ -19,63 +16,54 @@ public class PasswordResetService {
     }
 
     /**
-     * Initiates the password reset process by generating a reset token.
+     * Initiates the password reset process by generating an OTP.
      * 
      * @param email The email address of the user requesting a password reset
-     * @return true if the reset process was initiated successfully, false otherwise
+     * @return The generated OTP if email exists, null otherwise
      */
-    public boolean initiatePasswordReset(String email) {
+    public String initiatePasswordReset(String email) {
         try {
             User user = userService.getUserByEmail(email);
             if (user == null) {
                 LOGGER.warning("Password reset requested for non-existent email: " + email);
-                // Return true to prevent email enumeration attacks
-                return true;
+                // Return null to indicate email doesn't exist
+                return null;
             }
 
-            // Generate a reset token
-            String resetToken = generateResetToken();
-            long expiryTime = System.currentTimeMillis() + (RESET_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000);
-            
-            // In a real application, you would send an email with the reset link
-            // For now, we'll just log it
-            LOGGER.info("Password reset token for " + email + ": " + resetToken);
-            LOGGER.info("This token will expire at: " + new java.util.Date(expiryTime));
-            
-            // Store the token and expiry time (in a real app, this would be in a database)
-            // For now, we'll just log it since we don't have a token storage mechanism
-            
-            return true;
+            // Generate and return OTP
+            String otp = OTPService.generateOTP(email);
+            LOGGER.info("Generated OTP for " + email + ": " + otp);
+            return otp;
         } catch (Exception e) {
             LOGGER.severe("Error initiating password reset: " + e.getMessage());
-            return false;
+            return null;
         }
     }
 
     /**
-     * Resets a user's password using a valid reset token.
+     * Resets a user's password after OTP verification.
      * 
      * @param email The user's email
-     * @param token The reset token
+     * @param otp The OTP for verification
      * @param newPassword The new password
      * @return true if the password was reset successfully, false otherwise
      */
-    public boolean resetPassword(String email, String token, String newPassword) {
+    public boolean resetPassword(String email, String otp, String newPassword) {
         try {
-            // In a real application, you would validate the token here
-            // For now, we'll just validate the user exists
+            // Validate OTP first
+if (!OTPService.validateOTP(email, otp)) {
+                LOGGER.warning("Invalid or expired OTP provided for email: " + email);
+                return false;
+            }
+
+            // Get the user
             User user = userService.getUserByEmail(email);
             if (user == null) {
                 LOGGER.warning("Password reset attempted for non-existent email: " + email);
                 return false;
             }
 
-            // In a real application, you would:
-            // 1. Verify the token is valid and not expired
-            // 2. Update the user's password
-            // 3. Invalidate the token
-            
-            // For now, we'll just update the password
+            // Update the password
             user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
             boolean success = userService.updateUser(user);
             
@@ -91,13 +79,17 @@ public class PasswordResetService {
             return false;
         }
     }
-
+    
     /**
-     * Generates a random reset token.
+     * Validates an OTP for password reset.
      * 
-     * @return A random UUID string
+     * @param email The user's email
+     * @param otp The OTP to validate
+     * @return true if OTP is valid, false otherwise
      */
-    private String generateResetToken() {
-        return UUID.randomUUID().toString();
+    public boolean validateOTP(String email, String otp) {
+        return OTPService.validateOTP(email, otp);
     }
+
+    // OTP generation is now handled by OTPService
 }

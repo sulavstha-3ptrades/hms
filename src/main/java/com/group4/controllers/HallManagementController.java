@@ -3,7 +3,9 @@ package com.group4.controllers;
 import com.group4.App;
 import com.group4.models.Hall;
 import com.group4.models.HallType;
+import com.group4.models.User;
 import com.group4.services.HallService;
+import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
 
 import javafx.application.Platform;
@@ -305,7 +307,15 @@ public class HallManagementController {
     @FXML
     private void handleBack() {
         try {
-            FXMLLoader loader = new FXMLLoader(App.class.getResource("view/SchedulerDashboard.fxml"));
+            // Check if the user is coming from the admin dashboard
+            User currentUser = SessionManager.getInstance().getCurrentUser();
+            String targetView = "view/SchedulerDashboard.fxml";
+            
+            if (currentUser != null && "Admin".equals(currentUser.getRole())) {
+                targetView = "view/AdminDashboard.fxml";
+            }
+            
+            FXMLLoader loader = new FXMLLoader(App.class.getResource(targetView));
             Parent root = loader.load();
 
             Stage stage = (Stage) backButton.getScene().getWindow();
@@ -315,6 +325,25 @@ public class HallManagementController {
         } catch (IOException e) {
             e.printStackTrace();
             showError("Error navigating back: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Initializes the controller for editing an existing hall.
+     * 
+     * @param hall The hall to edit
+     */
+    public void initForEdit(Hall hall) {
+        if (hall != null) {
+            // Populate form with selected hall data
+            hallIdField.setText(hall.getHallId());
+            hallTypeComboBox.setValue(hall.getType().name());
+            capacityField.setText(String.valueOf(hall.getCapacity()));
+            ratePerHourField.setText(String.valueOf(hall.getRatePerHour()));
+
+            // Enable edit mode
+            isEditMode = true;
+            saveButton.setText("Update");
         }
     }
 

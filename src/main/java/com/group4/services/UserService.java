@@ -132,7 +132,36 @@ public class UserService {
                 System.out.println("Processing line " + lineNumber + ": " + line);
                 
                 try {
-                    String[] parts = line.split("\\|", -1);
+                    // First, handle escaped pipes in the line
+                    StringBuilder processedLine = new StringBuilder();
+                    boolean escape = false;
+                    for (int i = 0; i < line.length(); i++) {
+                        char c = line.charAt(i);
+                        if (c == '\\' && !escape) {
+                            escape = true;
+                            continue;
+                        }
+                        if (escape && c == '|') {
+                            processedLine.append('|');
+                            escape = false;
+                        } else if (escape) {
+                            processedLine.append('\\').append(c);
+                            escape = false;
+                        } else if (c == '|') {
+                            processedLine.append('\u0000'); // Use a temporary delimiter
+                        } else {
+                            processedLine.append(c);
+                        }
+                    }
+                    
+                    // Split on the temporary delimiter
+                    String[] parts = processedLine.toString().split("\u0000", -1);
+                    
+                    // Unescape any remaining backslashes
+                    for (int i = 0; i < parts.length; i++) {
+                        parts[i] = parts[i].replace("\\\\", "\\");
+                    }
+                    
                     if (parts.length >= 8) { // Ensure we have all required fields
                         User user = new User(
                             parts[0], // userId
@@ -147,6 +176,8 @@ public class UserService {
                         // Set profile picture if available (9th field, index 8)
                         if (parts.length > 8 && !parts[8].trim().isEmpty()) {
                             user.setProfilePicture(parts[8]);
+                        } else {
+                            user.setProfilePicture(""); // Ensure empty string instead of null
                         }
                         users.add(user);
                         System.out.println("Loaded user: " + user.getEmail() + " with profile picture: " + user.getProfilePicture());
@@ -212,6 +243,19 @@ public class UserService {
         return PasswordUtils.verifyPassword(password, user.getPassword());
     }
     
+    /**
+     * Escapes pipe characters in a string and handles null values
+     * @param input The input string to escape
+     * @return The escaped string, or empty string if input is null
+     */
+    private String escapePipe(String input) {
+        if (input == null) {
+            return "";
+        }
+        // Replace any existing escape sequences first to avoid double-escaping
+        return input.replace("\\", "\\\\").replace("|", "\\|");
+    }
+    
     private boolean saveAllUsers(List<User> users) {
         System.out.println("Attempting to save " + users.size() + " users to: " + USERS_FILE);
         
@@ -234,18 +278,21 @@ public class UserService {
                     hashedPassword = PasswordUtils.hashPassword(hashedPassword);
                 }
                 
-                // Using pipe as delimiter without escaping for the join
-                String userLine = String.join("|",
-                    user.getUserId(),
-                    user.getFirstName(),
-                    user.getLastName(),
-                    user.getRole(),
-                    user.getEmail(),
-                    hashedPassword,
-                    user.getContactNumber(),
-                    user.getStatus(),
-                    user.getProfilePicture()
-                );
+                // Escape pipe characters in each field and handle null values
+                String[] userData = {
+                    escapePipe(user.getUserId()),
+                    escapePipe(user.getFirstName()),
+                    escapePipe(user.getLastName()),
+                    escapePipe(user.getRole()),
+                    escapePipe(user.getEmail()),
+                    escapePipe(hashedPassword),
+                    escapePipe(user.getContactNumber()),
+                    escapePipe(user.getStatus()),
+                    escapePipe(user.getProfilePicture())
+                };
+                
+                // Join with pipe delimiter
+                String userLine = String.join("|", userData);
                 writer.println(userLine);
             }
             return true;

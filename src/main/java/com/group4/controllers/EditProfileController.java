@@ -384,9 +384,13 @@ public class EditProfileController {
                         currentUser.setEmail(emailField.getText().trim());
                         currentUser.setContactNumber(contactNumberField.getText().trim());
                         
-                        // Update password if changed
-                        if (!currentPasswordField.getText().trim().isEmpty()) {
+                        // Update password if changed, otherwise keep the current password
+                        if (!passwordField.getText().trim().isEmpty()) {
+                            // Use the new password if provided
                             currentUser.setPassword(passwordField.getText().trim());
+                        } else {
+                            // If new password is empty, use the current password
+                            currentUser.setPassword(currentPasswordField.getText().trim());
                         }
                     });
                     

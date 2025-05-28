@@ -6,6 +6,7 @@ import com.group4.utils.FileConstants;
 import com.group4.utils.FileHandler;
 import javafx.concurrent.Task;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -28,6 +29,13 @@ public class HallService {
                 List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
                 List<Hall> halls = new ArrayList<>();
 
+                // If file is empty, initialize with sample halls
+                if (lines.isEmpty()) {
+                    initializeSampleHalls();
+                    lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                }
+
+
                 for (String line : lines) {
                     Hall hall = Hall.fromDelimitedString(line);
                     if (hall != null) {
@@ -35,9 +43,27 @@ public class HallService {
                     }
                 }
 
+
                 return halls;
             }
         };
+    }
+    
+    /**
+     * Initializes the halls file with sample data if it's empty.
+     * 
+     * @throws IOException If an I/O error occurs
+     */
+    private void initializeSampleHalls() throws IOException {
+        List<String> lines = new ArrayList<>();
+        
+        // Add sample halls
+        lines.add("HALL-12345678|AUDITORIUM|500|1000.0");
+        lines.add("HALL-23456789|BANQUET|200|500.0");
+        lines.add("HALL-34567890|MEETING_ROOM|50|200.0");
+        
+        // Write sample data to file
+        FileHandler.writeLines(FileConstants.HALLS_FILE, lines);
     }
 
     /**

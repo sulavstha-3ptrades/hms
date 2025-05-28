@@ -1,0 +1,347 @@
+/* Maintenance Form Styling */
+
+/* Main container */
+.dialog-pane {
+    -fx-background-color: #f8f9fa;
+    -fx-padding: 15px;
+    -fx-spacing: 10px;
+}
+
+/* Header */
+.dialog-pane .header-panel {
+    -fx-background-color: #9b59b6;
+    -fx-padding: 15px;
+}
+
+.dialog-pane .header-panel .label {
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+/* Content area */
+.dialog-pane .content {
+    -fx-padding: 15px;
+    -fx-spacing: 15px;
+}
+
+/* Form elements */
+.label {
+    -fx-text-fill: #2c3e50;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.text-field, .combo-box, .date-picker, .text-area {
+    -fx-background-color: white;
+    background-color: white;
+    -fx-border-color: #bdc3c7;
+    border-color: #bdc3c7;
+    -fx-border-radius: 4px;
+    border-radius: 4px;
+    -fx-padding: 8px;
+    padding: 8px;
+    -fx-font-size: 14px;
+    font-size: 14px;
+    -fx-effect: null;
+    -fx-transition: all 0.2s;
+    transition: all 0.2s;
+}
+
+.text-field:focused, .combo-box:focused, .date-picker:focused, .text-area:focused {
+    -fx-border-color: #9b59b6;
+    -fx-effect: dropshadow(gaussian, rgba(155, 89, 182, 0.15), 8, 0, 0, 2);
+}
+
+/* Focus state for error fields */
+.error-field:focused {
+    -fx-border-color: #e74c3c !important;
+    border-color: #e74c3c !important;
+    -fx-effect: dropshadow(gaussian, rgba(231, 76, 60, 0.15), 8, 0, 0, 2) !important;
+}
+
+/* Buttons */
+.button {
+    -fx-font-size: 14px;
+    font-size: 14px;
+    -fx-padding: 8px 20px;
+    padding: 8px 20px;
+    -fx-background-radius: 4px;
+    -fx-border-radius: 4px;
+    border-radius: 4px;
+    -fx-cursor: hand;
+    cursor: pointer;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 2, 0, 0, 1);
+    -fx-transition: all 0.2s ease;
+    transition: all 0.2s ease;
+    -fx-font-weight: 500;
+    font-weight: 500;
+    -fx-text-fill: white;
+    -fx-background-insets: 0;
+}
+
+.button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: not-allowed;
+    -fx-effect: none;
+}
+
+/* Primary Button (OK/Submit) */
+.ok-button, .button:default {
+    -fx-background-color: #6c5ce7;
+    background-color: #6c5ce7;
+    -fx-text-fill: white;
+}
+
+.ok-button:hover, .button:default:hover {
+    -fx-background-color: #5649c0;
+    background-color: #5649c0;
+    -fx-effect: dropshadow(gaussian, rgba(108, 92, 231, 0.4), 4, 0, 0, 2);
+}
+
+.ok-button:pressed, .button:default:pressed {
+    -fx-background-color: #4a3db2;
+    background-color: #4a3db2;
+    -fx-effect: dropshadow(gaussian, rgba(108, 92, 231, 0.2), 2, 0, 0, 1);
+}
+
+/* Secondary Button (Cancel) */
+.cancel-button, .button:cancel {
+    -fx-background-color: #95a5a6;
+    -fx-text-fill: white;
+}
+
+.cancel-button:hover, .button:cancel:hover {
+    -fx-background-color: #7f8c8d;
+    -fx-effect: dropshadow(gaussian, rgba(149, 165, 166, 0.3), 4, 0, 0, 2);
+}
+
+.cancel-button:pressed, .button:cancel:pressed {
+    -fx-background-color: #6c7a7d;
+    -fx-effect: dropshadow(gaussian, rgba(149, 165, 166, 0.2), 2, 0, 0, 1);
+}
+
+/* Success Button (For confirmation actions) */
+.success-button {
+    -fx-background-color: #2ecc71;
+    background-color: #2ecc71;
+}
+
+.success-button:hover {
+    -fx-background-color: #27ae60;
+    background-color: #27ae60;
+    -fx-effect: dropshadow(gaussian, rgba(46, 204, 113, 0.4), 4, 0, 0, 2);
+}
+
+.success-button:pressed {
+    -fx-background-color: #219653;
+    background-color: #219653;
+}
+
+/* Danger Button (For delete actions) */
+.danger-button {
+    -fx-background-color: #e74c3c;
+}
+
+.danger-button:hover {
+    -fx-background-color: #c0392b;
+    -fx-effect: dropshadow(gaussian, rgba(231, 76, 60, 0.4), 4, 0, 0, 2);
+}
+
+.danger-button:pressed {
+    -fx-background-color: #a93226;
+}
+
+/* Button Bar Styling */
+.button-bar {
+    -fx-padding: 20px 0 5px 0;
+    -fx-spacing: 15px;
+    -fx-alignment: center;
+}
+
+.button-bar .button {
+    -fx-min-width: 120px;
+    min-width: 120px;
+    -fx-padding: 8px 20px;
+    padding: 8px 20px;
+}
+
+/* Ensure buttons are visible above error messages */
+.dialog-pane > .button-bar {
+    -fx-padding: 20px 0 0 0;
+    padding-top: 20px;
+    -fx-background-color: transparent;
+    background-color: transparent;
+}
+
+/* Error message styling - matches profile update form */
+.error-message {
+    -fx-text-fill: #e53935;
+    -fx-font-size: 13px;
+    -fx-padding: 12px 20px;
+    -fx-background-color: #ffebee;
+    -fx-background-radius: 6px;
+    -fx-border-color: #ffcdd2;
+    -fx-border-width: 1px;
+    -fx-border-radius: 6px;
+    -fx-max-width: 500px;
+    -fx-wrap-text: true;
+    -fx-text-alignment: left;
+    -fx-alignment: center-left;
+    -fx-content-display: left;
+}
+
+/* Error state for form fields */
+.error-field {
+    -fx-border-color: #e53935 !important;
+    -fx-border-width: 1.5px !important;
+    -fx-border-radius: 4px;
+    -fx-effect: dropshadow(gaussian, rgba(229, 57, 53, 0.1), 5, 0, 0, 1);
+}
+
+/* Error label for individual fields */
+.error-label {
+    -fx-text-fill: #e53935;
+    -fx-font-size: 12px;
+    -fx-padding: 4px 0 0 5px;
+    -fx-wrap-text: true;
+    -fx-max-width: 350px;
+}
+
+/* Grid layout */
+.grid-pane {
+    -fx-hgap: 15px;
+    -fx-vgap: 10px;
+    -fx-padding: 10px 0;
+}
+
+/* Text area styling */
+.text-area {
+    -fx-pref-height: 80px;
+    -fx-pref-width: 100%;
+}
+
+.text-area .content {
+    -fx-background-color: white;
+    -fx-background-insets: 0;
+    -fx-padding: 8px;
+}
+
+/* Combo box styling */
+.combo-box .list-cell {
+    -fx-padding: 8px;
+}
+
+/* Date picker styling */
+.date-picker .arrow-button {
+    -fx-background-color: #9b59b6;
+    -fx-background-radius: 0 3px 3px 0;
+}
+
+.date-picker .arrow {
+    -fx-background-color: white;
+}
+
+.date-picker .text-field {
+    -fx-padding: 8px;
+}
+
+/* Form section headers */
+.section-header {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+    -fx-padding: 10px 0 5px 0;
+    -fx-border-width: 0 0 1px 0;
+    -fx-border-color: #e0e0e0;
+}
+
+/* Time Selection Components */
+.time-selector {
+    -fx-spacing: 5;
+    -fx-alignment: center-left;
+}
+
+/* Spinner Styles */
+.spinner {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 4px;
+    -fx-border-width: 1px;
+    -fx-padding: 5px;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #ced4da;
+    -fx-padding: 2px;
+}
+
+.spinner .increment-arrow,
+.spinner .decrement-arrow {
+    -fx-background-color: #6c757d;
+    -fx-padding: 2px 4px;
+}
+
+.spinner .text-field {
+    -fx-font-size: 14px;
+    -fx-padding: 5px;
+    -fx-alignment: center;
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+}
+
+/* AM/PM Toggle Buttons */
+.ampm-button {
+    -fx-background-color: #f8f9fa;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1px;
+    -fx-padding: 5px 10px;
+    -fx-font-size: 12px;
+    -fx-text-fill: #495057;
+    -fx-cursor: hand;
+    -fx-background-radius: 0;
+}
+
+.ampm-button:selected {
+    -fx-background-color: #9b59b6;
+    -fx-text-fill: white;
+    -fx-border-color: #8e44ad;
+}
+
+.ampm-button:first-child {
+    -fx-border-radius: 4px 0 0 4px;
+    -fx-border-width: 1px 0 1px 1px;
+}
+
+.ampm-button:last-child {
+    -fx-border-radius: 0 4px 4px 0;
+    -fx-border-width: 1px 1px 1px 0;
+}
+
+/* Time Separator */
+.time-separator {
+    -fx-font-size: 16px;
+    -fx-text-fill: #2c3e50;
+    -fx-padding: 0 5px;
+}
+
+/* Focus State */
+.spinner:focused {
+    -fx-border-color: #9b59b6;
+    -fx-effect: dropshadow(gaussian, rgba(155, 89, 182, 0.3), 5, 0, 0, 1);
+}
+
+/* Hover State */
+.spinner:hover,
+.ampm-button:hover {
+    -fx-border-color: #9b59b6;
+}
+
+/* Disabled State */
+.spinner:disabled,
+.ampm-button:disabled {
+    -fx-opacity: 0.6;
+    -fx-cursor: default;
+}

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<DialogPane fx:controller="com.group4.controllers.MaintenanceFormController"
+    xmlns:fx="http://javafx.com/fxml"
+    stylesheets="@../css/maintenance-form.css"
+    styleClass="maintenance-dialog"
+    fx:id="dialogPane">
+
+    <header>
+        <VBox spacing="5" style="-fx-padding: 15px;">
+            <Label text="Schedule Maintenance"
+                style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #2c3e50;" />
+            <Label fx:id="hallLabel" style="-fx-font-size: 14px; -fx-text-fill: #7f8c8d;" />
+        </VBox>
+    </header>
+
+    <content>
+        <VBox spacing="15" style="-fx-padding: 10px 15px 15px 15px;">
+            <!-- Error message label -->
+            <Label fx:id="errorLabel" styleClass="error-message" visible="false" managed="false" />
+
+            <GridPane styleClass="grid-pane" hgap="15" vgap="15">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="NEVER" minWidth="100" />
+                    <ColumnConstraints hgrow="ALWAYS" minWidth="250" />
+                </columnConstraints>
+
+                <!-- Start Date and Time -->
+                <Label text="Start Time" GridPane.rowIndex="0" GridPane.columnIndex="0" />
+                <VBox spacing="2" GridPane.rowIndex="0" GridPane.columnIndex="1">
+                    <VBox spacing="2">
+                        <DatePicker fx:id="startDatePicker" styleClass="date-picker" />
+                        <Label fx:id="startDateError" styleClass="error-label" visible="false" managed="false" />
+                    </VBox>
+                    <VBox spacing="2">
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <HBox spacing="2" alignment="CENTER_LEFT" styleClass="time-selector">
+                                <Spinner fx:id="startHourSpinner" styleClass="hour-spinner" />
+                                <Label text=":" styleClass="time-separator" />
+                                <Spinner fx:id="startMinuteSpinner" styleClass="minute-spinner" />
+                                <ToggleButton text="AM" fx:id="startAmButton" userData="AM"
+                                    styleClass="ampm-button" />
+                                <ToggleButton text="PM" fx:id="startPmButton" userData="PM"
+                                    styleClass="ampm-button" />
+                            </HBox>
+                        </HBox>
+                        <Label fx:id="startTimeError" styleClass="error-label" visible="false" managed="false" />
+                    </VBox>
+                </VBox>
+
+                <!-- End Date and Time -->
+                <Label text="End Time" GridPane.rowIndex="1" GridPane.columnIndex="0" />
+                <VBox spacing="2" GridPane.rowIndex="1" GridPane.columnIndex="1">
+                    <VBox spacing="2">
+                        <DatePicker fx:id="endDatePicker" styleClass="date-picker" />
+                        <Label fx:id="endDateError" styleClass="error-label" visible="false" managed="false" />
+                    </VBox>
+                    <VBox spacing="2">
+                        <HBox spacing="5" alignment="CENTER_LEFT">
+                            <HBox spacing="2" alignment="CENTER_LEFT" styleClass="time-selector">
+                                <Spinner fx:id="endHourSpinner" styleClass="hour-spinner" />
+                                <Label text=":" styleClass="time-separator" />
+                                <Spinner fx:id="endMinuteSpinner" styleClass="minute-spinner" />
+                                <ToggleButton text="AM" fx:id="endAmButton" userData="AM"
+                                    styleClass="ampm-button" />
+                                <ToggleButton text="PM" fx:id="endPmButton" userData="PM"
+                                    styleClass="ampm-button" />
+                            </HBox>
+                        </HBox>
+                        <Label fx:id="endTimeError" styleClass="error-label" visible="false" managed="false" />
+                    </VBox>
+                </VBox>
+
+                <!-- Description -->
+                <Label text="Description" GridPane.rowIndex="2" GridPane.columnIndex="0" />
+                <VBox spacing="2" GridPane.rowIndex="2" GridPane.columnIndex="1">
+                    <TextArea fx:id="descriptionField"
+                        promptText="Enter maintenance details (max 500 characters)"
+                        wrapText="true"
+                        styleClass="form-text-area" />
+                    <HBox spacing="10" alignment="CENTER_LEFT">
+                        <Label text="* All fields are required" styleClass="hint-text" />
+                        <Label text="0/500" styleClass="character-count" />
+                    </HBox>
+                    <Label fx:id="descriptionError" styleClass="error-label" visible="false" managed="false" />
+                </VBox>
+            </GridPane>
+        </VBox>
+    </content>
+
+
+</DialogPane>

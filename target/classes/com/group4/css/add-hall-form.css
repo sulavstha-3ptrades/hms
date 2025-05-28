@@ -1,0 +1,87 @@
+/* Add Hall Form Specific Styles */
+
+/* Form Container */
+.form-container {
+    -fx-background-color: white;
+    -fx-padding: 35px 40px;
+    -fx-background-radius: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 15, 0, 0, 5);
+    -fx-min-width: 500px;
+    -fx-max-width: 700px;
+    -fx-spacing: 25px;
+    -fx-border-color: #e9ecef;
+    -fx-border-width: 1px;
+    -fx-border-radius: 12px;
+    -fx-vgap: 15px;
+    -fx-hgap: 15px;
+    -fx-alignment: center;
+}
+
+/* Title Label */
+.title-label {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1a237e;
+    -fx-padding: 0 0 25px 0;
+    -fx-font-family: 'Roboto', sans-serif;
+}
+
+/* Form Labels */
+.form-label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #4a4a4a;
+    -fx-padding: 5px 0 8px 3px;
+    -fx-font-weight: bold;
+    -fx-font-family: 'Roboto', sans-serif;
+}
+
+/* Form Fields */
+.form-field {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e0e0e0;
+    -fx-border-width: 1.5px;
+    -fx-border-radius: 6px;
+    -fx-padding: 12px 15px;
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+    -fx-font-family: 'Roboto', sans-serif;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.02), 3, 0, 0, 1);
+    -fx-min-width: 300px;
+    -fx-max-width: 350px;
+}
+
+.form-field:focused {
+    -fx-border-color: #3f51b5;
+    -fx-effect: dropshadow(gaussian, rgba(63,81,181,0.15), 8, 0, 0, 3);
+}
+
+.form-field:hover {
+    -fx-border-color: #9fa8da;
+}
+
+/* Combo Box */
+.combo-box {
+    -fx-min-width: 300px;
+    -fx-max-width: 350px;
+}
+
+.combo-box .list-cell {
+    -fx-padding: 8px 15px;
+}
+
+/* Error Message */
+.error-message {
+    -fx-text-fill: #d32f2f;
+    -fx-font-size: 13px;
+    -fx-padding: 5px 0;
+}
+
+/* Dialog Buttons */
+.dialog-pane > .button-bar > .container {
+    -fx-alignment: center;
+}
+
+.dialog-pane .button {
+    -fx-min-width: 120px;
+    -fx-padding: 8px 20px;
+}

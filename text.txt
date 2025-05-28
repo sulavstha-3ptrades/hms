@@ -25,3 +25,10 @@ Next todo:
 
 - Centralized toast logic and styling
 - fix popup profile update form
+
+
+In Hall Management tab of @AdminDashboard.fxml  view:
+
+- remove heading "Hall"
+- add realted filters
+- add button to schedule maintainance with schedule maintainance functionality.

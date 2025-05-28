@@ -5,6 +5,18 @@
     -fx-cursor: default;
 }
 
+/* Dialog Button Bar */
+.dialog-pane > .button-bar > .container {
+    -fx-alignment: center;
+}
+
+.dialog-pane .button {
+    min-width: 120px;
+    -fx-min-width: 120px;
+    padding: 8px 20px;
+    -fx-padding: 8px 20px;
+}
+
 /* Button Styles */
 .button {
     -fx-background-color: #2e86c1;
@@ -38,6 +50,19 @@
 }
 
 /* ComboBox Styles */
+.combo-box .list-cell {
+    padding: 8px 15px;  /* Standard CSS */
+    -fx-padding: 8px 15px;  /* JavaFX CSS */
+    -fx-cell-padding: 8px 15px;  /* JavaFX specific */
+}
+
+.combo-box {
+    min-width: 300px;
+    max-width: 350px;
+    -fx-min-width: 300px;
+    -fx-max-width: 350px;
+}
+
 .combo-box {
     -fx-background-color: transparent;
     -fx-border-color: #ccc;
@@ -136,6 +161,7 @@
     -fx-border-radius: 12px;
     -fx-vgap: 15px;
     -fx-hgap: 15px;
+    -fx-alignment: center;
 }
 
 .title-label {
@@ -155,15 +181,28 @@
 }
 
 .form-field {
+    background-color: #ffffff;
     -fx-background-color: #ffffff;
+    border-color: #e0e0e0;
     -fx-border-color: #e0e0e0;
+    border-width: 1.5px;
     -fx-border-width: 1.5px;
+    border-radius: 6px;
     -fx-border-radius: 6px;
+    padding: 12px 15px;
     -fx-padding: 12px 15px;
+    font-size: 14px;
     -fx-font-size: 14px;
+    color: #333333;
     -fx-text-fill: #333333;
+    font-family: 'Roboto', sans-serif;
     -fx-font-family: 'Roboto', sans-serif;
+    box-shadow: 0 0 3px rgba(0,0,0,0.02);
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.02), 3, 0, 0, 1);
+    min-width: 300px;
+    max-width: 350px;
+    -fx-min-width: 300px;
+    -fx-max-width: 350px;
 }
 
 .form-field:focused {

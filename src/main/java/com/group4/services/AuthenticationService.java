@@ -117,22 +117,87 @@ public class AuthenticationService {
     }
 
     /**
-     * Checks if an email already exists in the users file.
+     * Checks if an email already exists in the system.
      * 
      * @param email The email to check
-     * @return True if the email exists, false otherwise
-     * @throws IOException If an I/O error occurs
+     * @return User object if the email exists, null otherwise
      */
-    private boolean emailExists(String email) throws IOException {
-        List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
-
-        for (String line : lines) {
-            User user = User.fromDelimitedString(line);
-            if (user != null && user.getEmail().equals(email)) {
+    private User findUserByEmail(String email) {
+        try {
+            List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+            for (String line : lines) {
+                User user = User.fromDelimitedString(line);
+                if (user != null && user.getEmail().equalsIgnoreCase(email)) {
+                    return user;
+                }
+            }
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error finding user by email: " + email, e);
+        }
+        return null;
+    }
+    
+    /**
+     * Checks if an email exists in the system.
+     * 
+     * @param email The email to check
+     * @return true if the email exists, false otherwise
+     */
+    private boolean emailExists(String email) {
+        return findUserByEmail(email) != null;
+    }
+    
+    /**
+     * Initiates the password reset process by generating an OTP for the given email.
+     * 
+     * @param email The email to send the OTP to
+     * @return The generated OTP if email exists, null otherwise
+     */
+    public String initiatePasswordReset(String email) {
+        if (emailExists(email)) {
+            return OTPService.generateOTP(email);
+        }
+        return null;
+    }
+    
+    /**
+     * Resets the password for a user after OTP verification.
+     * 
+     * @param email The user's email
+     * @param otp The OTP for verification
+     * @param newPassword The new password to set
+     * @return true if password was reset successfully, false otherwise
+     */
+    public boolean resetPassword(String email, String otp, String newPassword) {
+        if (!OTPService.validateOTP(email, otp)) {
+            return false;
+        }
+        
+        try {
+            List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+            List<String> updatedLines = new ArrayList<>();
+            boolean userFound = false;
+            
+            for (String line : lines) {
+                User user = User.fromDelimitedString(line);
+                if (user != null && user.getEmail().equalsIgnoreCase(email)) {
+                    // Update the password with BCrypt hash
+                    user.setPassword(BCrypt.hashpw(newPassword, BCrypt.gensalt()));
+                    updatedLines.add(user.toDelimitedString());
+                    userFound = true;
+                } else {
+                    updatedLines.add(line);
+                }
+            }
+            
+            if (userFound) {
+                FileHandler.writeLines(FileConstants.USERS_FILE, updatedLines);
                 return true;
             }
+        } catch (IOException e) {
+            LOGGER.log(Level.SEVERE, "Error resetting password for: " + email, e);
         }
-
+        
         return false;
     }
 
