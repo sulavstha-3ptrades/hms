@@ -383,7 +383,6 @@ public class HallManagementController {
         ratePerHourField.setDisable(disabled);
         saveButton.setDisable(disabled);
         clearButton.setDisable(disabled);
-        backButton.setDisable(disabled);
         editButton.setDisable(disabled);
         deleteButton.setDisable(disabled);
     }

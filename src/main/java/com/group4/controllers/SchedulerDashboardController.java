@@ -2,23 +2,28 @@ package com.group4.controllers;
 
 import com.group4.App;
 import com.group4.utils.SessionManager;
-
+import com.group4.utils.ViewManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import com.group4.utils.ViewManager;
-
-import java.io.IOException;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 
 /**
- * Controller for the Scheduler Dashboard.
+ * Controller for the Scheduler Dashboard with tabbed interface.
  */
 public class SchedulerDashboardController {
 
     @FXML
-    private Button hallManagementButton;
-
+    private TabPane mainTabPane;
+    
+    @FXML
+    private Tab dashboardTab;
+    
+    @FXML
+    private Tab reportsTab;
+    
     @FXML
     private Button logoutButton;
 
@@ -27,22 +32,7 @@ public class SchedulerDashboardController {
      */
     @FXML
     public void initialize() {
-        // Initialization code if needed
-    }
-
-    /**
-     * Handles the hall management button click.
-     */
-    @FXML
-    private void handleHallManagement() {
-        try {
-            FXMLLoader loader = new FXMLLoader(App.class.getResource("view/HallManagement.fxml"));
-            Parent root = loader.load();
-            ViewManager.switchView(root);
-        } catch (IOException e) {
-            e.printStackTrace();
-            // Show error message if needed
-        }
+        // Initialization code can go here
     }
 
     /**
@@ -55,10 +45,10 @@ public class SchedulerDashboardController {
             SessionManager.getInstance().logout();
 
             // Load the login screen using ViewManager
-            FXMLLoader loader = new FXMLLoader(App.class.getResource("view/Login.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/Login.fxml"));
             Parent root = loader.load();
             ViewManager.switchView(root);
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             // Show error message if needed
         }

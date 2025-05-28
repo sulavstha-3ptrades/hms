@@ -3,52 +3,80 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.group4.controllers.SchedulerDashboardController">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+   prefHeight="700.0" prefWidth="1000.0"
+   xmlns="http://javafx.com/javafx/21"
+   xmlns:fx="http://javafx.com/fxml/1"
+   fx:controller="com.group4.controllers.SchedulerDashboardController">
+
    <top>
-      <VBox alignment="CENTER" prefHeight="100.0" prefWidth="100.0" style="-fx-background-color: #2e86c1;" BorderPane.alignment="CENTER">
-         <children>
-            <Label text="Hall Management System" textFill="WHITE">
-               <font>
-                  <Font name="System Bold" size="24.0" />
-               </font>
-            </Label>
-            <Label text="Scheduler Dashboard" textFill="WHITE">
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </Label>
-         </children>
-      </VBox>
+      <HBox alignment="CENTER_LEFT" style="-fx-background-color: #2e86c1; -fx-padding: 15px 20px;" prefHeight="70">
+         <Label text="Hall Management System" textFill="WHITE">
+            <font>
+               <Font name="System Bold" size="24.0" />
+            </font>
+         </Label>
+         <Region HBox.hgrow="ALWAYS" />
+         <Button fx:id="logoutButton" onAction="#handleLogout"
+            style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-padding: 8px 20px;" text="Logout">
+            <font>
+               <Font size="12.0" />
+            </font>
+         </Button>
+      </HBox>
    </top>
+
    <center>
-      <VBox alignment="CENTER" prefHeight="200.0" prefWidth="100.0" spacing="20.0" BorderPane.alignment="CENTER">
-         <children>
-            <Label text="Welcome to the Scheduler Dashboard">
-               <font>
-                  <Font size="18.0" />
-               </font>
-            </Label>
-            <Button fx:id="hallManagementButton" onAction="#handleHallManagement" prefHeight="50.0" prefWidth="250.0" style="-fx-background-color: #2e86c1; -fx-text-fill: white;" text="Hall Management">
-               <font>
-                  <Font size="14.0" />
-               </font>
-            </Button>
-            <Button fx:id="logoutButton" onAction="#handleLogout" prefHeight="50.0" prefWidth="250.0" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Logout">
-               <font>
-                  <Font size="14.0" />
-               </font>
-               <VBox.margin>
-                  <Insets top="50.0" />
-               </VBox.margin>
-            </Button>
-         </children>
-         <padding>
-            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
-         </padding>
-      </VBox>
+      <TabPane fx:id="mainTabPane" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+         <tabs>
+            <Tab fx:id="dashboardTab" text="Dashboard">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Label layoutX="20.0" layoutY="20.0" text="Welcome to Scheduler Dashboard" />
+                        <!-- Add dashboard content here -->
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+
+            <Tab fx:id="hallManagementTab" text="Hall Management">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="hallManagementContent" source="HallManagement.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+
+            <Tab fx:id="reportsTab" text="Reports">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Label layoutX="20.0" layoutY="20.0" text="Reports and Analytics" />
+                        <!-- Add reports content here -->
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+         </tabs>
+      </TabPane>
    </center>
+
+   <bottom>
+      <HBox alignment="CENTER" style="-fx-background-color: #f4f4f4;" BorderPane.alignment="CENTER">
+         <Label text="© 2025 Hall Management System" style="-fx-padding: 10;" />
+      </HBox>
+   </bottom>
+
 </BorderPane> 
