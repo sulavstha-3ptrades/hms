@@ -122,6 +122,7 @@ com/group4/services/OTPService$1.class
 com/group4/services/IssueService.class
 com/group4/services/HallService$4.class
 com/group4/utils/FileHandler$1.class
+com/group4/utils/AlertUtils.class
 com/group4/services/BookingService$3.class
 com/group4/utils/FileHandler.class
 com/group4/services/HallAvailabilityService$7.class

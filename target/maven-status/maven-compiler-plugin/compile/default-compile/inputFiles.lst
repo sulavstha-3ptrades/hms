@@ -1,5 +1,6 @@
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/services/AvailabilityService.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/controllers/HallManagementController.java
+/Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/utils/AlertUtils.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/services/HallService.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/TestBCrypt.java
 /Users/work/Developer/Java/hall_management_system/src/main/java/com/group4/models/HallType.java
