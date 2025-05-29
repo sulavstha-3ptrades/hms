@@ -20,11 +20,11 @@ public class ConsoleApp {
             System.out.println("Created hall: " + hall.toDelimitedString());
 
             // Save the hall to the file
-            FileHandler.appendLine(FileConstants.HALLS_FILE, hall.toDelimitedString());
+            FileHandler.appendLine(FileConstants.getHallsFilePath(), hall.toDelimitedString());
             System.out.println("Hall saved to file.");
 
             // Read all halls from the file
-            List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+            List<String> lines = FileHandler.readLines(FileConstants.getHallsFilePath());
             System.out.println("All halls:");
             for (String line : lines) {
                 Hall h = Hall.fromDelimitedString(line);

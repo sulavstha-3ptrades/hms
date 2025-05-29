@@ -23,7 +23,8 @@ import java.util.logging.Logger;
 
 /**
  * Implementation of the booking service interface.
- * Handles all booking-related operations including creation, cancellation, and querying.
+ * Handles all booking-related operations including creation, cancellation, and
+ * querying.
  */
 public class BookingService implements IBookingService {
     private static final Logger LOGGER = Logger.getLogger(BookingService.class.getName());
@@ -40,7 +41,7 @@ public class BookingService implements IBookingService {
         return new Task<List<Booking>>() {
             @Override
             protected List<Booking> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
                 List<Booking> bookings = new ArrayList<>();
 
                 for (String line : lines) {
@@ -55,7 +56,6 @@ public class BookingService implements IBookingService {
         };
     }
 
-
     /**
      * Gets a booking by its ID.
      * 
@@ -68,23 +68,23 @@ public class BookingService implements IBookingService {
         if (bookingId == null || bookingId.trim().isEmpty()) {
             throw new IllegalArgumentException("Booking ID cannot be null or empty");
         }
-        
+
         final String finalBookingId = bookingId.trim();
-        
+
         return new Task<Booking>() {
             @Override
             protected Booking call() throws Exception {
                 try {
                     LOGGER.info("Retrieving booking with ID: " + finalBookingId);
-                    
-                    List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
-                    
+
+                    List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
+
                     for (String line : lines) {
                         if (isCancelled()) {
                             LOGGER.info("Booking retrieval was cancelled");
                             return null;
                         }
-                        
+
                         try {
                             Booking booking = Booking.fromDelimitedString(line);
                             if (booking != null && finalBookingId.equals(booking.getBookingId())) {
@@ -96,23 +96,23 @@ public class BookingService implements IBookingService {
                             // Continue with next line if one booking fails to parse
                         }
                     }
-                    
+
                     LOGGER.warning("Booking not found: " + finalBookingId);
                     return null;
-                    
+
                 } catch (Exception e) {
                     String errorMsg = "Failed to retrieve booking: " + e.getMessage();
                     LOGGER.log(Level.SEVERE, errorMsg, e);
                     throw new RuntimeException(errorMsg, e);
                 }
             }
-            
+
             @Override
             protected void failed() {
                 super.failed();
                 LOGGER.log(Level.SEVERE, "Failed to retrieve booking: " + finalBookingId, getException());
             }
-            
+
             @Override
             protected void succeeded() {
                 super.succeeded();
@@ -129,7 +129,8 @@ public class BookingService implements IBookingService {
      * Cancels a booking with the specified booking ID.
      *
      * @param bookingId The ID of the booking to cancel
-     * @return A Task that returns true if cancellation was successful, false otherwise
+     * @return A Task that returns true if cancellation was successful, false
+     *         otherwise
      * @throws IllegalArgumentException if bookingId is null or empty
      */
     @Override
@@ -137,7 +138,7 @@ public class BookingService implements IBookingService {
         if (bookingId == null || bookingId.trim().isEmpty()) {
             throw new IllegalArgumentException("Booking ID cannot be null or empty");
         }
-        
+
         // Make effectively final for use in inner class
         final String finalBookingId = bookingId.trim();
 
@@ -146,30 +147,32 @@ public class BookingService implements IBookingService {
             protected Boolean call() throws Exception {
                 try {
                     LOGGER.info("Attempting to cancel booking: " + finalBookingId);
-                    
+
                     // Read all bookings
-                    List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
+                    List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
                     List<String> updatedLines = new ArrayList<>();
                     boolean found = false;
-                    
+
                     // Find and update the booking
                     for (String line : lines) {
                         if (isCancelled()) {
                             LOGGER.info("Booking cancellation was cancelled");
                             return false;
                         }
-                        
+
                         Booking booking = Booking.fromDelimitedString(line);
                         if (booking != null && bookingId.equals(booking.getBookingId())) {
                             // Check if booking can be cancelled (at least 3 days before start)
                             LocalDateTime now = LocalDateTime.now();
-                            LocalDateTime cancellationDeadline = booking.getStartDateTime().minusDays(CANCELLATION_DEADLINE_DAYS);
-                            
+                            LocalDateTime cancellationDeadline = booking.getStartDateTime()
+                                    .minusDays(CANCELLATION_DEADLINE_DAYS);
+
                             if (now.isAfter(cancellationDeadline)) {
-                                LOGGER.warning("Cannot cancel booking " + finalBookingId + ": Cancellation deadline has passed");
+                                LOGGER.warning("Cannot cancel booking " + finalBookingId
+                                        + ": Cancellation deadline has passed");
                                 return false;
                             }
-                            
+
                             // Remove the booking
                             found = true;
                             LOGGER.info("Booking " + finalBookingId + " removed");
@@ -177,29 +180,29 @@ public class BookingService implements IBookingService {
                             updatedLines.add(line);
                         }
                     }
-                    
+
                     if (!found) {
                         LOGGER.warning("Booking not found: " + finalBookingId);
                         return false;
                     }
-                    
+
                     // Write updated bookings back to file
-                    FileHandler.writeLines(FileConstants.BOOKINGS_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getBookingsFilePath(), updatedLines);
                     LOGGER.info("Successfully cancelled booking: " + finalBookingId);
                     return true;
-                    
+
                 } catch (Exception e) {
                     LOGGER.log(Level.SEVERE, "Error cancelling booking: " + finalBookingId, e);
                     throw new RuntimeException("Failed to cancel booking: " + e.getMessage(), e);
                 }
             }
-            
+
             @Override
             protected void failed() {
                 super.failed();
                 LOGGER.log(Level.SEVERE, "Failed to cancel booking: " + finalBookingId, getException());
             }
-            
+
             @Override
             protected void succeeded() {
                 super.succeeded();
@@ -235,7 +238,7 @@ public class BookingService implements IBookingService {
                 }
 
                 // Check for overlapping bookings
-                List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
 
                 for (String line : lines) {
                     Booking booking = Booking.fromDelimitedString(line);
@@ -348,14 +351,12 @@ public class BookingService implements IBookingService {
                         endDateTime,
                         totalCost
                     );
-
-                    // Save the booking to the file
-                    String bookingLine = newBooking.toDelimitedString();
-                    FileHandler.appendLine(FileConstants.BOOKINGS_FILE, bookingLine);
-                    LOGGER.info("Successfully created booking: " + bookingId);
-
-                    return newBooking;
                     
+                    // Save the booking
+                    FileHandler.appendLine(FileConstants.getBookingsFilePath(), newBooking.toDelimitedString());
+                    LOGGER.info("Successfully created booking: " + bookingId);
+                    
+                    return newBooking;
                 } catch (Exception e) {
                     String errorMsg = "Failed to create booking: " + e.getMessage();
                     LOGGER.log(Level.SEVERE, errorMsg, e);
@@ -387,7 +388,7 @@ public class BookingService implements IBookingService {
         return new Task<List<Booking>>() {
             @Override
             protected List<Booking> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
                 List<Booking> bookings = new ArrayList<>();
 
                 for (String line : lines) {
@@ -406,7 +407,8 @@ public class BookingService implements IBookingService {
      * Gets bookings for a specific customer.
      *
      * @param customerId The ID of the customer
-     * @return A Task that returns an ObservableList of bookings for the specified customer
+     * @return A Task that returns an ObservableList of bookings for the specified
+     *         customer
      * @throws IllegalArgumentException if customerId is null or empty
      */
     @Override
@@ -419,15 +421,15 @@ public class BookingService implements IBookingService {
             @Override
             protected ObservableList<Booking> call() throws Exception {
                 ObservableList<Booking> bookings = FXCollections.observableArrayList();
-                
+
                 try {
-                    List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
-                    
+                    List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
+
                     for (String line : lines) {
                         if (isCancelled()) {
                             break;
                         }
-                        
+
                         try {
                             Booking booking = Booking.fromDelimitedString(line);
                             if (booking != null && customerId.equals(booking.getCustomerId())) {
@@ -437,23 +439,23 @@ public class BookingService implements IBookingService {
                             LOGGER.log(Level.WARNING, "Error parsing booking: " + line, e);
                             // Continue with next line if one booking fails to parse
                         }
-                        
+
                         updateProgress(bookings.size(), lines.size());
                     }
-                    
+
                     return bookings;
                 } catch (IOException e) {
                     LOGGER.log(Level.SEVERE, "Error reading bookings file", e);
                     throw new RuntimeException("Failed to load bookings: " + e.getMessage(), e);
                 }
             }
-            
+
             @Override
             protected void failed() {
                 super.failed();
                 LOGGER.log(Level.SEVERE, "Failed to load bookings", getException());
             }
-            
+
             @Override
             protected void succeeded() {
                 super.succeeded();

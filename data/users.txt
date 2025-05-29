@@ -1,14 +1,3 @@
-USER-12345678|Admin|User|Admin|admin@example.com|$2a$12$50vdeGlh0u.2iLZ3N0Y0d.3BXLnIuxY85Dxy1XsqxNRqA4gZmKFK6|1234567890|ACTIVE|/com/group4/assets/images/users/user_USER-12345678_1748441985565.png
-USER-23456789|Manager|User|Manager|manager@example.com|$2a$12$haF/HPf46bCyMOYFFXdQjOksx7rEHaCXjlk.4R8IocN2OU/Lt.ooS|2345678901|ACTIVE|/com/group4/assets/images/users/user_USER-23456789_1748442084835.png
-USER-34567890|Scheduler|User|Scheduler|scheduler@example.com|$2a$12$9tag5.DvkNnbfm1Hd2dGZeY8tq6MQkXGrKav6wCvHXwpYiGV3GBSu|3456789012|ACTIVE|/com/group4/assets/images/users/user_USER-34567890_1748442037070.png
-USER-45678901|Customer|User|Customer|customer@example.com|$2a$10$hGZaDcnIL/zUGHL29BJ.FOYzkbeoDl.Iaxj/5c/KNgsd..RDHwt2a|4567890123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-792f82ce-bb57-4891-9614-80b5823b4120|New|User|Customer|new@eg.com|$2a$10$AQpzf/dk7aok8ntG.I2MgO/CXV42elZA0TgJzqMXHsNfJ4u87iKNC|123123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-e7f6a87d-1e15-4c8d-bb4d-6a8345f24c94|Ram|Thapa|Customer|ram@example.com|$2a$10$Xka/49pEdrhCowOfzG8pnO6biw3quO3/OVOaCgRpHQDu7l6fZ1I2a|123456789|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-USER-578aaf73|Sita|Regmi|Customer|sita@example.com|$2a$10$40Dr9rOJwtpnebcos.wfD.0xTZtxeI.4H0m/../4cvT.qRbqvICS6|123123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-b4568035-1817-4a62-9535-ca6f989f0b65|Test|User|Customer|test_47b7430f@example.com|$2a$10$I0kvhO3Xlp0K17qi.ZUaMuZ4RP.XtxGyYA643TXJHBN7ibmcs58cC|1234567890|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-83f38d3f-9f95-4296-9c4a-d23577b90b84|Test|User|Customer|test_2ed40bc3@example.com|$2a$10$plJmRFa/A/NLHYerfe6NreXuWK05rp4BMTOJKepXsvW6S63QeOZI.|1234567890|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-5efee178-1ea5-4773-a74f-48b7d381f0aa|Test|User|Customer|test_82643890@example.com|$2a$10$MGGQOT2dsQ7ZjQ.DbEt4d.toe/h/F5l/N8V98qgL24Txz5RLAJioW|1234567890|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-f223a53a-655a-406d-bd40-3976da914d79|Test|User|Customer|test_5e51d014@example.com|$2a$10$454GXBq4kLwhmJKByzd50em8M9MLsvs1xT26h5sFi8xh7E/ObXC7u|1234567890|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-6f24d3e5-f599-4fa9-a022-40a037070db8|Hari|Sharma|Customer|hari@example.com|$2a$12$ABJhHG4vMff83/mInn/Zx.T7WmYPZY2gZP0waJMtC0Xw0JSjrs4..|123123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-596808b0-784e-439a-81e3-2fad079ee68c|john|doe|Customer|john@example.com|$2a$10$JOBg84CtJgLusZFmmciunu3MWmhoz/UglxIhMSzzyY7a2LqgFeGb2|3334445556|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-USER-67af0208|josh|bee|Customer|josh@example.com|$2a$10$HLs0gAd50xPe1gzrUfsJPuXf0sNPOJwf7BzWmlXQW03/f6JrPDP9m|223314141414|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
+USER-493b0301|Manager|One|Manager|manager@example.com|$2a$10$VVRR6fm9QYoMu8R.W7fei.IB5t3IPQ/IlUYkaEoNCgZP4iTm4RvOK|121123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
+ADMIN-04c6a2f9|Admin|User|Admin|admin@example.com|$2a$12$j/.syfbbsqo6SJ51f/oEUuRx1qG.SaB9IQt5s7RVJ8GG1jiDzyHfC|1234567890|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
+USER-fc79d4b8|Schedular|One|Scheduler|schedular@example.com|$2a$10$PlfVKndNlNC5HJ6pFcuzquFfCewlb5apcOofuCgRawdPuiLdM2CRu|123123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg

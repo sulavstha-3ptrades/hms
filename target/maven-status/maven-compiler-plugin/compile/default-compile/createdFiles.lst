@@ -6,7 +6,9 @@ com/group4/services/MaintenanceService$1.class
 com/group4/services/AvailabilityService.class
 com/group4/services/IssueService$7.class
 com/group4/TestLogin.class
+com/group4/utils/DataFileManager.class
 com/group4/utils/AppInitializer.class
+com/group4/utils/FileHandler$5.class
 com/group4/services/OTPService$OTPData.class
 com/group4/utils/SessionManager.class
 com/group4/services/BookingService$2.class
@@ -52,6 +54,7 @@ com/group4/controllers/AvailabilityController$3.class
 com/group4/models/HallAvailability.class
 com/group4/services/AuthenticationService$2.class
 com/group4/services/AdminService$1.class
+com/group4/utils/FileHandler$4.class
 com/group4/models/Issue.class
 com/group4/services/HallAvailabilityService$5.class
 com/group4/services/HallService$7.class
@@ -73,6 +76,7 @@ com/group4/controllers/CustomerDashboardController$2.class
 com/group4/services/AdminService$2.class
 com/group4/utils/FileHandler$3.class
 com/group4/controllers/AvailabilityController$2.class
+com/group4/utils/PlatformUtils.class
 com/group4/services/IssueService$3.class
 com/group4/controllers/AddHallFormController.class
 com/group4/controllers/AvailabilityController.class
@@ -88,6 +92,7 @@ com/group4/services/MaintenanceService.class
 com/group4/services/MaintenanceService$3.class
 com/group4/utils/FileConstants.class
 com/group4/controllers/AvailabilityController$1.class
+com/group4/utils/SystemInitializer.class
 com/group4/models/HallType.class
 com/group4/services/IssueService$10.class
 com/group4/controllers/MaintenanceController$3.class

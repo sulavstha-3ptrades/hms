@@ -186,7 +186,7 @@ public class BookingConfirmationController implements Initializable {
         
         try {
             // Read all bookings from the file
-            List<String> lines = FileHandler.readLines(FileConstants.BOOKINGS_FILE);
+            List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
             
             for (String line : lines) {
                 try {

@@ -33,8 +33,9 @@ public class AuthenticationService {
             @Override
             protected User call() throws Exception {
                 LOGGER.info("Attempting login for user: " + email);
-                List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
-
+                String usersFilePath = FileConstants.getUsersFilePath();
+                LOGGER.fine("Reading users from: " + usersFilePath);
+                List<String> lines = FileHandler.readLines(usersFilePath);
                 LOGGER.info("Read " + lines.size() + " lines from users file");
                 for (String line : lines) {
                     LOGGER.fine("Processing line: " + line);
@@ -109,7 +110,7 @@ public class AuthenticationService {
                         hashedPassword, contactNumber, "ACTIVE");
 
                 // Save the user to the file
-                FileHandler.appendLine(FileConstants.USERS_FILE, user.toDelimitedString());
+                FileHandler.appendLine(FileConstants.getUsersFilePath(), user.toDelimitedString());
 
                 return user;
             }
@@ -124,7 +125,9 @@ public class AuthenticationService {
      */
     private User findUserByEmail(String email) {
         try {
-            List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+            String usersFilePath = FileConstants.getUsersFilePath();
+            LOGGER.fine("Looking up user in: " + usersFilePath);
+            List<String> lines = FileHandler.readLines(usersFilePath);
             for (String line : lines) {
                 User user = User.fromDelimitedString(line);
                 if (user != null && user.getEmail().equalsIgnoreCase(email)) {
@@ -174,7 +177,7 @@ public class AuthenticationService {
         }
         
         try {
-            List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+            List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
             List<String> updatedLines = new ArrayList<>();
             boolean userFound = false;
             
@@ -191,7 +194,7 @@ public class AuthenticationService {
             }
             
             if (userFound) {
-                FileHandler.writeLines(FileConstants.USERS_FILE, updatedLines);
+                FileHandler.writeLines(FileConstants.getUsersFilePath(), updatedLines);
                 return true;
             }
         } catch (IOException e) {
@@ -212,7 +215,7 @@ public class AuthenticationService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
@@ -228,7 +231,7 @@ public class AuthenticationService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.USERS_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getUsersFilePath(), updatedLines);
                     return true;
                 }
 

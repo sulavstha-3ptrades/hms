@@ -24,7 +24,7 @@ public class AdminService {
         return new Task<List<User>>() {
             @Override
             protected List<User> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
                 List<User> users = new ArrayList<>();
 
                 for (String line : lines) {
@@ -55,7 +55,7 @@ public class AdminService {
                 }
 
                 // Read existing users to check for duplicate emails
-                List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
                 for (String line : lines) {
                     User existingUser = User.fromDelimitedString(line);
                     if (existingUser != null && existingUser.getEmail().equalsIgnoreCase(user.getEmail())) {
@@ -71,7 +71,7 @@ public class AdminService {
 
                 // Add the new user
                 lines.add(user.toDelimitedString());
-                FileHandler.writeLines(FileConstants.USERS_FILE, lines);
+                FileHandler.writeLines(FileConstants.getUsersFilePath(), lines);
                 return true;
             }
         };
@@ -87,7 +87,7 @@ public class AdminService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
@@ -118,7 +118,7 @@ public class AdminService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.USERS_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getUsersFilePath(), updatedLines);
                     return true;
                 }
 
@@ -138,16 +138,17 @@ public class AdminService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
                 for (String line : lines) {
-                    User user = User.fromDelimitedString(line);
-                    if (user != null) {
-                        if (user.getUserId().equals(userId)) {
-                            user.setStatus(status);
-                            updatedLines.add(user.toDelimitedString());
+                    User existingUser = User.fromDelimitedString(line);
+                    if (existingUser != null) {
+                        // Check if this is the user we want to update
+                        if (existingUser.getUserId().equals(userId)) {
+                            existingUser.setStatus(status);
+                            updatedLines.add(existingUser.toDelimitedString());
                             found = true;
                         } else {
                             updatedLines.add(line);
@@ -156,7 +157,7 @@ public class AdminService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.USERS_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getUsersFilePath(), updatedLines);
                     return true;
                 }
 
@@ -175,7 +176,7 @@ public class AdminService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
@@ -183,13 +184,13 @@ public class AdminService {
                     User user = User.fromDelimitedString(line);
                     if (user != null && !user.getUserId().equals(userId)) {
                         updatedLines.add(line);
-                    } else {
+                    } else if (user != null) {
                         found = true;
                     }
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.USERS_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getUsersFilePath(), updatedLines);
                     return true;
                 }
 

@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
 /**
  * Service class for managing hall availability.
  */
@@ -26,7 +24,7 @@ public class HallAvailabilityService {
         return new Task<List<HallAvailability>>() {
             @Override
             protected List<HallAvailability> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.AVAILABILITY_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getAvailabilityScheduleFilePath());
                 List<HallAvailability> availabilityList = new ArrayList<>();
 
                 for (String line : lines) {
@@ -51,7 +49,7 @@ public class HallAvailabilityService {
         return new Task<List<HallAvailability>>() {
             @Override
             protected List<HallAvailability> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.AVAILABILITY_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getAvailabilityScheduleFilePath());
                 List<HallAvailability> availabilityList = new ArrayList<>();
 
                 for (String line : lines) {
@@ -77,7 +75,7 @@ public class HallAvailabilityService {
         return new Task<List<HallAvailability>>() {
             @Override
             protected List<HallAvailability> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.AVAILABILITY_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getAvailabilityScheduleFilePath());
                 List<HallAvailability> availabilityList = new ArrayList<>();
 
                 for (String line : lines) {
@@ -111,25 +109,19 @@ public class HallAvailabilityService {
         return new Task<List<String>>() {
             @Override
             protected List<String> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.AVAILABILITY_SCHEDULE_FILE);
-                List<String> availableHallIds = new ArrayList<>();
+                List<String> lines = FileHandler.readLines(FileConstants.getAvailabilityScheduleFilePath());
+                List<String> hallIds = new ArrayList<>();
 
                 for (String line : lines) {
                     HallAvailability availability = HallAvailability.fromDelimitedString(line);
-                    if (availability != null && availability.getStatus().equals("AVAILABLE")) {
-                        // Check if availability period overlaps with the given period
-                        boolean overlaps = (availability.getStartTime().isBefore(endTime) || 
-                                           availability.getStartTime().isEqual(endTime)) &&
-                                          (availability.getEndTime().isAfter(startTime) || 
-                                           availability.getEndTime().isEqual(startTime));
-                        
-                        if (overlaps && !availableHallIds.contains(availability.getHallId())) {
-                            availableHallIds.add(availability.getHallId());
-                        }
+                    if (availability != null && 
+                        !availability.getStatus().equals("BOOKED") && 
+                        availability.getStartTime().isAfter(LocalDateTime.now())) {
+                        hallIds.add(availability.getHallId());
                     }
                 }
 
-                return availableHallIds;
+                return hallIds;
             }
         };
     }
@@ -154,7 +146,7 @@ public class HallAvailabilityService {
                 HallAvailability availability = new HallAvailability(availabilityId, hallId, startTime, endTime, status);
 
                 // Save the availability record to the file
-                FileHandler.appendLine(FileConstants.AVAILABILITY_SCHEDULE_FILE, availability.toDelimitedString());
+                FileHandler.appendLine(FileConstants.getAvailabilityScheduleFilePath(), availability.toDelimitedString());
 
                 return availability;
             }
@@ -171,14 +163,13 @@ public class HallAvailabilityService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.AVAILABILITY_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getAvailabilityScheduleFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
                 for (String line : lines) {
-                    HallAvailability existingAvailability = HallAvailability.fromDelimitedString(line);
-                    if (existingAvailability != null && 
-                        existingAvailability.getAvailabilityId().equals(availability.getAvailabilityId())) {
+                    HallAvailability existing = HallAvailability.fromDelimitedString(line);
+                    if (existing != null && existing.getAvailabilityId().equals(availability.getAvailabilityId())) {
                         updatedLines.add(availability.toDelimitedString());
                         found = true;
                     } else {
@@ -187,7 +178,7 @@ public class HallAvailabilityService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.AVAILABILITY_SCHEDULE_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getAvailabilityScheduleFilePath(), updatedLines);
                     return true;
                 }
 
@@ -206,16 +197,21 @@ public class HallAvailabilityService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.AVAILABILITY_SCHEDULE_FILE);
-                List<String> updatedLines = lines.stream()
-                        .filter(line -> {
-                            HallAvailability availability = HallAvailability.fromDelimitedString(line);
-                            return availability == null || !availability.getAvailabilityId().equals(availabilityId);
-                        })
-                        .collect(Collectors.toList());
+                List<String> lines = FileHandler.readLines(FileConstants.getAvailabilityScheduleFilePath());
+                List<String> updatedLines = new ArrayList<>();
+                boolean found = false;
 
-                if (updatedLines.size() < lines.size()) {
-                    FileHandler.writeLines(FileConstants.AVAILABILITY_SCHEDULE_FILE, updatedLines);
+                for (String line : lines) {
+                    HallAvailability existing = HallAvailability.fromDelimitedString(line);
+                    if (existing != null && existing.getAvailabilityId().equals(availabilityId)) {
+                        found = true;
+                    } else {
+                        updatedLines.add(line);
+                    }
+                }
+
+                if (found) {
+                    FileHandler.writeLines(FileConstants.getAvailabilityScheduleFilePath(), updatedLines);
                     return true;
                 }
 
@@ -236,7 +232,7 @@ public class HallAvailabilityService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.AVAILABILITY_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getAvailabilityScheduleFilePath());
                 
                 // First, check if there's an explicit availability record for this period
                 for (String line : lines) {
@@ -258,18 +254,11 @@ public class HallAvailabilityService {
                 for (String line : lines) {
                     HallAvailability availability = HallAvailability.fromDelimitedString(line);
                     if (availability != null && 
-                        availability.getHallId().equals(hallId) && 
-                        availability.getStatus().equals("UNAVAILABLE")) {
-                        
-                        // Check if unavailable period overlaps with the given period
-                        boolean overlaps = (availability.getStartTime().isBefore(endTime) || 
-                                           availability.getStartTime().isEqual(endTime)) &&
-                                          (availability.getEndTime().isAfter(startTime) || 
-                                           availability.getEndTime().isEqual(startTime));
-                        
-                        if (overlaps) {
-                            return false;
-                        }
+                        availability.getHallId().equals(hallId) &&
+                        !availability.getStatus().equals("BOOKED") &&
+                        ((availability.getStartTime().isAfter(startTime) || availability.getStartTime().isEqual(startTime)) &&
+                         (availability.getEndTime().isBefore(endTime) || availability.getEndTime().isEqual(endTime)))) {
+                        return true;
                     }
                 }
                 

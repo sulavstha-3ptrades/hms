@@ -26,7 +26,7 @@ public class MaintenanceService {
         return new Task<List<Maintenance>>() {
             @Override
             protected List<Maintenance> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.MAINTENANCE_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getMaintenanceScheduleFilePath());
                 List<Maintenance> maintenanceList = new ArrayList<>();
 
                 for (String line : lines) {
@@ -51,7 +51,7 @@ public class MaintenanceService {
         return new Task<List<Maintenance>>() {
             @Override
             protected List<Maintenance> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.MAINTENANCE_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getMaintenanceScheduleFilePath());
                 List<Maintenance> maintenanceList = new ArrayList<>();
 
                 for (String line : lines) {
@@ -77,7 +77,7 @@ public class MaintenanceService {
         return new Task<List<Maintenance>>() {
             @Override
             protected List<Maintenance> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.MAINTENANCE_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getMaintenanceScheduleFilePath());
                 List<Maintenance> maintenanceList = new ArrayList<>();
 
                 for (String line : lines) {
@@ -120,7 +120,7 @@ public class MaintenanceService {
                 Maintenance maintenance = new Maintenance(maintenanceId, hallId, description, startTime, endTime);
 
                 // Save the maintenance schedule to the file
-                FileHandler.appendLine(FileConstants.MAINTENANCE_SCHEDULE_FILE, maintenance.toDelimitedString());
+                FileHandler.appendLine(FileConstants.getMaintenanceScheduleFilePath(), maintenance.toDelimitedString());
 
                 return maintenance;
             }
@@ -137,7 +137,7 @@ public class MaintenanceService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.MAINTENANCE_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getMaintenanceScheduleFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
@@ -153,7 +153,7 @@ public class MaintenanceService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.MAINTENANCE_SCHEDULE_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getMaintenanceScheduleFilePath(), updatedLines);
                     return true;
                 }
 
@@ -172,16 +172,21 @@ public class MaintenanceService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.MAINTENANCE_SCHEDULE_FILE);
-                List<String> updatedLines = lines.stream()
-                        .filter(line -> {
-                            Maintenance maintenance = Maintenance.fromDelimitedString(line);
-                            return maintenance == null || !maintenance.getMaintenanceId().equals(maintenanceId);
-                        })
-                        .collect(Collectors.toList());
+                List<String> lines = FileHandler.readLines(FileConstants.getMaintenanceScheduleFilePath());
+                List<String> updatedLines = new ArrayList<>();
+                boolean found = false;
 
-                if (updatedLines.size() < lines.size()) {
-                    FileHandler.writeLines(FileConstants.MAINTENANCE_SCHEDULE_FILE, updatedLines);
+                for (String line : lines) {
+                    Maintenance maintenance = Maintenance.fromDelimitedString(line);
+                    if (maintenance != null && maintenance.getMaintenanceId().equals(maintenanceId)) {
+                        found = true;
+                    } else {
+                        updatedLines.add(line);
+                    }
+                }
+
+                if (found) {
+                    FileHandler.writeLines(FileConstants.getMaintenanceScheduleFilePath(), updatedLines);
                     return true;
                 }
 
@@ -202,18 +207,18 @@ public class MaintenanceService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.MAINTENANCE_SCHEDULE_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getMaintenanceScheduleFilePath());
 
                 for (String line : lines) {
                     Maintenance maintenance = Maintenance.fromDelimitedString(line);
-                    if (maintenance != null && maintenance.getHallId().equals(hallId)) {
+                    if (maintenance != null) {
                         // Check if maintenance period overlaps with the given period
                         boolean overlaps = (maintenance.getStartTime().isBefore(endTime) || 
                                            maintenance.getStartTime().isEqual(endTime)) &&
                                           (maintenance.getEndTime().isAfter(startTime) || 
                                            maintenance.getEndTime().isEqual(startTime));
                         
-                        if (overlaps) {
+                        if (overlaps && maintenance.getHallId().equals(hallId)) {
                             return true;
                         }
                     }

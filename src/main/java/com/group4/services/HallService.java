@@ -26,13 +26,13 @@ public class HallService {
         return new Task<List<Hall>>() {
             @Override
             protected List<Hall> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getHallsFilePath());
                 List<Hall> halls = new ArrayList<>();
 
                 // If file is empty, initialize with sample halls
                 if (lines.isEmpty()) {
                     initializeSampleHalls();
-                    lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                    lines = FileHandler.readLines(FileConstants.getHallsFilePath());
                 }
 
 
@@ -63,7 +63,7 @@ public class HallService {
         lines.add("HALL-34567890|MEETING_ROOM|50|200.0");
         
         // Write sample data to file
-        FileHandler.writeLines(FileConstants.HALLS_FILE, lines);
+        FileHandler.writeLines(FileConstants.getHallsFilePath(), lines);
     }
 
     /**
@@ -76,7 +76,7 @@ public class HallService {
         return new Task<Hall>() {
             @Override
             protected Hall call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getHallsFilePath());
 
                 for (String line : lines) {
                     Hall hall = Hall.fromDelimitedString(line);
@@ -109,7 +109,7 @@ public class HallService {
                 Hall hall = new Hall(hallId, type, capacity, ratePerHour);
 
                 // Save the hall to the file
-                FileHandler.appendLine(FileConstants.HALLS_FILE, hall.toDelimitedString());
+                FileHandler.appendLine(FileConstants.getHallsFilePath(), hall.toDelimitedString());
 
                 return hall;
             }
@@ -126,7 +126,7 @@ public class HallService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getHallsFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
@@ -141,7 +141,7 @@ public class HallService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.HALLS_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getHallsFilePath(), updatedLines);
                     return true;
                 }
 
@@ -160,7 +160,7 @@ public class HallService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getHallsFilePath());
                 List<String> updatedLines = lines.stream()
                         .filter(line -> {
                             Hall hall = Hall.fromDelimitedString(line);
@@ -169,7 +169,7 @@ public class HallService {
                         .collect(Collectors.toList());
 
                 if (updatedLines.size() < lines.size()) {
-                    FileHandler.writeLines(FileConstants.HALLS_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getHallsFilePath(), updatedLines);
                     return true;
                 }
 
@@ -188,7 +188,7 @@ public class HallService {
         return new Task<List<Hall>>() {
             @Override
             protected List<Hall> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getHallsFilePath());
                 List<Hall> halls = new ArrayList<>();
 
                 for (String line : lines) {
@@ -214,7 +214,7 @@ public class HallService {
         return new Task<List<Hall>>() {
             @Override
             protected List<Hall> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.HALLS_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getHallsFilePath());
                 List<Hall> halls = new ArrayList<>();
 
                 for (String line : lines) {

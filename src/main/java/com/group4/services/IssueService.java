@@ -25,7 +25,7 @@ public class IssueService {
         return new Task<List<Issue>>() {
             @Override
             protected List<Issue> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<Issue> issues = new ArrayList<>();
 
                 for (String line : lines) {
@@ -50,7 +50,7 @@ public class IssueService {
             @Override
             protected List<Issue> call() throws Exception {
                 String userId = SessionManager.getInstance().getCurrentUser().getUserId();
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<Issue> issues = new ArrayList<>();
 
                 for (String line : lines) {
@@ -76,7 +76,7 @@ public class IssueService {
             @Override
             protected List<Issue> call() throws Exception {
                 String staffId = SessionManager.getInstance().getCurrentUser().getUserId();
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<Issue> issues = new ArrayList<>();
 
                 for (String line : lines) {
@@ -102,7 +102,7 @@ public class IssueService {
         return new Task<Issue>() {
             @Override
             protected Issue call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
 
                 for (String line : lines) {
                     Issue issue = Issue.fromDelimitedString(line);
@@ -137,7 +137,7 @@ public class IssueService {
                 Issue issue = new Issue(issueId, customerId, hallId, description, null, IssueStatus.OPEN);
 
                 // Save the issue to the file
-                FileHandler.appendLine(FileConstants.ISSUES_FILE, issue.toDelimitedString());
+                FileHandler.appendLine(FileConstants.getIssuesFilePath(), issue.toDelimitedString());
 
                 return issue;
             }
@@ -154,7 +154,7 @@ public class IssueService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
@@ -169,7 +169,7 @@ public class IssueService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.ISSUES_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getIssuesFilePath(), updatedLines);
                     return true;
                 }
 
@@ -189,26 +189,27 @@ public class IssueService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
                 for (String line : lines) {
                     Issue issue = Issue.fromDelimitedString(line);
-                    if (issue != null) {
-                        if (issue.getIssueId().equals(issueId)) {
-                            issue.setAssignedStaffId(staffId);
-                            issue.setStatus(IssueStatus.IN_PROGRESS);
-                            updatedLines.add(issue.toDelimitedString());
-                            found = true;
-                        } else {
-                            updatedLines.add(line);
+                    if (issue != null && issue.getIssueId().equals(issueId)) {
+                        if (issue.getStatus() != IssueStatus.OPEN) {
+                            throw new IllegalStateException("Only OPEN issues can be assigned");
                         }
+                        issue.setAssignedStaffId(staffId);
+                        issue.setStatus(IssueStatus.IN_PROGRESS);
+                        updatedLines.add(issue.toDelimitedString());
+                        found = true;
+                    } else {
+                        updatedLines.add(line);
                     }
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.ISSUES_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getIssuesFilePath(), updatedLines);
                     return true;
                 }
 
@@ -228,7 +229,7 @@ public class IssueService {
         return new Task<Boolean>() {
             @Override
             protected Boolean call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<String> updatedLines = new ArrayList<>();
                 boolean found = false;
 
@@ -246,7 +247,7 @@ public class IssueService {
                 }
 
                 if (found) {
-                    FileHandler.writeLines(FileConstants.ISSUES_FILE, updatedLines);
+                    FileHandler.writeLines(FileConstants.getIssuesFilePath(), updatedLines);
                     return true;
                 }
 
@@ -265,7 +266,7 @@ public class IssueService {
         return new Task<List<Issue>>() {
             @Override
             protected List<Issue> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<Issue> issues = new ArrayList<>();
 
                 for (String line : lines) {
@@ -290,7 +291,7 @@ public class IssueService {
         return new Task<List<Issue>>() {
             @Override
             protected List<Issue> call() throws Exception {
-                List<String> lines = FileHandler.readLines(FileConstants.ISSUES_FILE);
+                List<String> lines = FileHandler.readLines(FileConstants.getIssuesFilePath());
                 List<Issue> issues = new ArrayList<>();
 
                 for (String line : lines) {

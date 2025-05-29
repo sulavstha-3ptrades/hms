@@ -19,8 +19,8 @@ import java.util.stream.Collectors;
  * Service class for managing hall availability.
  */
 public class AvailabilityService {
-    private final String availabilityFilePath = FileConstants.AVAILABILITY_SCHEDULE_FILE;
-    private final String maintenanceFilePath = FileConstants.MAINTENANCE_SCHEDULE_FILE;
+    private final String availabilityFilePath = FileConstants.getAvailabilityScheduleFilePath();
+    private final String maintenanceFilePath = FileConstants.getMaintenanceScheduleFilePath();
     private final HallService hallService = new HallService();
 
     /**

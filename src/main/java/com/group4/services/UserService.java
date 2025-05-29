@@ -1,11 +1,11 @@
 package com.group4.services;
 
 import com.group4.models.User;
+import com.group4.utils.FileConstants;
 import com.group4.utils.PasswordUtils;
 
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,11 +13,14 @@ import java.util.List;
  * Service class for handling user-related operations.
  */
 public class UserService {
-    private static final String USERS_FILE = "data/users.txt";
     private static final String DEFAULT_ADMIN_EMAIL = "admin@example.com";
     private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
     private static final String DEFAULT_ADMIN_FIRST_NAME = "Admin";
     private static final String DEFAULT_ADMIN_LAST_NAME = "User";
+    
+    private String getUsersFilePath() {
+        return FileConstants.getUsersFilePath();
+    }
 
     /**
      * Updates an existing user's information.
@@ -78,15 +81,22 @@ public class UserService {
      */
     public User getUserByEmail(String email) {
         if (email == null || email.trim().isEmpty()) {
+            System.out.println("Empty or null email provided");
             return null;
         }
         
+        System.out.println("Looking up user with email: " + email);
         List<User> users = getAllUsers();
+        System.out.println("Total users loaded: " + users.size());
+        
         for (User user : users) {
-            if (email.equalsIgnoreCase(user.getEmail())) {
+            if (user.getEmail() != null && user.getEmail().equalsIgnoreCase(email.trim())) {
+                System.out.println("Found user: " + user.getEmail() + " with role: " + user.getRole());
                 return user;
             }
         }
+        
+        System.out.println("No user found with email: " + email);
         return null;
     }
     
@@ -95,27 +105,32 @@ public class UserService {
      *
      * @return A list of all users
      */
-    private List<User> getAllUsers() {
+    public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
-        File usersFile = new File(USERS_FILE);
+        String usersFilePath = getUsersFilePath();
+        File usersFile = new File(usersFilePath);
         
-        // If file doesn't exist, create it with default admin user
-        if (!usersFile.exists()) {
-            System.out.println("Users file does not exist. Creating with default admin user...");
-            users.add(createDefaultAdminUser());
-            saveAllUsers(users);
-            return users;
+        // Ensure parent directory exists
+        File parentDir = usersFile.getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            boolean dirsCreated = parentDir.mkdirs();
+            if (!dirsCreated) {
+                System.err.println("Failed to create data directory: " + parentDir.getAbsolutePath());
+                return users;
+            }
         }
         
-        // If file is empty, create default admin user
-        if (usersFile.length() == 0) {
-            System.out.println("Users file is empty. Creating default admin user...");
-            users.add(createDefaultAdminUser());
-            saveAllUsers(users);
-            return users;
-        }
+
         
         System.out.println("Reading users from: " + usersFile.getAbsolutePath());
+        
+        // If file doesn't exist or is empty, create default admin user
+        if (!usersFile.exists() || usersFile.length() == 0) {
+            System.out.println((!usersFile.exists() ? "Users file does not exist" : "Users file is empty") + ". Creating default admin user...");
+            users.add(createDefaultAdminUser());
+            saveAllUsers(users);
+            return users;
+        }
         
         try (BufferedReader reader = new BufferedReader(new FileReader(usersFile))) {
             String line;
@@ -199,36 +214,34 @@ public class UserService {
     }
     
     /**
-     * Saves all users to the data store.
-     *
-     * @param users The list of users to save
-     * @return true if the save was successful, false otherwise
-     */
-    /**
      * Creates a default admin user with predefined credentials.
      * @return A new User instance with admin privileges
      */
-    private User createDefaultAdminUser() {
+    public User createDefaultAdminUser() {
         System.out.println("Creating default admin user...");
+        String userId = "ADMIN-" + java.util.UUID.randomUUID().toString().substring(0, 8);
+        String hashedPassword = PasswordUtils.hashPassword(DEFAULT_ADMIN_PASSWORD);
+        
+        System.out.println("Creating admin user with ID: " + userId);
+        System.out.println("Admin email: " + DEFAULT_ADMIN_EMAIL);
+        System.out.println("Admin password hash: " + hashedPassword);
+        
         User admin = new User(
-            java.util.UUID.randomUUID().toString(), // Generate a new UUID
+            userId,
             DEFAULT_ADMIN_FIRST_NAME,
             DEFAULT_ADMIN_LAST_NAME,
-            "admin",
+            "Admin",  // Role with capital A to match expected role names
             DEFAULT_ADMIN_EMAIL,
-            PasswordUtils.hashPassword(DEFAULT_ADMIN_PASSWORD),
+            hashedPassword,
             "1234567890",
-            "active"
+            "ACTIVE"  // Uppercase to match status checks
         );
-        System.out.println("Created default admin user with email: " + DEFAULT_ADMIN_EMAIL);
+        admin.setProfilePicture("");
+        
+        System.out.println("Admin user created: " + admin);
         return admin;
     }
     
-    /**
-     * Saves all users to the users file.
-     * @param users List of users to save
-     * @return true if save was successful, false otherwise
-     */
     /**
      * Verifies if the provided password matches the user's stored password
      * @param userId The ID of the user to verify
@@ -256,20 +269,31 @@ public class UserService {
         return input.replace("\\", "\\\\").replace("|", "\\|");
     }
     
-    private boolean saveAllUsers(List<User> users) {
-        System.out.println("Attempting to save " + users.size() + " users to: " + USERS_FILE);
+    /**
+     * Saves all users to the data file.
+     * @param users The list of users to save
+     * @return true if the save was successful, false otherwise
+     */
+    public boolean saveAllUsers(List<User> users) {
+        String usersFilePath = getUsersFilePath();
+        System.out.println("Attempting to save " + users.size() + " users to: " + usersFilePath);
         
-        // Create parent directories if they don't exist
-        try {
-            Files.createDirectories(Paths.get(USERS_FILE).getParent());
-            System.out.println("Created necessary directories");
-        } catch (IOException e) {
-            System.err.println("Error creating directories: " + e.getMessage());
-            e.printStackTrace();
-            return false;
+        // Ensure parent directory exists
+        File parentDir = new File(usersFilePath).getParentFile();
+        if (parentDir != null && !parentDir.exists()) {
+            boolean dirsCreated = parentDir.mkdirs();
+            if (!dirsCreated) {
+                System.err.println("Failed to create data directory: " + parentDir.getAbsolutePath());
+                return false;
+            }
         }
         
-        try (PrintWriter writer = new PrintWriter(new FileWriter(USERS_FILE))) {
+        // Create a temporary file first to ensure atomic write
+        Path tempPath = Paths.get(usersFilePath + ".tmp");
+        Path usersPath = Paths.get(usersFilePath);
+        
+        try (BufferedWriter writer = Files.newBufferedWriter(tempPath, StandardOpenOption.CREATE, 
+                                                           StandardOpenOption.TRUNCATE_EXISTING)) {
             System.out.println("Successfully opened file for writing");
             for (User user : users) {
                 String hashedPassword = user.getPassword();
@@ -293,11 +317,29 @@ public class UserService {
                 
                 // Join with pipe delimiter
                 String userLine = String.join("|", userData);
-                writer.println(userLine);
+                writer.write(userLine);
+                writer.newLine();
             }
+            
+            // Close the writer before moving the file
+            writer.close();
+            
+            // Atomically replace the old file with the new one
+            Files.move(tempPath, usersPath, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            
+            System.out.println("Successfully saved users to: " + usersPath);
             return true;
         } catch (IOException e) {
             System.err.println("Error writing to users file: " + e.getMessage());
+            e.printStackTrace();
+            try {
+                // Clean up temp file if it exists
+                if (Files.exists(tempPath)) {
+                    Files.deleteIfExists(tempPath);
+                }
+            } catch (IOException ex) {
+                System.err.println("Failed to clean up temp file: " + ex.getMessage());
+            }
             return false;
         }
     }

@@ -12,7 +12,7 @@ public class TestLogin {
     public static void main(String[] args) {
         try {
             // Read users from file
-            List<String> lines = FileHandler.readLines(FileConstants.USERS_FILE);
+            List<String> lines = FileHandler.readLines(FileConstants.getUsersFilePath());
             System.out.println("Read " + lines.size() + " lines from users file");
 
             // Test password

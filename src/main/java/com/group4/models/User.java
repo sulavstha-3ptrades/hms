@@ -134,6 +134,12 @@ public class User {
     public StringProperty profilePictureProperty() {
         return profilePicture;
     }
+    
+    @Override
+    public String toString() {
+        return String.format("User{userId='%s', email='%s', role='%s', status='%s', name='%s %s'}",
+            getUserId(), getEmail(), getRole(), getStatus(), getFirstName(), getLastName());
+    }
 
     // JavaFX property getters
     public StringProperty userIdProperty() {

@@ -47,24 +47,13 @@ public final class FileConstants {
     private static final String DEFAULT_USER_IMAGE = "default-user" + PNG_EXTENSION;
     private static final String DEFAULT_HALL_IMAGE = "default-hall" + PNG_EXTENSION;
 
-    // Data files
-    /** Users data file */
-    public static final String USERS_FILE = "users" + TXT_EXTENSION;
-    
-    /** Halls data file */
-    public static final String HALLS_FILE = "halls" + TXT_EXTENSION;
-    
-    /** Bookings data file */
-    public static final String BOOKINGS_FILE = "bookings" + TXT_EXTENSION;
-    
-    /** Issues data file */
-    public static final String ISSUES_FILE = "issues" + TXT_EXTENSION;
-    
-    /** Availability schedule data file */
-    public static final String AVAILABILITY_SCHEDULE_FILE = "availability_schedule" + TXT_EXTENSION;
-    
-    /** Maintenance schedule data file */
-    public static final String MAINTENANCE_SCHEDULE_FILE = "maintenance_schedule" + TXT_EXTENSION;
+    // Data files - private to enforce using getter methods
+    private static final String USERS_FILE = "users" + TXT_EXTENSION;
+    private static final String HALLS_FILE = "halls" + TXT_EXTENSION;
+    private static final String BOOKINGS_FILE = "bookings" + TXT_EXTENSION;
+    private static final String ISSUES_FILE = "issues" + TXT_EXTENSION;
+    private static final String AVAILABILITY_SCHEDULE_FILE = "availability_schedule" + TXT_EXTENSION;
+    private static final String MAINTENANCE_SCHEDULE_FILE = "maintenance_schedule" + TXT_EXTENSION;
     
     /**
      * Joins path components using the system's file separator.
@@ -96,12 +85,30 @@ public final class FileConstants {
     }
     
     /**
+     * Gets just the users filename.
+     * 
+     * @return users.txt
+     */
+    public static String getUsersFilename() {
+        return USERS_FILE;
+    }
+    
+    /**
      * Gets the full path to the halls data file.
      * 
      * @return Full path to halls.txt
      */
     public static String getHallsFilePath() {
         return getDataFilePath(HALLS_FILE);
+    }
+    
+    /**
+     * Gets just the halls filename.
+     * 
+     * @return halls.txt
+     */
+    public static String getHallsFilename() {
+        return HALLS_FILE;
     }
     
     /**
@@ -114,12 +121,30 @@ public final class FileConstants {
     }
     
     /**
+     * Gets just the bookings filename.
+     * 
+     * @return bookings.txt
+     */
+    public static String getBookingsFilename() {
+        return BOOKINGS_FILE;
+    }
+    
+    /**
      * Gets the full path to the issues data file.
      * 
      * @return Full path to issues.txt
      */
     public static String getIssuesFilePath() {
         return getDataFilePath(ISSUES_FILE);
+    }
+    
+    /**
+     * Gets just the issues filename.
+     * 
+     * @return issues.txt
+     */
+    public static String getIssuesFilename() {
+        return ISSUES_FILE;
     }
     
     /**
@@ -132,12 +157,30 @@ public final class FileConstants {
     }
     
     /**
+     * Gets just the availability schedule filename.
+     * 
+     * @return availability_schedule.txt
+     */
+    public static String getAvailabilityScheduleFilename() {
+        return AVAILABILITY_SCHEDULE_FILE;
+    }
+    
+    /**
      * Gets the full path to the maintenance schedule file.
      * 
      * @return Full path to maintenance_schedule.txt
      */
     public static String getMaintenanceScheduleFilePath() {
         return getDataFilePath(MAINTENANCE_SCHEDULE_FILE);
+    }
+    
+    /**
+     * Gets just the maintenance schedule filename.
+     * 
+     * @return maintenance_schedule.txt
+     */
+    public static String getMaintenanceScheduleFilename() {
+        return MAINTENANCE_SCHEDULE_FILE;
     }
     
     /**
@@ -176,13 +219,13 @@ public final class FileConstants {
     }
     
     /**
-     * Gets the path to the data directory.
+     * Gets the path to the data directory in the project root.
      * 
      * @param filename The name of the file in the data directory
      * @return Full path to the file in the data directory
      */
     private static String getDataFilePath(String filename) {
-        return getAppDataDir().resolve(DATA_DIR).resolve(filename).toString();
+        return Path.of("").toAbsolutePath().resolve(DATA_DIR).resolve(filename).toString();
     }
     
     /**
