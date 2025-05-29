@@ -2,7 +2,6 @@ package com.group4.controllers;
 
 import com.group4.models.Booking;
 import com.group4.models.Hall;
-import com.group4.services.BookingService;
 import com.group4.utils.FileConstants;
 import com.group4.utils.FileHandler;
 import javafx.beans.value.ChangeListener;
@@ -56,10 +55,9 @@ public class BookingConfirmationController implements Initializable {
     private TextArea specialRequests;
 
     private Hall currentHall;
-    private BookingService bookingService;
     private List<BookingTimeSlot> bookedTimeSlots;
     private static final Logger LOGGER = Logger.getLogger(BookingConfirmationController.class.getName());
-    
+
     /**
      * Inner class to represent a booked time slot for a hall
      */
@@ -67,49 +65,36 @@ public class BookingConfirmationController implements Initializable {
         private LocalTime startTime;
         private LocalTime endTime;
         private String bookingId;
-        
+
         public BookingTimeSlot(LocalTime startTime, LocalTime endTime, String bookingId) {
             this.startTime = startTime;
             this.endTime = endTime;
             this.bookingId = bookingId;
         }
-        
-        public LocalTime getStartTime() {
-            return startTime;
-        }
-        
-        public LocalTime getEndTime() {
-            return endTime;
-        }
-        
-        public String getBookingId() {
-            return bookingId;
-        }
-        
+
         /**
          * Checks if this time slot overlaps with the specified time range
          * 
          * @param start The start time to check
-         * @param end The end time to check
+         * @param end   The end time to check
          * @return true if there is an overlap, false otherwise
          */
         public boolean overlaps(LocalTime start, LocalTime end) {
             return !(end.isBefore(startTime) || start.isAfter(endTime));
         }
-        
+
         @Override
         public String toString() {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("h:mm a");
-            return startTime.format(formatter) + " - " + endTime.format(formatter) + " (" + bookingId + ")"; 
+            return startTime.format(formatter) + " - " + endTime.format(formatter) + " (" + bookingId + ")";
         }
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // Initialize services
-        bookingService = new BookingService();
         bookedTimeSlots = new ArrayList<>();
-        
+
         // Initialize time selection ComboBoxes
         initializeTimeComboBoxes();
 
@@ -124,7 +109,7 @@ public class BookingConfirmationController implements Initializable {
                 setDisable(empty || date.isBefore(LocalDate.now()));
             }
         });
-        
+
         // Add listener to date picker to check availability when date changes
         bookingDatePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && currentHall != null) {
@@ -179,32 +164,31 @@ public class BookingConfirmationController implements Initializable {
      * Loads all booked time slots for the specified hall and date.
      * 
      * @param hallId The ID of the hall
-     * @param date The date to check
+     * @param date   The date to check
      */
     private void loadBookedTimeSlots(String hallId, LocalDate date) {
         bookedTimeSlots.clear();
-        
+
         try {
             // Read all bookings from the file
             List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
-            
+
             for (String line : lines) {
                 try {
                     Booking booking = Booking.fromDelimitedString(line);
-                    
-                    if (booking != null && 
-                        booking.getHallId().equals(hallId)) {
-                        
+
+                    if (booking != null &&
+                            booking.getHallId().equals(hallId)) {
+
                         // Check if the booking is on the selected date
                         LocalDate bookingDate = booking.getStartDateTime().toLocalDate();
-                        
+
                         if (bookingDate.equals(date)) {
                             // Add this time slot to the list of booked slots
                             BookingTimeSlot slot = new BookingTimeSlot(
-                                booking.getStartDateTime().toLocalTime(),
-                                booking.getEndDateTime().toLocalTime(),
-                                booking.getBookingId()
-                            );
+                                    booking.getStartDateTime().toLocalTime(),
+                                    booking.getEndDateTime().toLocalTime(),
+                                    booking.getBookingId());
                             bookedTimeSlots.add(slot);
                             LOGGER.info("Found booked time slot: " + slot);
                         }
@@ -213,26 +197,26 @@ public class BookingConfirmationController implements Initializable {
                     LOGGER.log(Level.WARNING, "Error parsing booking: " + line, e);
                 }
             }
-            
+
             // Update UI to show booked time slots
             updateTimeSelectionUI();
-            
+
         } catch (IOException e) {
             LOGGER.log(Level.SEVERE, "Error reading bookings file", e);
         }
     }
-    
+
     /**
      * Updates the time selection UI to reflect booked time slots.
      */
     private void updateTimeSelectionUI() {
         // Reset all time selection controls to default style
         resetTimeControlStyles();
-        
+
         // Check if current selection conflicts with any booked slots
         checkAndUpdateTimeConflicts();
     }
-    
+
     /**
      * Resets all time selection controls to default style.
      */
@@ -244,24 +228,25 @@ public class BookingConfirmationController implements Initializable {
         endMinuteComboBox.setStyle("");
         endAmPmComboBox.setStyle("");
     }
-    
+
     /**
-     * Checks if the current time selection conflicts with any booked slots and updates UI accordingly.
+     * Checks if the current time selection conflicts with any booked slots and
+     * updates UI accordingly.
      */
     private void checkAndUpdateTimeConflicts() {
         LocalTime startTime = getSelectedStartTime();
         LocalTime endTime = getSelectedEndTime();
-        
+
         if (startTime != null && endTime != null) {
             boolean hasConflict = false;
-            
+
             for (BookingTimeSlot slot : bookedTimeSlots) {
                 if (slot.overlaps(startTime, endTime)) {
                     hasConflict = true;
                     break;
                 }
             }
-            
+
             if (hasConflict) {
                 // Mark time controls with conflict style
                 String conflictStyle = "-fx-border-color: red; -fx-border-width: 2px;";
@@ -271,7 +256,7 @@ public class BookingConfirmationController implements Initializable {
                 endHourComboBox.setStyle(conflictStyle);
                 endMinuteComboBox.setStyle(conflictStyle);
                 endAmPmComboBox.setStyle(conflictStyle);
-                
+
                 // Show conflict tooltip
                 Tooltip tooltip = new Tooltip("This time slot conflicts with an existing booking");
                 startHourComboBox.setTooltip(tooltip);
@@ -291,7 +276,7 @@ public class BookingConfirmationController implements Initializable {
             }
         }
     }
-    
+
     /**
      * Updates the duration and cost based on the selected start and end times.
      * Also checks for time conflicts with existing bookings.
@@ -317,7 +302,7 @@ public class BookingConfirmationController implements Initializable {
             // Calculate and set cost
             double cost = currentHall.getRatePerHour() * durationHours;
             costLabel.setText(String.format("$%.2f", cost));
-            
+
             // Check for conflicts with existing bookings
             checkAndUpdateTimeConflicts();
         }

@@ -51,7 +51,12 @@
                         GridPane.columnIndex="0" />
                     <ComboBox fx:id="hallTypeComboBox" styleClass="form-field" GridPane.rowIndex="1"
                         GridPane.columnIndex="1" GridPane.hgrow="ALWAYS"
-                        maxWidth="1.7976931348623157E308" />
+                        promptText="Select Hall Type" maxWidth="1.7976931348623157E308"
+                        onShown="#initialize">
+                        <tooltip>
+                            <Tooltip text="Select the type of hall from the list" />
+                        </tooltip>
+                    </ComboBox>
 
                     <!-- Capacity -->
                     <Label text="Capacity" styleClass="form-label" GridPane.rowIndex="2"

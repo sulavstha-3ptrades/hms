@@ -19,16 +19,13 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -98,43 +95,74 @@ public class AdminDashboardController {
 
     @FXML
     private ComboBox<String> roleFilterComboBox;
-    
+
     // Profile components
-    @FXML private ImageView profileImageView;
-    @FXML private ImageView profileImageLarge;
-    @FXML private Label userNameLabel;
-    @FXML private Label userRoleLabel;
-    @FXML private Label profileFullName;
-    @FXML private Label profileEmail;
-    @FXML private Label profileRole;
-    @FXML private Label profileContact;
-    @FXML private Label profileUsername;
-    @FXML private Label profileEmailField;
-    @FXML private Label profileContactField;
-    @FXML private TabPane tabPane;
-    
+    @FXML
+    private ImageView profileImageView;
+    @FXML
+    private ImageView profileImageLarge;
+    @FXML
+    private Label userNameLabel;
+    @FXML
+    private Label userRoleLabel;
+    @FXML
+    private Label profileFullName;
+    @FXML
+    private Label profileEmail;
+    @FXML
+    private Label profileRole;
+    @FXML
+    private Label profileContact;
+    @FXML
+    private Label profileUsername;
+    @FXML
+    private Label profileEmailField;
+    @FXML
+    private Label profileContactField;
+    @FXML
+    private TabPane tabPane;
+
     // Hall Management components
-    @FXML private TableView<Hall> hallsTable;
-    @FXML private TableColumn<Hall, String> hallIdColumn;
-    @FXML private TableColumn<Hall, String> hallTypeColumn;
-    @FXML private TableColumn<Hall, Integer> capacityColumn;
-    @FXML private TableColumn<Hall, Double> rateColumn;
-    @FXML private Button addHallButton;
-    @FXML private Button editHallButton;
-    @FXML private Button deleteHallButton;
-    @FXML private Button setAvailabilityButton;
-    @FXML private Button quickMaintenanceButton;
-    
+    @FXML
+    private TableView<Hall> hallsTable;
+    @FXML
+    private TableColumn<Hall, String> hallIdColumn;
+    @FXML
+    private TableColumn<Hall, String> hallTypeColumn;
+    @FXML
+    private TableColumn<Hall, Integer> capacityColumn;
+    @FXML
+    private TableColumn<Hall, Double> rateColumn;
+    @FXML
+    private Button addHallButton;
+    @FXML
+    private Button editHallButton;
+    @FXML
+    private Button deleteHallButton;
+    @FXML
+    private Button setAvailabilityButton;
+    @FXML
+    private Button quickMaintenanceButton;
+
     // Maintenance components
-    @FXML private TableView<Maintenance> maintenanceTable;
-    @FXML private TableColumn<Maintenance, String> maintenanceIdColumn;
-    @FXML private TableColumn<Maintenance, String> maintenanceHallIdColumn;
-    @FXML private TableColumn<Maintenance, String> maintenanceDescriptionColumn;
-    @FXML private TableColumn<Maintenance, String> maintenanceStartColumn;
-    @FXML private TableColumn<Maintenance, String> maintenanceEndColumn;
-    @FXML private Button addMaintenanceButton;
-    @FXML private Button editMaintenanceButton;
-    @FXML private Button deleteMaintenanceButton;
+    @FXML
+    private TableView<Maintenance> maintenanceTable;
+    @FXML
+    private TableColumn<Maintenance, String> maintenanceIdColumn;
+    @FXML
+    private TableColumn<Maintenance, String> maintenanceHallIdColumn;
+    @FXML
+    private TableColumn<Maintenance, String> maintenanceDescriptionColumn;
+    @FXML
+    private TableColumn<Maintenance, String> maintenanceStartColumn;
+    @FXML
+    private TableColumn<Maintenance, String> maintenanceEndColumn;
+    @FXML
+    private Button addMaintenanceButton;
+    @FXML
+    private Button editMaintenanceButton;
+    @FXML
+    private Button deleteMaintenanceButton;
 
     private AdminService adminService;
     private UserService userService;
@@ -203,20 +231,21 @@ public class AdminDashboardController {
             }
         });
     }
-    
+
     /**
      * Initializes the hall management tab.
      */
     private void initializeHallManagementTab() {
         // Initialize hall table columns
         hallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
-        hallTypeColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getType().toString()));
+        hallTypeColumn
+                .setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getType().toString()));
         capacityColumn.setCellValueFactory(cellData -> cellData.getValue().capacityProperty().asObject());
         rateColumn.setCellValueFactory(cellData -> cellData.getValue().ratePerHourProperty().asObject());
-        
+
         // Set hall table data source
         hallsTable.setItems(hallsList);
-        
+
         // Add hall table selection listener
         hallsTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
@@ -226,26 +255,26 @@ public class AdminDashboardController {
                     setAvailabilityButton.setDisable(!hallSelected);
                     quickMaintenanceButton.setDisable(!hallSelected);
                 });
-        
+
         // Initialize maintenance table columns
         maintenanceIdColumn.setCellValueFactory(cellData -> cellData.getValue().maintenanceIdProperty());
         maintenanceHallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
         maintenanceDescriptionColumn.setCellValueFactory(cellData -> cellData.getValue().descriptionProperty());
-        
+
         // Format date-time columns
         maintenanceStartColumn.setCellValueFactory(cellData -> {
             LocalDateTime startTime = cellData.getValue().getStartTime();
             return new SimpleStringProperty(startTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
         });
-        
+
         maintenanceEndColumn.setCellValueFactory(cellData -> {
             LocalDateTime endTime = cellData.getValue().getEndTime();
             return new SimpleStringProperty(endTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
         });
-        
+
         // Set maintenance table data source
         maintenanceTable.setItems(maintenanceList);
-        
+
         // Add maintenance table selection listener
         maintenanceTable.getSelectionModel().selectedItemProperty().addListener(
                 (observable, oldValue, newValue) -> {
@@ -253,7 +282,7 @@ public class AdminDashboardController {
                     editMaintenanceButton.setDisable(!maintenanceSelected);
                     deleteMaintenanceButton.setDisable(!maintenanceSelected);
                 });
-        
+
         // Disable buttons initially
         editHallButton.setDisable(true);
         deleteHallButton.setDisable(true);
@@ -276,7 +305,7 @@ public class AdminDashboardController {
                 },
                 error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load users: " + error.getMessage()));
     }
-    
+
     /**
      * Loads all halls from the database.
      */
@@ -289,7 +318,7 @@ public class AdminDashboardController {
                 },
                 error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load halls: " + error.getMessage()));
     }
-    
+
     /**
      * Loads all maintenance schedules from the database.
      */
@@ -300,7 +329,8 @@ public class AdminDashboardController {
                     maintenanceList.clear();
                     maintenanceList.addAll(maintenance);
                 },
-                error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load maintenance schedules: " + error.getMessage()));
+                error -> showAlert(Alert.AlertType.ERROR, "Error",
+                        "Failed to load maintenance schedules: " + error.getMessage()));
     }
 
     /**
@@ -361,7 +391,7 @@ public class AdminDashboardController {
             System.err.println("Failed to load current user with ID: " + currentUserId);
         }
     }
-    
+
     /**
      * Initializes the profile tab with user data.
      */
@@ -370,7 +400,7 @@ public class AdminDashboardController {
             profileFullName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
             profileEmail.setText(currentUser.getEmail());
             profileRole.setText(currentUser.getRole());
-            
+
             // Update other profile fields if they exist
             if (userNameLabel != null) {
                 userNameLabel.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
@@ -380,7 +410,7 @@ public class AdminDashboardController {
             }
         }
     }
-    
+
     /**
      * Initializes the profile image using the centralized image loading logic.
      * This method will attempt to load the user's profile image if available,
@@ -392,19 +422,19 @@ public class AdminDashboardController {
             if (currentUser != null) {
                 currentUser = userService.getUserById(currentUser.getUserId());
             }
-            
+
             String imagePath = (currentUser != null) ? currentUser.getProfilePicture() : null;
             logger.info("Loading profile image from path: " + imagePath);
-            
+
             // Clear the image cache first
             if (profileImageView != null) {
                 profileImageView.setImage(null);
             }
-            
+
             // Load the new image
             Image image = ImageUtils.loadImage(imagePath);
             setProfileImages(image);
-            
+
             // Force a UI refresh
             if (profileImageView != null) {
                 profileImageView.setImage(image);
@@ -419,7 +449,7 @@ public class AdminDashboardController {
             }
         }
     }
-    
+
     /**
      * Sets the profile images for both small and large image views
      */
@@ -431,9 +461,9 @@ public class AdminDashboardController {
             profileImageLarge.setImage(image);
         }
     }
-    
+
     // Default avatar handling is now managed by ImageUtils class
-    
+
     /**
      * Handles profile section click to switch to the profile tab
      */
@@ -441,14 +471,14 @@ public class AdminDashboardController {
     private void handleProfileSectionClick() {
         try {
             logger.info("Profile section clicked. Current tabPane: " + (tabPane != null ? "found" : "null"));
-            
+
             if (tabPane != null) {
                 // Log all available tabs
                 logger.info("Available tabs: " + tabPane.getTabs().size());
                 for (int i = 0; i < tabPane.getTabs().size(); i++) {
                     logger.info("Tab " + i + ": " + tabPane.getTabs().get(i).getText());
                 }
-                
+
                 // Find the profile tab by text
                 for (Tab tab : tabPane.getTabs()) {
                     if ("My Profile".equals(tab.getText())) {
@@ -460,7 +490,7 @@ public class AdminDashboardController {
                         return;
                     }
                 }
-                
+
                 // Fallback to index if text search fails
                 if (tabPane.getTabs().size() > 1) {
                     logger.info("Profile tab not found by text, trying index 1");
@@ -488,7 +518,7 @@ public class AdminDashboardController {
             });
         }
     }
-    
+
     /**
      * Handles changing the profile photo.
      */
@@ -496,7 +526,7 @@ public class AdminDashboardController {
      * Shows a toast message to the user.
      * 
      * @param message The message to display
-     * @param type The type of toast (success-toast, error-toast, etc.)
+     * @param type    The type of toast (success-toast, error-toast, etc.)
      */
     private void showToast(String message, String type) {
         // Create a new stage for the toast
@@ -504,44 +534,43 @@ public class AdminDashboardController {
         toastStage.initOwner(profileImageView.getScene().getWindow());
         toastStage.setResizable(false);
         toastStage.initStyle(StageStyle.TRANSPARENT);
-        
+
         // Create and style the label
         Label toastLabel = new Label(message);
         toastLabel.getStyleClass().addAll("toast", type);
         toastLabel.setWrapText(true);
         toastLabel.setMaxWidth(300);
-        
+
         // Create the scene with a transparent background
         Scene scene = new Scene(new StackPane(toastLabel));
         scene.setFill(Color.TRANSPARENT);
-        
+
         // Apply the stylesheet if available
         try {
             scene.getStylesheets().add(getClass().getResource("/com/group4/css/styles.css").toExternalForm());
         } catch (Exception e) {
             // Fallback to inline styles if stylesheet loading fails
             toastLabel.setStyle(
-                "-fx-padding: 15px;" +
-                "-fx-background-radius: 5;" +
-                "-fx-background-color: " + (type.equals("error-toast") ? "#ff4444" : "#4CAF50") + ";" +
-                "-fx-text-fill: white;" +
-                "-fx-font-size: 14px;"
-            );
+                    "-fx-padding: 15px;" +
+                            "-fx-background-radius: 5;" +
+                            "-fx-background-color: " + (type.equals("error-toast") ? "#ff4444" : "#4CAF50") + ";" +
+                            "-fx-text-fill: white;" +
+                            "-fx-font-size: 14px;");
         }
-        
+
         toastStage.setScene(scene);
-        
+
         // Position the toast at the bottom center of the window
         Window window = profileImageView.getScene().getWindow();
         double centerX = window.getX() + (window.getWidth() / 2) - 150;
         double bottomY = window.getY() + window.getHeight() - 100;
-        
+
         toastStage.setX(centerX);
         toastStage.setY(bottomY);
-        
+
         // Show the toast
         toastStage.show();
-        
+
         // Auto-close the toast after 3 seconds
         new Thread(() -> {
             try {
@@ -552,34 +581,33 @@ public class AdminDashboardController {
             }
         }).start();
     }
-    
+
     @FXML
     private void handleChangePhoto() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Select Profile Image");
         fileChooser.getExtensionFilters().addAll(
-            new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif")
-        );
-        
+                new FileChooser.ExtensionFilter("Image Files", "*.png", "*.jpg", "*.jpeg", "*.gif"));
+
         File selectedFile = fileChooser.showOpenDialog(profileImageView.getScene().getWindow());
         if (selectedFile != null) {
             try {
                 // Save the image and get the relative path
                 String imagePath = ImageUtils.saveProfileImage(selectedFile, currentUser.getUserId());
-                
+
                 if (imagePath != null) {
                     // Update user with the new profile picture path
                     currentUser.setProfilePicture(imagePath);
                     boolean updateSuccess = userService.updateUser(currentUser);
-                    
+
                     if (updateSuccess) {
                         // Update UI with the new image
                         Image image = ImageUtils.loadImage(imagePath);
                         setProfileImages(image);
-                        
+
                         // Show success toast
                         showToast("Profile photo updated successfully!", "success-toast");
-                        
+
                         // Refresh the view
                         Platform.runLater(this::updateProfileUI);
                     } else {
@@ -594,7 +622,7 @@ public class AdminDashboardController {
             }
         }
     }
-    
+
     /**
      * Handles editing the user's profile.
      */
@@ -611,41 +639,41 @@ public class AdminDashboardController {
             originalUser.setRole(currentUser.getRole());
             originalUser.setStatus(currentUser.getStatus());
             originalUser.setProfilePicture(currentUser.getProfilePicture());
-            
+
             // Load the edit profile view
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/EditProfile.fxml"));
             Parent root = loader.load();
-            
+
             // Get the controller and pass the current user data
             Object controller = loader.getController();
             if (controller instanceof EditProfileController) {
                 EditProfileController editController = (EditProfileController) controller;
                 editController.setUserData(currentUser);
-                
+
                 // Create and show the dialog
                 Stage stage = new Stage();
                 stage.setTitle("Edit Profile");
                 stage.setScene(new Scene(root));
                 stage.initModality(Modality.APPLICATION_MODAL);
-                
+
                 // Show the dialog and wait for it to close
                 stage.showAndWait();
-                
+
                 // After dialog is closed, refresh the current user data
                 User updatedUser = userService.getUserById(currentUser.getUserId());
                 if (updatedUser != null) {
                     // Check if any profile data has changed
                     boolean profileChanged = !originalUser.equals(updatedUser);
-                    
+
                     if (profileChanged) {
                         // Update the current user reference
                         currentUser = updatedUser;
-                        
+
                         // Update the session user if it's the same user
                         if (SessionManager.getInstance().getCurrentUser().getUserId().equals(currentUser.getUserId())) {
                             SessionManager.getInstance().setCurrentUser(currentUser);
                         }
-                        
+
                         // Force update the UI
                         Platform.runLater(() -> {
                             try {
@@ -656,56 +684,60 @@ public class AdminDashboardController {
                                 if (profileImageLarge != null) {
                                     profileImageLarge.setImage(null);
                                 }
-                                
+
                                 // Force garbage collection
                                 System.gc();
-                                
+
                                 // Add a small delay to ensure the UI has time to update
                                 new java.util.Timer().schedule(
-                                    new java.util.TimerTask() {
-                                        @Override
-                                        public void run() {
-                                            Platform.runLater(() -> {
-                                                try {
-                                                    // Reload the profile image with cache busting
-                                                    String imagePath = currentUser.getProfilePicture();
-                                                    String timestamp = "?t=" + System.currentTimeMillis();
-                                                    logger.info("Reloading profile image from: " + imagePath + timestamp);
-                                                    
-                                                    // Load the image
-                                                    Image newImage = ImageUtils.loadImage(imagePath);
-                                                    
-                                                    // Update UI elements
-                                                    updateProfileUI();
-                                                    
-                                                    // Set the new images after UI is updated
-                                                    if (profileImageView != null) {
-                                                        profileImageView.setImage(newImage);
+                                        new java.util.TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                Platform.runLater(() -> {
+                                                    try {
+                                                        // Reload the profile image with cache busting
+                                                        String imagePath = currentUser.getProfilePicture();
+                                                        String timestamp = "?t=" + System.currentTimeMillis();
+                                                        logger.info("Reloading profile image from: " + imagePath
+                                                                + timestamp);
+
+                                                        // Load the image
+                                                        Image newImage = ImageUtils.loadImage(imagePath);
+
+                                                        // Update UI elements
+                                                        updateProfileUI();
+
+                                                        // Set the new images after UI is updated
+                                                        if (profileImageView != null) {
+                                                            profileImageView.setImage(newImage);
+                                                        }
+                                                        if (profileImageLarge != null) {
+                                                            profileImageLarge.setImage(newImage);
+                                                        }
+
+                                                        logger.info("Profile UI refreshed successfully");
+
+                                                        // Show success message
+                                                        showToast("Profile updated successfully!", "success-toast");
+
+                                                    } catch (Exception e) {
+                                                        logger.log(Level.SEVERE, "Error updating profile UI:", e);
+                                                        // Fall back to default avatar on error
+                                                        Image defaultAvatar = ImageUtils.loadDefaultAvatar();
+                                                        if (profileImageView != null)
+                                                            profileImageView.setImage(defaultAvatar);
+                                                        if (profileImageLarge != null)
+                                                            profileImageLarge.setImage(defaultAvatar);
+
+                                                        showToast("Error updating profile: " + e.getMessage(),
+                                                                "error-toast");
                                                     }
-                                                    if (profileImageLarge != null) {
-                                                        profileImageLarge.setImage(newImage);
-                                                    }
-                                                    
-                                                    logger.info("Profile UI refreshed successfully");
-                                                    
-                                                    // Show success message
-                                                    showToast("Profile updated successfully!", "success-toast");
-                                                    
-                                                } catch (Exception e) {
-                                                    logger.log(Level.SEVERE, "Error updating profile UI:", e);
-                                                    // Fall back to default avatar on error
-                                                    Image defaultAvatar = ImageUtils.loadDefaultAvatar();
-                                                    if (profileImageView != null) profileImageView.setImage(defaultAvatar);
-                                                    if (profileImageLarge != null) profileImageLarge.setImage(defaultAvatar);
-                                                    
-                                                    showToast("Error updating profile: " + e.getMessage(), "error-toast");
-                                                }
-                                            });
-                                        }
-                                    },
-                                    100 // 100ms delay
+                                                });
+                                            }
+                                        },
+                                        100 // 100ms delay
                                 );
-                                
+
                             } catch (Exception e) {
                                 logger.log(Level.SEVERE, "Error in profile update handler:", e);
                                 showToast("Error updating profile: " + e.getMessage(), "error-toast");
@@ -725,6 +757,7 @@ public class AdminDashboardController {
             showAlert(Alert.AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());
         }
     }
+
     /**
      * Updates the profile UI with current user data.
      */
@@ -737,7 +770,7 @@ public class AdminDashboardController {
             if (userRoleLabel != null) {
                 userRoleLabel.setText(currentUser.getRole());
             }
-            
+
             // Update profile tab fields
             if (profileFullName != null) {
                 profileFullName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
@@ -757,17 +790,17 @@ public class AdminDashboardController {
                     profileContactField.setText(currentUser.getContactNumber());
                 }
             }
-            
+
             // Update profile images
             Platform.runLater(() -> {
                 try {
                     // Reload the user to get the latest data
                     currentUser = userService.getUserById(currentUser.getUserId());
-                    
+
                     // Load and set the profile images
                     String imagePath = currentUser.getProfilePicture();
                     logger.info("Updating profile UI with image path: " + imagePath);
-                    
+
                     // Clear existing images
                     if (profileImageView != null) {
                         profileImageView.setImage(null);
@@ -775,7 +808,7 @@ public class AdminDashboardController {
                     if (profileImageLarge != null) {
                         profileImageLarge.setImage(null);
                     }
-                    
+
                     // Load and set new images
                     Image image = ImageUtils.loadImage(imagePath);
                     if (profileImageView != null) {
@@ -784,21 +817,23 @@ public class AdminDashboardController {
                     if (profileImageLarge != null) {
                         profileImageLarge.setImage(image);
                     }
-                    
+
                     logger.info("Profile images updated successfully");
                 } catch (Exception e) {
                     logger.log(Level.SEVERE, "Error updating profile UI:", e);
                     // Fall back to default avatar if there's an error
                     Image defaultAvatar = ImageUtils.loadDefaultAvatar();
-                    if (profileImageView != null) profileImageView.setImage(defaultAvatar);
-                    if (profileImageLarge != null) profileImageLarge.setImage(defaultAvatar);
+                    if (profileImageView != null)
+                        profileImageView.setImage(defaultAvatar);
+                    if (profileImageLarge != null)
+                        profileImageLarge.setImage(defaultAvatar);
                 }
             });
         } else {
             logger.warning("Current user is null in updateProfileUI");
         }
     }
-    
+
     @FXML
     private void handleToggleUserStatus() {
         User selectedUser = usersTable.getSelectionModel().getSelectedItem();
@@ -990,40 +1025,40 @@ public class AdminDashboardController {
             Dialog<ButtonType> dialog = new Dialog<>();
             dialog.setTitle("Add New Hall");
             dialog.setDialogPane(loader.load());
-            
+
             // Get the controller
             AddHallFormController controller = loader.getController();
-            
+
             // Get the dialog pane and buttons
             DialogPane dialogPane = dialog.getDialogPane();
             ButtonType saveButtonType = new ButtonType("Save", ButtonBar.ButtonData.OK_DONE);
             dialogPane.getButtonTypes().addAll(saveButtonType, ButtonType.CANCEL);
-            
+
             // Get the save button and disable it initially
             Button saveButton = (Button) dialogPane.lookupButton(saveButtonType);
             saveButton.setDisable(true);
-            
+
             // Add validation listeners to enable/disable save button
             Runnable validateForm = () -> {
                 boolean isValid = controller.isFormValid();
                 saveButton.setDisable(!isValid);
             };
-            
+
             controller.getHallTypeComboBox().valueProperty().addListener((obs, oldVal, newVal) -> validateForm.run());
             controller.getCapacityField().textProperty().addListener((obs, oldVal, newVal) -> validateForm.run());
             controller.getRatePerHourField().textProperty().addListener((obs, oldVal, newVal) -> validateForm.run());
-            
+
             // Initial validation
             validateForm.run();
-            
+
             // Show the dialog and process the result
             Optional<ButtonType> result = dialog.showAndWait();
-            
+
             result.ifPresent(buttonType -> {
                 if (buttonType != saveButtonType) {
                     return;
                 }
-                
+
                 Hall newHall = controller.getHall();
                 if (newHall == null) {
                     return;
@@ -1031,11 +1066,10 @@ public class AdminDashboardController {
                 if (newHall != null) {
                     // Create a task to add the hall
                     Task<Hall> addHallTask = hallService.addHall(
-                        newHall.getType(),
-                        newHall.getCapacity(),
-                        newHall.getRatePerHour()
-                    );
-                    
+                            newHall.getType(),
+                            newHall.getCapacity(),
+                            newHall.getRatePerHour());
+
                     // Handle successful addition
                     addHallTask.setOnSucceeded(event -> {
                         Hall addedHall = addHallTask.getValue();
@@ -1050,23 +1084,21 @@ public class AdminDashboardController {
                                 hallsTable.refresh();
                             });
                         } else {
-                            Platform.runLater(() -> 
-                                showAlert(Alert.AlertType.ERROR, "Error", 
-                                    "Failed to add hall. The hall may already exist.")
-                            );
+                            Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Error",
+                                    "Failed to add hall. The hall may already exist."));
                         }
                     });
-                    
+
                     // Handle addition failure
                     addHallTask.setOnFailed(event -> {
                         Platform.runLater(() -> {
                             Throwable ex = addHallTask.getException();
                             String errorMessage = ex != null ? ex.getMessage() : "Unknown error";
-                            showAlert(Alert.AlertType.ERROR, "Error", 
-                                "Error adding hall: " + errorMessage);
+                            showAlert(Alert.AlertType.ERROR, "Error",
+                                    "Error adding hall: " + errorMessage);
                         });
                     });
-                    
+
                     // Start the task in a new thread
                     new Thread(addHallTask, "Add-Hall-Task").start();
                 }
@@ -1092,20 +1124,20 @@ public class AdminDashboardController {
             // Create and configure the dialog first
             Dialog<ButtonType> dialog = new Dialog<>();
             dialog.setTitle("Edit Hall");
-            
+
             // Load the AddHallForm FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/AddHallForm.fxml"));
             Parent root = loader.load();
-            
+
             // Set the content in the dialog pane
             dialog.getDialogPane().setContent(root);
             dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-            
+
             // Get the controller and initialize it with the selected hall's data
             // This is done after the dialog pane is set up
             AddHallFormController controller = loader.getController();
             controller.initEditMode(selectedHall);
-            
+
             // Set the dialog in the controller if needed
             try {
                 Method setDialogMethod = controller.getClass().getMethod("setDialog", Dialog.class);
@@ -1144,8 +1176,9 @@ public class AdminDashboardController {
                             }
                         });
                         updateTask.setOnFailed(e -> {
-                            showAlert(Alert.AlertType.ERROR, "Error", "Failed to update hall: " + 
-                                (updateTask.getException() != null ? updateTask.getException().getMessage() : "Unknown error"));
+                            showAlert(Alert.AlertType.ERROR, "Error", "Failed to update hall: " +
+                                    (updateTask.getException() != null ? updateTask.getException().getMessage()
+                                            : "Unknown error"));
                         });
                         new Thread(updateTask).start();
                     }
@@ -1282,7 +1315,8 @@ public class AdminDashboardController {
                     }
 
                     // Create the availability record
-                    return new HallAvailability("", hall.getHallId(), startDateTime, endDateTime, statusComboBox.getValue());
+                    return new HallAvailability("", hall.getHallId(), startDateTime, endDateTime,
+                            statusComboBox.getValue());
                 } catch (Exception e) {
                     showAlert(Alert.AlertType.WARNING, "Invalid Input", "Please enter valid date and time values.");
                     return null;
@@ -1306,7 +1340,8 @@ public class AdminDashboardController {
                         });
                     },
                     error -> Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.ERROR, "Error", "Error setting hall availability: " + error.getMessage());
+                        showAlert(Alert.AlertType.ERROR, "Error",
+                                "Error setting hall availability: " + error.getMessage());
                     }));
         });
     }
@@ -1344,7 +1379,8 @@ public class AdminDashboardController {
                         Platform.runLater(() -> showMaintenanceDialog(hall, selectedMaintenance));
                     } else {
                         Platform.runLater(() -> {
-                            showAlert(Alert.AlertType.ERROR, "Error", "Could not find the hall for this maintenance schedule.");
+                            showAlert(Alert.AlertType.ERROR, "Error",
+                                    "Could not find the hall for this maintenance schedule.");
                         });
                     }
                 },
@@ -1352,6 +1388,7 @@ public class AdminDashboardController {
                     showAlert(Alert.AlertType.ERROR, "Error", "Error loading hall: " + error.getMessage());
                 }));
     }
+
     @FXML
     private void handleDeleteMaintenance() {
         Maintenance selectedMaintenance = maintenanceTable.getSelectionModel().getSelectedItem();
@@ -1363,9 +1400,9 @@ public class AdminDashboardController {
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Delete");
         confirm.setHeaderText("Are you sure you want to delete this maintenance schedule?");
-        confirm.setContentText("Maintenance ID: " + selectedMaintenance.getMaintenanceId() + 
-                              "\nHall ID: " + selectedMaintenance.getHallId() + 
-                              "\nDescription: " + selectedMaintenance.getDescription());
+        confirm.setContentText("Maintenance ID: " + selectedMaintenance.getMaintenanceId() +
+                "\nHall ID: " + selectedMaintenance.getHallId() +
+                "\nDescription: " + selectedMaintenance.getDescription());
 
         if (confirm.showAndWait().get() == ButtonType.OK) {
             TaskUtils.executeTaskWithProgress(
@@ -1373,7 +1410,8 @@ public class AdminDashboardController {
                     success -> {
                         if (success) {
                             Platform.runLater(() -> {
-                                showAlert(Alert.AlertType.INFORMATION, "Success", "Maintenance schedule deleted successfully.");
+                                showAlert(Alert.AlertType.INFORMATION, "Success",
+                                        "Maintenance schedule deleted successfully.");
                                 loadAllMaintenance();
                             });
                         } else {
@@ -1383,7 +1421,8 @@ public class AdminDashboardController {
                         }
                     },
                     error -> Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.ERROR, "Error", "Error deleting maintenance schedule: " + error.getMessage());
+                        showAlert(Alert.AlertType.ERROR, "Error",
+                                "Error deleting maintenance schedule: " + error.getMessage());
                     }));
         }
     }
@@ -1391,39 +1430,40 @@ public class AdminDashboardController {
     /**
      * Shows the maintenance dialog for a hall.
      * 
-     * @param hall The hall to schedule maintenance for
+     * @param hall        The hall to schedule maintenance for
      * @param maintenance The maintenance schedule to edit, or null to add a new one
      */
     private void showMaintenanceDialog(Hall hall, Maintenance maintenance) {
         boolean isEditMode = maintenance != null;
         // Create a final reference that can be used in the lambda
-        final Maintenance[] finalMaintenanceRef = {maintenance};
+        final Maintenance[] finalMaintenanceRef = { maintenance };
 
         // Create the dialog
         Dialog<ButtonType> dialog = new Dialog<>();
         dialog.setTitle(isEditMode ? "Edit Maintenance Schedule" : "Schedule Maintenance");
-        dialog.setHeaderText((isEditMode ? "Edit maintenance for" : "Schedule maintenance for") + " hall: " + hall.getHallId());
+        dialog.setHeaderText(
+                (isEditMode ? "Edit maintenance for" : "Schedule maintenance for") + " hall: " + hall.getHallId());
 
         try {
             // Load the FXML
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/MaintenanceForm.fxml"));
             Parent root = loader.load();
-            
+
             // Get the controller and set the hall
             MaintenanceFormController controller = loader.getController();
             controller.setHall(hall);
-            
+
             // If editing, set the maintenance data
             if (isEditMode) {
                 controller.initializeWithMaintenance(maintenance);
             }
-            
+
             // Set the dialog content
             dialog.getDialogPane().setContent(root);
-            
+
             // Add buttons
             dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-            
+
             // Set the result converter to handle the OK button
             dialog.setResultConverter(buttonType -> {
                 if (buttonType == ButtonType.OK) {
@@ -1432,23 +1472,25 @@ public class AdminDashboardController {
                         String description = controller.getDescription();
                         LocalDateTime startDateTime = controller.getStartDateTime();
                         LocalDateTime endDateTime = controller.getEndDateTime();
-                        
+
                         // Validate the input
                         if (description == null || description.trim().isEmpty()) {
                             showAlert(Alert.AlertType.WARNING, "Invalid Input", "Please enter a description.");
                             return null;
                         }
-                        
+
                         if (startDateTime == null || endDateTime == null) {
-                            showAlert(Alert.AlertType.WARNING, "Invalid Input", "Please select valid start and end times.");
+                            showAlert(Alert.AlertType.WARNING, "Invalid Input",
+                                    "Please select valid start and end times.");
                             return null;
                         }
-                        
+
                         if (!endDateTime.isAfter(startDateTime)) {
-                            showAlert(Alert.AlertType.WARNING, "Invalid Time Range", "End time must be after start time.");
+                            showAlert(Alert.AlertType.WARNING, "Invalid Time Range",
+                                    "End time must be after start time.");
                             return null;
                         }
-                        
+
                         // Create or update the maintenance object
                         if (isEditMode) {
                             finalMaintenanceRef[0].setDescription(description);
@@ -1458,12 +1500,11 @@ public class AdminDashboardController {
                         } else {
                             // Create a new maintenance object
                             finalMaintenanceRef[0] = new Maintenance(
-                                "", 
-                                hall.getHallId(), 
-                                description, 
-                                startDateTime, 
-                                endDateTime
-                            );
+                                    "",
+                                    hall.getHallId(),
+                                    description,
+                                    startDateTime,
+                                    endDateTime);
                             return ButtonType.OK;
                         }
                     } catch (Exception e) {
@@ -1484,17 +1525,20 @@ public class AdminDashboardController {
                             success -> {
                                 if (success) {
                                     Platform.runLater(() -> {
-                                        showAlert(Alert.AlertType.INFORMATION, "Success", "Maintenance schedule updated successfully.");
+                                        showAlert(Alert.AlertType.INFORMATION, "Success",
+                                                "Maintenance schedule updated successfully.");
                                         loadAllMaintenance();
                                     });
                                 } else {
                                     Platform.runLater(() -> {
-                                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to update maintenance schedule.");
+                                        showAlert(Alert.AlertType.ERROR, "Error",
+                                                "Failed to update maintenance schedule.");
                                     });
                                 }
                             },
                             error -> Platform.runLater(() -> {
-                                showAlert(Alert.AlertType.ERROR, "Error", "Error updating maintenance schedule: " + error.getMessage());
+                                showAlert(Alert.AlertType.ERROR, "Error",
+                                        "Error updating maintenance schedule: " + error.getMessage());
                             }));
                 } else {
                     // Add new maintenance schedule
@@ -1506,12 +1550,14 @@ public class AdminDashboardController {
                                     finalMaintenanceRef[0].getEndTime()),
                             newMaintenance -> {
                                 Platform.runLater(() -> {
-                                    showAlert(Alert.AlertType.INFORMATION, "Success", "Maintenance schedule added successfully.");
+                                    showAlert(Alert.AlertType.INFORMATION, "Success",
+                                            "Maintenance schedule added successfully.");
                                     loadAllMaintenance();
                                 });
                             },
                             error -> Platform.runLater(() -> {
-                                showAlert(Alert.AlertType.ERROR, "Error", "Error adding maintenance schedule: " + error.getMessage());
+                                showAlert(Alert.AlertType.ERROR, "Error",
+                                        "Error adding maintenance schedule: " + error.getMessage());
                             }));
                 }
             }

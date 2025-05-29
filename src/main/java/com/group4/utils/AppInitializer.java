@@ -16,17 +16,17 @@ import java.util.logging.Logger;
  */
 public final class AppInitializer {
     private static final Logger LOGGER = Logger.getLogger(AppInitializer.class.getName());
-    
+
     // List of data files to be created
     private static final String[] DATA_FILES = {
-        FileConstants.getUsersFilePath(),
-        FileConstants.getHallsFilePath(),
-        FileConstants.getBookingsFilePath(),
-        FileConstants.getIssuesFilePath(),
-        FileConstants.getMaintenanceScheduleFilePath(),
-        FileConstants.getAvailabilityScheduleFilePath()
+            FileConstants.getUsersFilePath(),
+            FileConstants.getHallsFilePath(),
+            FileConstants.getBookingsFilePath(),
+            FileConstants.getIssuesFilePath(),
+            FileConstants.getMaintenanceScheduleFilePath(),
+            FileConstants.getAvailabilityScheduleFilePath()
     };
-    
+
     // Prevent instantiation
     private AppInitializer() {
         throw new AssertionError("Cannot instantiate utility class");
@@ -49,24 +49,7 @@ public final class AppInitializer {
             throw new RuntimeException(errorMsg, e);
         }
     }
-    
-    /**
-     * Creates a directory with appropriate permissions.
-     * 
-     * @param dirPath Path to the directory to create
-     * @throws IOException if directory creation fails
-     */
-    private static void createDirectory(String dirPath) throws IOException {
-        Path path = Paths.get(dirPath);
-        if (!Files.exists(path)) {
-            Files.createDirectories(path);
-            LOGGER.info("Created directory: " + path.toAbsolutePath());
-            
-            // Set appropriate permissions on non-Windows systems
-            setPosixPermissions(path, true);
-        }
-    }
-    
+
     /**
      * Creates all required data files with proper permissions.
      * 
@@ -82,31 +65,32 @@ public final class AppInitializer {
                 }
                 Files.createFile(path);
                 LOGGER.info("Created data file: " + path.toAbsolutePath());
-                
+
                 // Set appropriate permissions for the file
                 setPosixPermissions(path, false);
             }
         }
     }
-    
+
     /**
      * Sets POSIX file permissions on non-Windows systems.
      * 
-     * @param path Path to the file/directory
+     * @param path        Path to the file/directory
      * @param isDirectory Whether the path is a directory
      */
     private static void setPosixPermissions(Path path, boolean isDirectory) {
         if (!System.getProperty("os.name").toLowerCase().startsWith("win")) {
             try {
                 Set<PosixFilePermission> perms = new HashSet<>();
-                
-                // Owner always has read/write/execute (for directories) or read/write (for files)
+
+                // Owner always has read/write/execute (for directories) or read/write (for
+                // files)
                 perms.add(PosixFilePermission.OWNER_READ);
                 perms.add(PosixFilePermission.OWNER_WRITE);
                 if (isDirectory) {
                     perms.add(PosixFilePermission.OWNER_EXECUTE);
                 }
-                
+
                 // Group and others have read/execute (for directories) or read (for files)
                 perms.add(PosixFilePermission.GROUP_READ);
                 perms.add(PosixFilePermission.OTHERS_READ);
@@ -114,7 +98,7 @@ public final class AppInitializer {
                     perms.add(PosixFilePermission.GROUP_EXECUTE);
                     perms.add(PosixFilePermission.OTHERS_EXECUTE);
                 }
-                
+
                 Files.setPosixFilePermissions(path, perms);
             } catch (UnsupportedOperationException e) {
                 LOGGER.warning("Could not set POSIX file permissions for " + path + ": " + e.getMessage());
@@ -123,7 +107,7 @@ public final class AppInitializer {
             }
         }
     }
-    
+
     /**
      * Initializes the default admin user if it doesn't exist.
      */
@@ -140,13 +124,5 @@ public final class AppInitializer {
             LOGGER.log(Level.SEVERE, "Failed to initialize default admin user: " + e.getMessage(), e);
             throw new RuntimeException("Failed to initialize default admin user", e);
         }
-    }
-
-    /**
-     * Ensures the data directory exists and has proper permissions.
-     * This is handled automatically by createDirectories() and createDataFiles().
-     */
-    private static void ensureDataDirectory() {
-        // No-op - handled by other methods
     }
 }
