@@ -24,14 +24,18 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import javafx.stage.FileChooser;
-import javafx.stage.Modality;
+import javafx.scene.shape.Circle;
+import javafx.geometry.Pos;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
+import javafx.scene.input.KeyCode;
+import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.GridPane;
 import javafx.application.Platform;
 
 import com.group4.utils.ImageUtils;
@@ -95,6 +99,21 @@ public class AdminDashboardController {
 
     @FXML
     private ComboBox<String> roleFilterComboBox;
+    
+    @FXML
+    private ComboBox<String> statusFilterComboBox;
+    
+    @FXML
+    private TextField nameSearchField;
+    
+    @FXML
+    private TextField emailSearchField;
+    
+    @FXML
+    private TextField contactSearchField;
+    
+    @FXML
+    private Button searchButton;
 
     // Profile components
     @FXML
@@ -218,18 +237,77 @@ public class AdminDashboardController {
         emailColumn.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
         contactNumberColumn.setCellValueFactory(cellData -> cellData.getValue().contactNumberProperty());
         statusColumn.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
+        
+        // Custom cell factory for status column
+        statusColumn.setCellFactory(column -> new TableCell<User, String>() {
+            private final HBox container = new HBox(5);
+            private final Circle statusDot = new Circle(5);
+            private final Label statusLabel = new Label();
+            
+            {
+                container.setAlignment(Pos.CENTER);
+                container.getChildren().addAll(statusDot, statusLabel);
+                statusLabel.setStyle("-fx-font-weight: bold;");
+            }
+            
+            @Override
+            protected void updateItem(String status, boolean empty) {
+                super.updateItem(status, empty);
+                
+                if (empty || status == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    boolean isActive = "Active".equalsIgnoreCase(status);
+                    String color = isActive ? "#2ecc71" : "#e74c3c";
+                    
+                    statusDot.setFill(Color.web(color));
+                    statusLabel.setText(status);
+                    statusLabel.setTextFill(Color.web(color));
+                    
+                    setGraphic(container);
+                    setText(null);
+                }
+            }
+        });
 
         // Initialize role filter
         roleFilterComboBox.setItems(FXCollections.observableArrayList(
-                "All", "Admin", "Manager", "Scheduler", "Customer"));
+                "All", "Manager", "Scheduler", "Customer"));
         roleFilterComboBox.setValue("All");
+        
+        // Initialize status filter
+        statusFilterComboBox.setItems(FXCollections.observableArrayList(
+                "All", "Active", "Block"));
+        statusFilterComboBox.setValue("All");
 
-        // Add listener to the role filter
-        roleFilterComboBox.valueProperty().addListener((obs, oldValue, newValue) -> {
-            if (newValue != null) {
-                filterUsersByRole(newValue);
+        // Add listeners to filters
+        roleFilterComboBox.valueProperty().addListener((obs, oldValue, newValue) -> applyFilters());
+        statusFilterComboBox.valueProperty().addListener((obs, oldValue, newValue) -> applyFilters());
+        
+        // Add search button handler
+        searchButton.setOnAction(event -> applyFilters());
+        
+        // Add Enter key listener to search fields
+        nameSearchField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                applyFilters();
             }
         });
+        
+        emailSearchField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                applyFilters();
+            }
+        });
+        
+        contactSearchField.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.ENTER) {
+                applyFilters();
+            }
+        });
+        
+
     }
 
     /**
@@ -301,7 +379,7 @@ public class AdminDashboardController {
                 users -> {
                     usersList.clear();
                     usersList.addAll(users);
-                    filterUsersByRole(roleFilterComboBox.getValue());
+                    applyFilters();
                 },
                 error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load users: " + error.getMessage()));
     }
@@ -334,24 +412,68 @@ public class AdminDashboardController {
     }
 
     /**
-     * Filters users by role.
-     * 
-     * @param role The role to filter by or "All" to show all users
+     * Applies all active filters to the users table.
+     * Filters users based on role, status, name, email, and contact number.
      */
-    private void filterUsersByRole(String role) {
-        if (role == null || role.equals("All")) {
-            usersTable.setItems(usersList);
-            return;
-        }
+    private void applyFilters() {
+        String roleFilter = roleFilterComboBox.getValue();
+        String statusFilter = statusFilterComboBox.getValue();
+        String nameSearch = nameSearchField.getText().toLowerCase();
+        String emailSearch = emailSearchField.getText().toLowerCase();
+        String contactSearch = contactSearchField.getText().toLowerCase();
 
         ObservableList<User> filteredList = FXCollections.observableArrayList();
+        
         for (User user : usersList) {
-            if (user.getRole().equalsIgnoreCase(role)) {
-                filteredList.add(user);
+            // Skip admin users
+            if ("Admin".equalsIgnoreCase(user.getRole())) {
+                continue;
             }
+            
+            // Apply role filter
+            if (roleFilter != null && !roleFilter.equals("All") && !user.getRole().equals(roleFilter)) {
+                continue;
+            }
+            
+            // Apply status filter
+            if (statusFilter != null && !statusFilter.equals("All")) {
+                String userStatus = user.getStatus() != null ? user.getStatus().toUpperCase() : "";
+                
+                if (statusFilter.equalsIgnoreCase("Active") && !"ACTIVE".equals(userStatus)) {
+                    continue;
+                }
+                if (statusFilter.equalsIgnoreCase("Block") && !"BLOCKED".equals(userStatus)) {
+                    continue;
+                }
+            }
+            
+            // Apply name search
+            if (!nameSearch.isEmpty()) {
+                String fullName = (user.getFirstName() + " " + user.getLastName()).toLowerCase();
+                if (!fullName.contains(nameSearch)) {
+                    continue;
+                }
+            }
+            
+            // Apply email search
+            if (!emailSearch.isEmpty() && !user.getEmail().toLowerCase().contains(emailSearch)) {
+                continue;
+            }
+            
+            // Apply contact search
+            if (!contactSearch.isEmpty() && !user.getContactNumber().toLowerCase().contains(contactSearch)) {
+                continue;
+            }
+            
+            filteredList.add(user);
         }
-
+        
         usersTable.setItems(filteredList);
+    }
+    
+    @FXML
+    private void handleSearch() {
+        applyFilters();
     }
 
     /**
@@ -843,8 +965,8 @@ public class AdminDashboardController {
         }
 
         String currentStatus = selectedUser.getStatus();
-        String newStatus = currentStatus.equals("ACTIVE") ? "BLOCKED" : "ACTIVE";
-        String actionText = currentStatus.equals("ACTIVE") ? "block" : "unblock";
+        String newStatus = "Active".equals(currentStatus) ? "Block" : "Active";
+        String actionText = "Active".equals(currentStatus) ? "block" : "unblock";
 
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Confirm Status Change");
@@ -873,6 +995,14 @@ public class AdminDashboardController {
      */
     @FXML
     private void handleRefresh() {
+        // Reset all filters
+        roleFilterComboBox.setValue("All");
+        statusFilterComboBox.setValue("All");
+        nameSearchField.clear();
+        emailSearchField.clear();
+        contactSearchField.clear();
+        
+        // Reload all users
         loadAllUsers();
     }
 
@@ -1389,6 +1519,64 @@ public class AdminDashboardController {
                 }));
     }
 
+    /**
+     * Handles the delete user button click.
+     * Deletes the currently selected user after confirmation.
+     */
+    @FXML
+    private void handleDeleteUser() {
+        User selectedUser = usersTable.getSelectionModel().getSelectedItem();
+        if (selectedUser == null) {
+            showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a user to delete.");
+            return;
+        }
+
+        // Prevent deleting the current user
+        if (selectedUser.getUserId().equals(currentUser.getUserId())) {
+            showAlert(Alert.AlertType.WARNING, "Cannot Delete", "You cannot delete your own account while logged in.");
+            return;
+        }
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Deletion");
+        alert.setHeaderText("Delete User");
+        alert.setContentText("Are you sure you want to delete user: " + 
+            selectedUser.getFirstName() + " " + selectedUser.getLastName() + "?");
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            Task<Boolean> deleteTask = adminService.deleteUser(selectedUser.getUserId());
+            
+            deleteTask.setOnSucceeded(e -> {
+                if (Boolean.TRUE.equals(deleteTask.getValue())) {
+                    Platform.runLater(() -> {
+                        usersList.remove(selectedUser);
+                        showToast("User deleted successfully.", "success-toast");
+                    });
+                } else {
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Error", 
+                            "Failed to delete user. The user may have associated records.");
+                    });
+                }
+            });
+
+            deleteTask.setOnFailed(e -> {
+                Platform.runLater(() -> {
+                    showAlert(Alert.AlertType.ERROR, "Error", 
+                        "An error occurred while deleting the user.");
+                });
+                logger.log(Level.SEVERE, "Error deleting user", deleteTask.getException());
+            });
+
+            new Thread(deleteTask).start();
+        }
+    }
+
+    /**
+     * Handles the delete maintenance button click.
+     * Deletes the selected maintenance schedule after confirmation.
+     */
     @FXML
     private void handleDeleteMaintenance() {
         Maintenance selectedMaintenance = maintenanceTable.getSelectionModel().getSelectedItem();
@@ -1397,33 +1585,39 @@ public class AdminDashboardController {
             return;
         }
 
-        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
-        confirm.setTitle("Confirm Delete");
-        confirm.setHeaderText("Are you sure you want to delete this maintenance schedule?");
-        confirm.setContentText("Maintenance ID: " + selectedMaintenance.getMaintenanceId() +
-                "\nHall ID: " + selectedMaintenance.getHallId() +
-                "\nDescription: " + selectedMaintenance.getDescription());
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Deletion");
+        alert.setHeaderText("Delete Maintenance Schedule");
+        alert.setContentText("Are you sure you want to delete the maintenance schedule for " + 
+            selectedMaintenance.getHallId() + "?");
 
-        if (confirm.showAndWait().get() == ButtonType.OK) {
-            TaskUtils.executeTaskWithProgress(
-                    maintenanceService.deleteMaintenance(selectedMaintenance.getMaintenanceId()),
-                    success -> {
-                        if (success) {
-                            Platform.runLater(() -> {
-                                showAlert(Alert.AlertType.INFORMATION, "Success",
-                                        "Maintenance schedule deleted successfully.");
-                                loadAllMaintenance();
-                            });
-                        } else {
-                            Platform.runLater(() -> {
-                                showAlert(Alert.AlertType.ERROR, "Error", "Failed to delete maintenance schedule.");
-                            });
-                        }
-                    },
-                    error -> Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.ERROR, "Error",
-                                "Error deleting maintenance schedule: " + error.getMessage());
-                    }));
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK) {
+            Task<Boolean> deleteTask = maintenanceService.deleteMaintenance(selectedMaintenance.getMaintenanceId());
+            
+            deleteTask.setOnSucceeded(e -> {
+                if (Boolean.TRUE.equals(deleteTask.getValue())) {
+                    Platform.runLater(() -> {
+                        maintenanceList.remove(selectedMaintenance);
+                        showToast("Maintenance schedule deleted successfully.", "success-toast");
+                    });
+                } else {
+                    Platform.runLater(() -> {
+                        showAlert(Alert.AlertType.ERROR, "Error", 
+                            "Failed to delete maintenance schedule. It may be referenced by other records.");
+                    });
+                }
+            });
+
+            deleteTask.setOnFailed(e -> {
+                Platform.runLater(() -> {
+                    showAlert(Alert.AlertType.ERROR, "Error", 
+                        "An error occurred while deleting the maintenance schedule.");
+                });
+                logger.log(Level.SEVERE, "Error deleting maintenance schedule", deleteTask.getException());
+            });
+
+            new Thread(deleteTask).start();
         }
     }
 

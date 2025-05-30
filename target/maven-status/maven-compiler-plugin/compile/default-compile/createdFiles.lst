@@ -23,6 +23,7 @@ com/group4/services/MaintenanceService$6.class
 com/group4/controllers/CustomerDashboardController$1.class
 com/group4/services/IssueService$9.class
 com/group4/services/HallService$6.class
+com/group4/controllers/AdminDashboardController$2.class
 com/group4/services/BookingService$8.class
 com/group4/controllers/AdminDashboardController.class
 com/group4/utils/InvalidInputException.class
