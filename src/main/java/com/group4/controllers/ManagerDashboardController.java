@@ -7,7 +7,6 @@ import com.group4.models.IssueStatus;
 import com.group4.models.User;
 import com.group4.services.BookingService;
 import com.group4.services.IssueService;
-import com.group4.services.AdminService;
 import com.group4.services.UserService;
 import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
@@ -22,6 +21,8 @@ import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.*;
+import javafx.scene.Node;
+import javafx.stage.Modality;
 import com.group4.utils.ViewManager;
 
 import javafx.scene.Scene;
@@ -33,11 +34,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javafx.application.Platform;
+import javafx.concurrent.Task;
 import com.group4.utils.ImageUtils;
 
 /**
@@ -118,7 +121,6 @@ public class ManagerDashboardController {
 
     private BookingService bookingService;
     private IssueService issueService;
-    private AdminService adminService;
     private ObservableList<Issue> issuesList = FXCollections.observableArrayList();
 
     /**
@@ -126,9 +128,9 @@ public class ManagerDashboardController {
      */
     @FXML
     public void initialize() {
+        // Initialize services
         bookingService = new BookingService();
         issueService = new IssueService();
-        adminService = new AdminService();
         userService = new UserService();
         
         // Get current user from session
@@ -267,20 +269,286 @@ public class ManagerDashboardController {
         xAxis.setLabel("Period");
         yAxis.setLabel("Revenue ($)");
     }
-
+    
     /**
      * Sets up the issues table.
      */
     private void setupIssuesTable() {
-        // Initialize table columns using direct property references
         issueIdColumn.setCellValueFactory(cellData -> cellData.getValue().issueIdProperty());
         customerIdColumn.setCellValueFactory(cellData -> cellData.getValue().customerIdProperty());
         hallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
         descriptionColumn.setCellValueFactory(cellData -> cellData.getValue().descriptionProperty());
+        
+        // Set up the assigned staff column with a cell factory for editing
         assignedStaffIdColumn.setCellValueFactory(cellData -> cellData.getValue().assignedStaffIdProperty());
+        assignedStaffIdColumn.setCellFactory(column -> new TableCell<Issue, String>() {
+            private final ComboBox<User> userComboBox = new ComboBox<>();
+            private final List<User> allSchedulers = new ArrayList<>();
+            
+            {
+                // Load all users and filter for SCHEDULER role
+                List<User> allUsers = userService.getAllUsers();
+                for (User user : allUsers) {
+                    if ("SCHEDULER".equalsIgnoreCase(user.getRole())) {
+                        allSchedulers.add(user);
+                    }
+                }
+                userComboBox.getItems().addAll(allSchedulers);
+                
+                // Set the display text for users in the combo box
+                userComboBox.setCellFactory(lv -> new ListCell<User>() {
+                    @Override
+                    protected void updateItem(User user, boolean empty) {
+                        super.updateItem(user, empty);
+                        setText(empty || user == null ? "" : user.getFirstName() + " " + user.getLastName());
+                    }
+                });
+                
+                userComboBox.setButtonCell(new ListCell<User>() {
+                    @Override
+                    protected void updateItem(User user, boolean empty) {
+                        super.updateItem(user, empty);
+                        setText(empty || user == null ? "" : user.getFirstName() + " " + user.getLastName());
+                    }
+                });
+                
+                userComboBox.setOnAction(event -> {
+                    if (getTableRow() != null && getTableRow().getItem() != null && userComboBox.getValue() != null) {
+                        Issue issue = getTableRow().getItem();
+                        User selectedUser = userComboBox.getValue();
+                        String previousStaffId = issue.getAssignedStaffId();
+                        
+                        // Show loading state
+                        setText("Saving...");
+                        
+                        // Update the issue with the new assigned staff
+                        issue.setAssignedStaffId(selectedUser.getUserId());
+                        
+                        // Save the updated issue to the backend
+                        Task<Boolean> updateTask = issueService.updateIssue(issue);
+                        updateTask.setOnSucceeded(e -> {
+                            if (Boolean.TRUE.equals(updateTask.getValue())) {
+                                // Update successful, refresh the table
+                                Platform.runLater(() -> {
+                                    updateItem(issue.getAssignedStaffId(), false);
+                                    // Show success message with staff name
+                                    showAlert(Alert.AlertType.INFORMATION, "Success", 
+                                        String.format("Successfully assigned issue to %s %s", 
+                                            selectedUser.getFirstName(), 
+                                            selectedUser.getLastName()));
+                                    // Refresh the table to reflect changes
+                                    loadIssuesData();
+                                });
+                            } else {
+                                // Revert to previous state on failure
+                                issue.setAssignedStaffId(previousStaffId);
+                                Platform.runLater(() -> {
+                                    updateItem(previousStaffId, false);
+                                    showAlert(Alert.AlertType.ERROR, "Error", 
+                                        "Failed to update issue assignment. Please try again.");
+                                });
+                            }
+                        });
+                        
+                        updateTask.setOnFailed(e -> {
+                            // Revert to previous state on error
+                            issue.setAssignedStaffId(previousStaffId);
+                            Platform.runLater(() -> {
+                                updateItem(previousStaffId, false);
+                                showAlert(Alert.AlertType.ERROR, "Error", 
+                                    String.format("Failed to assign issue: %s", 
+                                        updateTask.getException().getMessage()));
+                            });
+                        });
+                        
+                        // Execute the task in a background thread
+                        new Thread(updateTask).start();
+                    }
+                });
+            }
+            
+            @Override
+            protected void updateItem(String staffId, boolean empty) {
+                super.updateItem(staffId, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    // Show the assigned user's name when not editing
+                    if (staffId == null || staffId.trim().isEmpty()) {
+                        setText("Unassigned");
+                    } else {
+                        User staff = userService.getUserById(staffId);
+                        setText(staff != null ? 
+                            staff.getFirstName() + " " + staff.getLastName() : 
+                            "Unknown (" + staffId + ")");
+                    }
+                    
+                    // Only show the combo box when the cell is being edited
+                    if (isEditing()) {
+                        if (staffId != null && !staffId.trim().isEmpty()) {
+                            userComboBox.getSelectionModel().select(
+                                userComboBox.getItems().stream()
+                                    .filter(u -> u.getUserId().equals(staffId))
+                                    .findFirst()
+                                    .orElse(null)
+                            );
+                        }
+                        setText(null);
+                        setGraphic(userComboBox);
+                    } else {
+                        setGraphic(null);
+                    }
+                }
+            }
+            
+            @Override
+            public void startEdit() {
+                super.startEdit();
+                if (!isEmpty()) {
+                    String staffId = getItem();
+                    if (staffId != null && !staffId.trim().isEmpty()) {
+                        userComboBox.getSelectionModel().select(
+                            userComboBox.getItems().stream()
+                                .filter(u -> u.getUserId().equals(staffId))
+                                .findFirst()
+                                .orElse(null)
+                        );
+                    }
+                    setText(null);
+                    setGraphic(userComboBox);
+                    userComboBox.requestFocus();
+                }
+            }
+            
+            @Override
+            public void cancelEdit() {
+                super.cancelEdit();
+                updateItem(getItem(), false);
+            }
+        });
+        
+        // Make the assigned staff column editable
+        assignedStaffIdColumn.setEditable(true);
+        
         statusColumn.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
+        
+        // Make the table editable
+        issuesTable.setEditable(true);
+        
+        // Make status column editable with a choice box
+        statusColumn.setCellFactory(column -> new TableCell<Issue, IssueStatus>() {
+            private final ComboBox<IssueStatus> comboBox = new ComboBox<>();
+            
+            {
+                // Include all available statuses
+                comboBox.getItems().addAll(
+                    IssueStatus.OPEN,
+                    IssueStatus.IN_PROGRESS,
+                    IssueStatus.RESOLVED,
+                    IssueStatus.CLOSED
+                );
+                
+                // Set default value to OPEN
+                comboBox.setValue(IssueStatus.OPEN);
+                
+                comboBox.setOnAction(event -> {
+                    if (getTableRow() != null && getTableRow().getItem() != null) {
+                        Issue issue = getTableRow().getItem();
+                        IssueStatus newStatus = comboBox.getValue();
+                        
+                        // Only proceed if the status has actually changed
+                        if (newStatus != issue.getStatus()) {
+                            IssueStatus oldStatus = issue.getStatus();
+                            issue.setStatus(newStatus);
+                            
+                            // Save the updated issue status
+                            Task<Boolean> updateTask = issueService.updateIssue(issue);
+                            updateTask.setOnSucceeded(e -> {
+                                if (Boolean.TRUE.equals(updateTask.getValue())) {
+                                    Platform.runLater(() -> {
+                                        updateItem(newStatus, false);
+                                        showAlert(Alert.AlertType.INFORMATION, "Success", 
+                                            String.format("Status updated from %s to %s successfully.", 
+                                                oldStatus, newStatus));
+                                        loadIssuesData();
+                                    });
+                                } else {
+                                    // Revert to old status on failure
+                                    issue.setStatus(oldStatus);
+                                    Platform.runLater(() -> {
+                                        updateItem(oldStatus, false);
+                                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to update status.");
+                                    });
+                                }
+                            });
+                            updateTask.setOnFailed(e -> {
+                                // Revert to old status on error
+                                issue.setStatus(oldStatus);
+                                Platform.runLater(() -> {
+                                    updateItem(oldStatus, false);
+                                    showAlert(Alert.AlertType.ERROR, "Error", 
+                                        "Failed to update status: " + updateTask.getException().getMessage());
+                                });
+                            });
+                            
+                            new Thread(updateTask).start();
+                        } else {
+                            // If status didn't change, just cancel the edit
+                            cancelEdit();
+                        }
+                    }
+                });
+            }
+            
+            @Override
+            protected void updateItem(IssueStatus item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    // If the item is null (new issue), default to OPEN
+                    if (item == null) {
+                        item = IssueStatus.OPEN;
+                    }
+                    // Show the status text when not editing
+                    setText(item.toString());
+                    
+                    // Only show the combo box when the cell is being edited
+                    if (isEditing()) {
+                        comboBox.setValue(item);
+                        setText(null);
+                        setGraphic(comboBox);
+                    } else {
+                        setGraphic(null);
+                    }
+                }
+            }
+            
+            @Override
+            public void startEdit() {
+                super.startEdit();
+                if (!isEmpty()) {
+                    comboBox.setValue(getItem());
+                    setText(null);
+                    setGraphic(comboBox);
+                    comboBox.requestFocus();
+                }
+            }
+            
+            @Override
+            public void cancelEdit() {
+                super.cancelEdit();
+                setText(getItem() == null ? "" : getItem().toString());
+                setGraphic(null);
+            }
+        });
+        
+        // Make the status column editable
+        statusColumn.setEditable(true);
     }
-
+    
     /**
      * Loads sales data for the chart based on the selected period.
      */
@@ -373,56 +641,57 @@ public class ManagerDashboardController {
             return;
         }
 
-        // Get staff members
-        TaskUtils.executeTaskWithProgress(
-                adminService.getAllUsers(),
-                users -> {
-                    // Filter for staff (non-customer roles)
-                    ObservableList<User> staffList = FXCollections.observableArrayList();
-                    for (User user : users) {
-                        if (!user.getRole().equalsIgnoreCase("CUSTOMER") && user.getStatus().equals("ACTIVE")) {
-                            staffList.add(user);
-                        }
-                    }
-
-                    // Show staff selection dialog
-                    User selectedStaff = showStaffSelectionDialog(staffList);
-                    if (selectedStaff != null) {
-                        // Assign the issue
-                        TaskUtils.executeTaskWithProgress(
-                                issueService.assignIssue(selectedIssue.getIssueId(), selectedStaff.getUserId()),
-                                success -> {
-                                    if (success) {
-                                        showAlert(Alert.AlertType.INFORMATION, "Success",
-                                                "Issue assigned successfully.");
-                                        loadIssuesData();
-                                    } else {
-                                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to assign issue.");
-                                    }
-                                },
-                                error -> showAlert(Alert.AlertType.ERROR, "Error",
-                                        "Failed to assign issue: " + error.getMessage()));
-                    }
-                },
-                error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load staff: " + error.getMessage()));
+        try {
+            // Load the assign issue dialog
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/AssignIssueDialog.fxml"));
+            DialogPane dialogPane = loader.load();
+            
+            // Get the controller and set the issue
+            AssignIssueDialogController controller = loader.getController();
+            controller.setIssue(selectedIssue);
+            
+            // Create and show the dialog
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setDialogPane(dialogPane);
+            dialog.setTitle("Assign Issue");
+            
+            // Show the dialog and wait for user input
+            Optional<ButtonType> result = dialog.showAndWait();
+            
+            if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.APPLY) {
+                // Assign the issue to the selected scheduler
+                User selectedScheduler = controller.getSelectedScheduler();
+                if (selectedScheduler != null) {
+                    TaskUtils.executeTaskWithProgress(
+                        issueService.assignIssue(selectedIssue.getIssueId(), selectedScheduler.getUserId()),
+                        success -> {
+                            if (success) {
+                                Platform.runLater(() -> {
+                                    showAlert(Alert.AlertType.INFORMATION, "Success",
+                                            String.format("Issue assigned to %s %s",
+                                                    selectedScheduler.getFirstName(),
+                                                    selectedScheduler.getLastName()));
+                                    loadIssuesData();
+                                });
+                            } else {
+                                Platform.runLater(() -> 
+                                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to assign issue."));
+                            }
+                        },
+                        error -> Platform.runLater(() -> 
+                            showAlert(Alert.AlertType.ERROR, "Error", 
+                                "Failed to assign issue: " + error.getMessage()))
+                    );
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", 
+                "Failed to load assign issue dialog: " + e.getMessage());
+        }
     }
 
     /**
-     * Shows a dialog for selecting a staff member.
-     * 
-     * @param staffList The list of staff members
-     * @return The selected staff member, or null if cancelled
-     */
-    private User showStaffSelectionDialog(ObservableList<User> staffList) {
-        // Create the dialog
-        Dialog<User> dialog = new Dialog<>();
-        dialog.setTitle("Assign Issue");
-        dialog.setHeaderText("Select a staff member to assign this issue to:");
-
-        // Set the button types
-        ButtonType assignButtonType = new ButtonType("Assign", ButtonBar.ButtonData.OK_DONE);
-        dialog.getDialogPane().getButtonTypes().addAll(assignButtonType, ButtonType.CANCEL);
-
         // Create the staff list view
         ListView<User> staffListView = new ListView<>(staffList);
         staffListView.setCellFactory(param -> new ListCell<User>() {
@@ -471,16 +740,20 @@ public class ManagerDashboardController {
 
         if (confirm.showAndWait().get() == ButtonType.OK) {
             TaskUtils.executeTaskWithProgress(
-                    issueService.updateIssueStatus(selectedIssue.getIssueId(), IssueStatus.RESOLVED),
+                    issueService.updateIssueStatus(selectedIssue.getIssueId(), IssueStatus.CLOSED),
                     success -> {
                         if (success) {
-                            showAlert(Alert.AlertType.INFORMATION, "Success", "Issue closed successfully.");
-                            loadIssuesData();
+                            Platform.runLater(() -> {
+                                showAlert(Alert.AlertType.INFORMATION, "Success", "Issue closed successfully.");
+                                loadIssuesData();
+                            });
                         } else {
-                            showAlert(Alert.AlertType.ERROR, "Error", "Failed to close issue.");
+                            Platform.runLater(() -> 
+                                showAlert(Alert.AlertType.ERROR, "Error", "Failed to close issue."));
                         }
                     },
-                    error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to close issue: " + error.getMessage()));
+                    error -> Platform.runLater(() -> 
+                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to close issue: " + error.getMessage())));
         }
     }
 
@@ -597,10 +870,57 @@ public class ManagerDashboardController {
      * @param message   the alert message
      */
     private void showAlert(Alert.AlertType alertType, String title, String message) {
-        Alert alert = new Alert(alertType);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Platform.runLater(() -> {
+            Alert alert = new Alert(alertType);
+            alert.setTitle(title);
+            alert.setHeaderText(null);
+            alert.setContentText(message);
+            
+            // Set the owner to ensure the dialog appears in front
+            if (issuesTable != null && issuesTable.getScene() != null) {
+                Stage stage = (Stage) issuesTable.getScene().getWindow();
+                alert.initOwner(stage);
+                
+                // Apply the scene's stylesheets to the dialog
+                DialogPane dialogPane = alert.getDialogPane();
+                dialogPane.getStylesheets().addAll(stage.getScene().getStylesheets());
+                dialogPane.getStyleClass().add("dialog-pane");
+                
+                // Apply specific styles based on alert type
+                switch (alertType) {
+                    case INFORMATION:
+                        dialogPane.getStyleClass().add("info-dialog");
+                        break;
+                    case WARNING:
+                        dialogPane.getStyleClass().add("warning-dialog");
+                        break;
+                    case ERROR:
+                        dialogPane.getStyleClass().add("error-dialog");
+                        break;
+                    case CONFIRMATION:
+                        dialogPane.getStyleClass().add("confirm-dialog");
+                        break;
+                    case NONE:
+                    default:
+                        dialogPane.getStyleClass().add("info-dialog");
+                        break;
+                }
+                
+                // Style buttons
+                for (ButtonType bt : dialogPane.getButtonTypes()) {
+                    Node button = dialogPane.lookupButton(bt);
+                    if (button instanceof Button) {
+                        button.getStyleClass().add("dialog-button");
+                    }
+                }
+                
+                // Set minimum width for better readability
+                dialogPane.setMinWidth(400);
+            }
+            
+            // Make sure the dialog is always on top
+            alert.initModality(Modality.APPLICATION_MODAL);
+            alert.showAndWait();
+        });
     }
 }

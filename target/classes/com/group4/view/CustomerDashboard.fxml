@@ -84,12 +84,17 @@
                       <TableColumn fx:id="totalCostColumn" prefWidth="100.0" text="Total Cost" />
                     </columns>
                   </TableView>
-                  <Button fx:id="cancelBookingButton" mnemonicParsing="false" onAction="#handleCancelBooking" prefHeight="40.0" prefWidth="180.0" text="Cancel Selected Booking">
+                  <Button fx:id="cancelBookingButton" mnemonicParsing="false" onAction="#handleCancelBooking" prefHeight="40.0" prefWidth="180.0" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Cancel Selected Booking">
                     <font>
                       <Font size="14.0" />
                     </font>
                   </Button>
-                  <Button fx:id="refreshBookingsButton" mnemonicParsing="false" onAction="#handleViewBookings" prefHeight="40.0" prefWidth="180.0" text="Refresh Bookings">
+                  <Button fx:id="reportIssueButton" mnemonicParsing="false" onAction="#handleReportIssue" prefHeight="40.0" prefWidth="180.0" style="-fx-background-color: #f39c12; -fx-text-fill: white;" text="Report Issue">
+                    <font>
+                      <Font size="14.0" />
+                    </font>
+                  </Button>
+                  <Button fx:id="refreshBookingsButton" mnemonicParsing="false" onAction="#handleViewBookings" prefHeight="40.0" prefWidth="180.0" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="Refresh Bookings">
                     <font>
                       <Font size="14.0" />
                     </font>

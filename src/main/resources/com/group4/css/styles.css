@@ -6,15 +6,29 @@
 }
 
 /* Dialog Button Bar */
+.dialog-pane {
+    -fx-padding: 20px;
+}
+
 .dialog-pane > .button-bar > .container {
     -fx-alignment: center;
+    -fx-padding: 15px 0 5px 0;
 }
 
 .dialog-pane .button {
-    min-width: 120px;
-    -fx-min-width: 120px;
-    padding: 8px 20px;
-    -fx-padding: 8px 20px;
+    min-width: 100px;
+    -fx-min-width: 100px;
+    -fx-padding: 6px 16px;  /* Standard padding for buttons */
+    -fx-margin: 0 2px;  /* Only horizontal margin */
+}
+
+.dialog-pane .button-bar {
+    -fx-padding: 10px 0 25px 0;  /* Increased bottom padding from 15px to 25px */
+    -fx-background-color: transparent;
+}
+
+.dialog-pane .content {
+    -fx-padding: 15px 15px 10px 15px;
 }
 
 /* Button Styles */

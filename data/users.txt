@@ -1,4 +1,6 @@
 USER-493b0301|Manager|One|Manager|manager@example.com|$2a$10$VVRR6fm9QYoMu8R.W7fei.IB5t3IPQ/IlUYkaEoNCgZP4iTm4RvOK|121123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
 ADMIN-04c6a2f9|Admin|User|Admin|admin@example.com|$2a$12$j/.syfbbsqo6SJ51f/oEUuRx1qG.SaB9IQt5s7RVJ8GG1jiDzyHfC|1234567890|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
 USER-fc79d4b8|Schedular|One|Scheduler|schedular@example.com|$2a$10$PlfVKndNlNC5HJ6pFcuzquFfCewlb5apcOofuCgRawdPuiLdM2CRu|123123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
-USER-ac815acd|Test|One|Customer|test@eg.com|$2a$10$gtdj27wBPoIgm.Q65o1qnujDR/tJ1Y6P.E3DZm4goc5OQbK4adL/C|123123|BLOCKED|/com/group4/assets/images/users/default-avatar.jpg
+USER-ac815acd|Test|One|Customer|test@eg.com|$2a$10$14M4agOLGtQK3GvagDY39uFJIQz1kVJQd.qSlG/D0sK/YTtwp53tO|123123|BLOCKED|/com/group4/assets/images/users/default-avatar.jpg
+057c0cbb-29d2-4896-97f4-b7d540e63459|User|One|Customer|user@example.com|$2a$10$Nv99MsITTi5VN.n9Ac3Vse4UICPNA0TBD9L.HDLRD.kxBKk1.iQwi|123123123|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg
+USER-8617af71|Scheduler|User|Scheduler|scheduler2@example.com|$2a$10$iZYfAGWeeFIuI1lVoKcvPeBsoJhDOOcD5H6SfXaiDk7HkuvVxsmzW|1231231231|ACTIVE|/com/group4/assets/images/users/default-avatar.jpg

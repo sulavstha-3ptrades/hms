@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<DialogPane xmlns:fx="http://javafx.com/fxml">
+    
+    <content>
+        <GridPane hgap="10" vgap="10">
+            <padding>
+                <Insets bottom="20" left="20" right="20" top="20"/>
+            </padding>
+            
+            <Label text="Hall ID:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+            <Label fx:id="hallIdLabel" style="-fx-padding: 5 0 5 0; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+            
+            <Label text="Hall Type:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+            <Label fx:id="hallTypeLabel" style="-fx-padding: 5 0 5 0; -fx-font-weight: bold;" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+            
+            <Label text="Description:" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+            <TextArea fx:id="descriptionTextArea" prefRowCount="6" wrapText="true" 
+                     GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.rowSpan="2">
+                <GridPane.margin>
+                    <Insets bottom="10"/>
+                </GridPane.margin>
+            </TextArea>
+        </GridPane>
+    </content>
+    
+    <buttonTypes>
+        <ButtonType text="Submit" buttonData="OK_DONE"/>
+        <ButtonType text="Cancel" buttonData="CANCEL_CLOSE"/>
+    </buttonTypes>
+</DialogPane>

@@ -1,30 +1,23 @@
 package com.group4.controllers;
 
 import com.group4.App;
-import com.group4.models.Booking;
+import com.group4.models.*;
 import com.group4.services.BookingService;
+import com.group4.services.HallService;
 import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
-
+import com.group4.utils.ViewManager;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import com.group4.utils.ViewManager;
-import com.group4.models.User;
-import javafx.scene.control.Label;
+import javafx.stage.Modality;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -84,6 +77,9 @@ public class CustomerDashboardController {
 
     @FXML
     private Button refreshBookingsButton;
+
+    @FXML
+    private Button reportIssueButton;
 
     private BookingService bookingService;
     private ObservableList<Booking> bookingsList = FXCollections.observableArrayList();
@@ -317,5 +313,82 @@ public class CustomerDashboardController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+    
+    /**
+     * Handles the report issue button click.
+     * Shows a dialog for the user to report a new issue.
+     */
+    @FXML
+    private void handleReportIssue() {
+        try {
+            // Get the selected booking
+            Booking selectedBooking = bookingsTable.getSelectionModel().getSelectedItem();
+            
+            if (selectedBooking == null) {
+                showAlert(Alert.AlertType.WARNING, "No Selection", "Please select a booking to report an issue for.");
+                return;
+            }
+            
+            String selectedHallId = selectedBooking.getHallId();
+            
+            if (selectedHallId == null || selectedHallId.trim().isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Error", "Selected booking does not have a valid hall ID.");
+                return;
+            }
+            
+            // Create and show loading dialog
+            Alert loadingAlert = new Alert(Alert.AlertType.INFORMATION);
+            loadingAlert.setTitle("Loading");
+            loadingAlert.setHeaderText(null);
+            loadingAlert.setContentText("Loading hall information...");
+            loadingAlert.initModality(Modality.APPLICATION_MODAL);
+            
+            // Show the loading dialog in a separate thread
+            new Thread(() -> {
+                Platform.runLater(loadingAlert::show);
+            }).start();
+            
+            // Get hall details
+            HallService hallService = new HallService();
+            TaskUtils.executeTaskWithProgress(
+                hallService.getHallById(selectedHallId),
+                hall -> Platform.runLater(() -> {
+                    // Close the loading dialog
+                    loadingAlert.close();
+                    
+                    String hallType = "Unknown Type";
+                    if (hall != null && hall.getType() != null) {
+                        // Convert enum to display-friendly string (e.g., "MEETING_ROOM" -> "Meeting Room")
+                        String[] parts = hall.getType().name().toLowerCase().split("_");
+                        StringBuilder displayType = new StringBuilder();
+                        for (String part : parts) {
+                            if (!part.isEmpty()) {
+                                displayType.append(Character.toUpperCase(part.charAt(0)))
+                                        .append(part.substring(1)).append(" ");
+                            }
+                        }
+                        hallType = displayType.toString().trim();
+                    }
+                    
+                    // Create and show the dialog with the hall information
+                    ReportIssueDialogController dialog = new ReportIssueDialogController(selectedHallId, hallType);
+                    dialog.showAndWait();
+                }),
+                error -> Platform.runLater(() -> {
+                    // Close the loading dialog
+                    loadingAlert.close();
+                    
+                    // Show error but still allow to proceed with just the hall ID
+                    showAlert(Alert.AlertType.WARNING, "Warning", 
+                            "Could not load hall type. You can still report the issue with just the hall ID.");
+                    ReportIssueDialogController dialog = new ReportIssueDialogController(selectedHallId, "Unknown Type");
+                    dialog.showAndWait();
+                })
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to open report issue dialog: " + e.getMessage());
+        }
     }
 }
