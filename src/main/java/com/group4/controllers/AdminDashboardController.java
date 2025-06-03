@@ -10,6 +10,9 @@ import com.group4.services.HallAvailabilityService;
 import com.group4.services.HallService;
 import com.group4.services.MaintenanceService;
 import com.group4.services.UserService;
+import com.group4.services.BookingService;
+import com.group4.models.Booking;
+import com.group4.models.BookingStatus;
 import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
 import com.group4.utils.ViewManager;
@@ -21,7 +24,24 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.paint.Color;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
+import javafx.scene.control.PasswordField;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.ButtonBar;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -49,14 +69,46 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Controller for the Admin Dashboard.
  */
 public class AdminDashboardController {
     private static final Logger logger = Logger.getLogger(AdminDashboardController.class.getName());
+
+    // Booking History Tab Components
+    @FXML
+    private TableView<Booking> bookingsTable;
+    
+    // Filter fields
+    @FXML
+    private TextField hallIdFilter;
+    
+    @FXML
+    private TextField customerIdFilter;
+    
+    @FXML
+    private ComboBox<String> statusFilter;
+    @FXML
+    private TableColumn<Booking, String> bookingIdColumn;
+    @FXML
+    private TableColumn<Booking, String> bookingCustomerIdColumn;
+    @FXML
+    private TableColumn<Booking, String> bookingHallIdColumn;
+    @FXML
+    private TableColumn<Booking, String> bookingStartDateColumn;
+    @FXML
+    private TableColumn<Booking, String> bookingEndDateColumn;
+    @FXML
+    private TableColumn<Booking, Double> bookingTotalCostColumn;
+    @FXML
+    private TableColumn<Booking, BookingStatus> bookingStatusColumn;
+    @FXML
+    private Button refreshBookingsButton;
 
     @FXML
     private Button logoutButton;
@@ -197,30 +249,24 @@ public class AdminDashboardController {
      * Initializes the controller.
      */
     @FXML
-    public void initialize() {
+    private void initialize() {
         adminService = new AdminService();
         userService = new UserService();
         hallService = new HallService();
         maintenanceService = new MaintenanceService();
         hallAvailabilityService = new HallAvailabilityService();
+        currentUser = SessionManager.getInstance().getCurrentUser();
 
-        // Load current user data
-        loadCurrentUser();
-
-        // Initialize profile tab
-        initializeProfileTab();
-
-        // Initialize user management tab
+        // Initialize all tabs
         initializeUserManagementTab();
-
-        // Initialize hall management tab
         initializeHallManagementTab();
-
-        // Load all data
+        initializeProfileTab();
+        initializeBookingHistoryTab();
         loadAllUsers();
         loadAllHalls();
         loadAllMaintenance();
-
+        loadAllBookings();
+        
         // Initialize profile image
         initializeProfileImage();
     }
@@ -1772,5 +1818,128 @@ public class AdminDashboardController {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    /**
+     * Initializes the booking history tab with table columns and cell factories.
+     */
+    private void initializeBookingHistoryTab() {
+        // Initialize booking table columns
+        bookingIdColumn.setCellValueFactory(new PropertyValueFactory<>("bookingId"));
+        bookingCustomerIdColumn.setCellValueFactory(new PropertyValueFactory<>("customerId"));
+        bookingHallIdColumn.setCellValueFactory(new PropertyValueFactory<>("hallId"));
+        
+        // Format date/time columns
+        bookingStartDateColumn.setCellValueFactory(cellData -> 
+            new SimpleStringProperty(cellData.getValue().getStartDateTime()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+        );
+        
+        bookingEndDateColumn.setCellValueFactory(cellData -> 
+            new SimpleStringProperty(cellData.getValue().getEndDateTime()
+                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+        );
+        
+        bookingTotalCostColumn.setCellValueFactory(new PropertyValueFactory<>("totalCost"));
+        bookingStatusColumn.setCellValueFactory(new PropertyValueFactory<>("bookingStatus"));
+        
+        // Set cell factory for status column to add color coding
+        bookingStatusColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(BookingStatus status, boolean empty) {
+                super.updateItem(status, empty);
+                
+                if (status == null || empty) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(status.toString());
+                    
+                    switch (status) {
+                        case BOOKED:
+                            setTextFill(Color.GREEN);
+                            break;
+                        case CANCELLED:
+                            setTextFill(Color.RED);
+                            break;
+                        default:
+                            setTextFill(Color.BLACK);
+                    }
+                }
+            }
+        });
+    }
+    
+    /**
+     * Loads all bookings from the database and displays them in the table.
+     */
+    private void loadAllBookings() {
+        Task<List<Booking>> task = new BookingService().getAllBookings();
+        
+        task.setOnSucceeded(e -> {
+            List<Booking> bookings = task.getValue();
+            if (bookings != null) {
+                // Sort bookings by start date (newest first)
+                bookings.sort((b1, b2) -> b2.getStartDateTime().compareTo(b1.getStartDateTime()));
+                applyBookingFilters(bookings);
+            }
+        });
+        
+        task.setOnFailed(e -> {
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to load bookings: " + task.getException().getMessage());
+            task.getException().printStackTrace();
+        });
+        
+        new Thread(task).start();
+    }
+    
+    /**
+     * Applies the current filters to the booking list
+     * @param bookings The list of all bookings to filter
+     */
+    private void applyBookingFilters(List<Booking> bookings) {
+        if (bookings == null) return;
+        
+        String hallId = hallIdFilter.getText().trim().toLowerCase();
+        String customerId = customerIdFilter.getText().trim().toLowerCase();
+        String status = statusFilter.getValue() != null ? statusFilter.getValue() : "ALL";
+        
+        List<Booking> filteredBookings = bookings.stream()
+            .filter(booking -> 
+                (hallId.isEmpty() || booking.getHallId().toLowerCase().contains(hallId)) &&
+                (customerId.isEmpty() || booking.getCustomerId().toLowerCase().contains(customerId)) &&
+                ("ALL".equals(status) || booking.getBookingStatus().name().equals(status))
+            )
+            .collect(Collectors.toList());
+            
+        bookingsTable.getItems().setAll(filteredBookings);
+    }
+    
+    /**
+     * Handles the apply filters button click
+     */
+    @FXML
+    public void handleApplyBookingFilters() {
+        // Reload all bookings to apply filters
+        loadAllBookings();
+    }
+    
+    /**
+     * Handles the clear filters button click
+     */
+    @FXML
+    public void handleClearBookingFilters() {
+        hallIdFilter.clear();
+        customerIdFilter.clear();
+        statusFilter.setValue("ALL");
+        loadAllBookings();
+    }
+    
+    /**
+     * Handles the refresh bookings button click.
+     */
+    @FXML
+    public void handleRefreshBookings() {
+        loadAllBookings();
     }
 }
