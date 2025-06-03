@@ -16,7 +16,7 @@
          <children>
             <VBox alignment="CENTER" spacing="20.0" fillWidth="true" style="-fx-background-color: #f8f9fa; -fx-padding: 30px; -fx-background-radius: 10px; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 4);">
                <children>
-                  <Label text="Hall Management System" styleClass="header-label">
+                  <Label text="Hall Symphony Inc." styleClass="header-label">
                      <font>
                         <Font name="System Bold" size="24.0" />
                      </font>

@@ -48,7 +48,6 @@ com\group4\utils\AppInitializer.class
 com\group4\services\OTPService$OTPData.class
 com\group4\services\IssueService.class
 com\group4\utils\DialogManager.class
-com\group4\controllers\AdminDashboardController$3.class
 com\group4\services\MaintenanceService$3.class
 com\group4\services\AdminService.class
 com\group4\controllers\ReportIssueDialogController.class
@@ -85,7 +84,6 @@ com\group4\models\HallAvailability.class
 com\group4\services\HallService$4.class
 com\group4\models\Availability.class
 com\group4\services\IssueService$8.class
-com\group4\controllers\AdminDashboardController$4.class
 com\group4\controllers\HallBookingController.class
 com\group4\services\HallAvailabilityService$3.class
 com\group4\services\OTPService$1.class
@@ -99,6 +97,7 @@ com\group4\services\BookingService$2.class
 com\group4\controllers\HallBookingController$1.class
 com\group4\controllers\MaintenanceController$1.class
 com\group4\controllers\ManagerDashboardController.class
+com\group4\services\BookingService$9.class
 com\group4\controllers\MaintenanceFormController$1.class
 com\group4\controllers\AdminDashboardController.class
 com\group4\utils\SessionManager.class

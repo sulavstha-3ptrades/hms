@@ -497,4 +497,80 @@ public class BookingService implements IBookingService {
         // Calculate total cost
         return hall.getRatePerHour() * hours;
     }
+
+    /**
+     * Updates an existing booking in the system.
+     * 
+     * @param updatedBooking The booking with updated information
+     * @return A Task that returns true if update was successful, false otherwise
+     */
+    public Task<Boolean> updateBooking(Booking updatedBooking) {
+        if (updatedBooking == null) {
+            throw new IllegalArgumentException("Updated booking cannot be null");
+        }
+
+        return new Task<Boolean>() {
+            @Override
+            protected Boolean call() throws Exception {
+                try {
+                    LOGGER.info("Attempting to update booking: " + updatedBooking.getBookingId());
+
+                    // Read all bookings
+                    List<String> lines = FileHandler.readLines(FileConstants.getBookingsFilePath());
+                    List<String> updatedLines = new ArrayList<>();
+                    boolean found = false;
+
+                    // Find and update the booking
+                    for (String line : lines) {
+                        if (isCancelled()) {
+                            LOGGER.info("Booking update was cancelled");
+                            return false;
+                        }
+
+                        Booking existingBooking = Booking.fromDelimitedString(line);
+                        if (existingBooking != null
+                                && existingBooking.getBookingId().equals(updatedBooking.getBookingId())) {
+                            // Replace with updated booking
+                            updatedLines.add(updatedBooking.toDelimitedString());
+                            found = true;
+                            LOGGER.info("Found and updated booking: " + updatedBooking.getBookingId());
+                        } else {
+                            updatedLines.add(line);
+                        }
+                    }
+
+                    if (!found) {
+                        LOGGER.warning("Booking not found: " + updatedBooking.getBookingId());
+                        return false;
+                    }
+
+                    // Write updated bookings back to file
+                    FileHandler.writeLines(FileConstants.getBookingsFilePath(), updatedLines);
+                    LOGGER.info("Successfully updated booking: " + updatedBooking.getBookingId());
+                    return true;
+
+                } catch (Exception e) {
+                    String errorMsg = "Failed to update booking: " + e.getMessage();
+                    LOGGER.log(Level.SEVERE, errorMsg, e);
+                    throw new RuntimeException(errorMsg, e);
+                }
+            }
+
+            @Override
+            protected void failed() {
+                super.failed();
+                LOGGER.log(Level.SEVERE, "Failed to update booking: " + updatedBooking.getBookingId(), getException());
+            }
+
+            @Override
+            protected void succeeded() {
+                super.succeeded();
+                if (getValue()) {
+                    LOGGER.info("Booking update successful: " + updatedBooking.getBookingId());
+                } else {
+                    LOGGER.warning("Booking update failed: " + updatedBooking.getBookingId());
+                }
+            }
+        };
+    }
 }

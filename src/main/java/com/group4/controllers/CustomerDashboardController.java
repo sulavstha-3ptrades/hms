@@ -5,9 +5,11 @@ import com.group4.models.*;
 import com.group4.services.BookingService;
 import com.group4.services.HallService;
 import com.group4.services.UserService;
+import com.group4.services.IssueService;
 import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
 import com.group4.utils.ViewManager;
+import com.group4.utils.ImageUtils;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,10 +23,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Controller for the Customer Dashboard.
@@ -88,25 +95,70 @@ public class CustomerDashboardController {
     @FXML
     private Button editProfileButton;
 
+    @FXML
+    private ComboBox<String> bookingStatusFilter;
+
+    @FXML
+    private ImageView profileImageLarge;
+
+    @FXML
+    private Label profileFullName;
+
+    @FXML
+    private Label profileEmail;
+
+    @FXML
+    private Label profileRole;
+
+    @FXML
+    private Label profileContact;
+
+    @FXML
+    private Label profileEmailField;
+
+    @FXML
+    private Label profileContactField;
+
+    @FXML
+    private Label profileCreatedDate;
+
     private BookingService bookingService;
+    private IssueService issueService;
     private ObservableList<Booking> bookingsList = FXCollections.observableArrayList();
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
     private User currentUser;
     private UserService userService;
+    private FilteredList<Booking> filteredBookings;
+    private ObservableList<Booking> masterBookingsList = FXCollections.observableArrayList();
+    private static final Logger logger = Logger.getLogger(CustomerDashboardController.class.getName());
 
     /**
      * Initializes the controller.
      */
     @FXML
     public void initialize() {
-        // Load and display current user information
-        loadCurrentUserInfo();
-
-        // Set up the profile image view
-        setupProfileImageView();
+        // Initialize services
         bookingService = new BookingService();
         userService = new UserService();
 
+        // Get current user from session
+        currentUser = SessionManager.getInstance().getCurrentUser();
+
+        // Initialize UI components
+        setupBookingStatusFilter();
+        setupBookingsTable();
+
+        // Load user data immediately
+        loadCurrentUserInfo();
+
+        // Load initial data
+        loadCustomerBookings();
+    }
+
+    /**
+     * Sets up the bookings table columns and data.
+     */
+    private void setupBookingsTable() {
         // Initialize table columns
         bookingIdColumn.setCellValueFactory(cellData -> cellData.getValue().bookingIdProperty());
         hallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
@@ -143,56 +195,93 @@ public class CustomerDashboardController {
         // Initialize booking status column
         bookingStatusColumn.setCellValueFactory(cellData -> cellData.getValue().bookingStatusProperty());
 
-        // Load customer bookings
-        loadCustomerBookings();
+        // Initialize filtered list
+        filteredBookings = new FilteredList<>(masterBookingsList, p -> true);
+
+        // Bind the filtered list to the table
+        SortedList<Booking> sortedData = new SortedList<>(filteredBookings);
+        sortedData.comparatorProperty().bind(bookingsTable.comparatorProperty());
+        bookingsTable.setItems(sortedData);
     }
 
     /**
-     * Loads and displays the current user's information in the header.
+     * Loads and displays the current user's information.
      */
     private void loadCurrentUserInfo() {
-        try {
-            // Get the current user from the session
-            currentUser = SessionManager.getInstance().getCurrentUser();
-            if (currentUser != null) {
-                // Set user name and role
-                userNameLabel.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
-                userRoleLabel.setText(currentUser.getRole());
-
-                // Load profile picture
-                try {
-                    String profilePicPath = currentUser.getProfilePicture();
-                    // Load image from classpath
-                    Image profileImage = new Image(
-                            getClass().getResourceAsStream(profilePicPath),
-                            60, 60, true, true);
-                    profileImageView.setImage(profileImage);
-                } catch (Exception e) {
-                    System.err.println("Error loading profile image: " + e.getMessage());
-                    // Fall back to default avatar
-                    loadDefaultAvatar();
+        if (currentUser != null) {
+            Platform.runLater(() -> {
+                // Update header
+                if (userNameLabel != null) {
+                    userNameLabel.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
                 }
-            }
-        } catch (Exception e) {
-            System.err.println("Error loading user info: " + e.getMessage());
-            e.printStackTrace();
-            loadDefaultAvatar();
+                if (userRoleLabel != null) {
+                    userRoleLabel.setText(currentUser.getRole());
+                }
+
+                // Update profile tab
+                if (profileFullName != null) {
+                    profileFullName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
+                }
+                if (profileEmail != null) {
+                    profileEmail.setText(currentUser.getEmail());
+                    if (profileEmailField != null) {
+                        profileEmailField.setText(currentUser.getEmail());
+                    }
+                }
+                if (profileRole != null) {
+                    profileRole.setText(currentUser.getRole());
+                }
+                if (profileContact != null && profileContactField != null) {
+                    String contact = currentUser.getContactNumber();
+                    profileContact.setText(contact != null ? contact : "Not provided");
+                    profileContactField.setText(contact != null ? contact : "Not provided");
+                }
+                if (profileCreatedDate != null) {
+                    profileCreatedDate.setText(LocalDate.now().toString()); // TODO: Add created date to User model
+                }
+
+                // Load profile image
+                loadProfileImage();
+            });
         }
     }
 
     /**
-     * Loads the default avatar image.
+     * Loads the user's profile image.
      */
-    private void loadDefaultAvatar() {
+    private void loadProfileImage() {
         try {
-            Image defaultAvatar = new Image(
-                    getClass().getResourceAsStream("/com/group4/assets/images/users/default-avatar.jpg"),
-                    60, 60, true, true);
-            profileImageView.setImage(defaultAvatar);
+            // Get the image path from the user object
+            String imagePath = (currentUser != null) ? currentUser.getProfilePicture() : null;
+
+            // Load the image using ImageUtils
+            Image image = ImageUtils.loadImage(imagePath);
+
+            // Set the images on the UI thread
+            Platform.runLater(() -> setProfileImages(image));
+
         } catch (Exception e) {
-            System.err.println("Error loading default avatar: " + e.getMessage());
-            // If we can't load the default avatar, set a blank image to avoid NPE
-            profileImageView.setImage(null);
+            logger.log(Level.WARNING, "Error loading profile image", e);
+            // Load default avatar on error
+            Platform.runLater(() -> setProfileImages(ImageUtils.loadDefaultAvatar()));
+        }
+    }
+
+    /**
+     * Sets the profile images for both the small and large image views.
+     * 
+     * @param image The image to set
+     */
+    private void setProfileImages(Image image) {
+        if (image == null) {
+            image = ImageUtils.loadDefaultAvatar();
+        }
+
+        if (profileImageView != null) {
+            profileImageView.setImage(image);
+        }
+        if (profileImageLarge != null) {
+            profileImageLarge.setImage(image);
         }
     }
 
@@ -217,6 +306,32 @@ public class CustomerDashboardController {
     }
 
     /**
+     * Sets up the booking status filter ComboBox.
+     */
+    private void setupBookingStatusFilter() {
+        // Initialize filter options
+        bookingStatusFilter.setItems(FXCollections.observableArrayList(
+                "All Bookings",
+                "Booked",
+                "Cancelled"));
+
+        // Set default value
+        bookingStatusFilter.setValue("All Bookings");
+
+        // Add listener for filter changes
+        bookingStatusFilter.valueProperty().addListener((observable, oldValue, newValue) -> {
+            filteredBookings.setPredicate(booking -> {
+                if (newValue == null || newValue.equals("All Bookings")) {
+                    return true;
+                }
+
+                String filterValue = newValue.toUpperCase();
+                return booking.getBookingStatus().toString().equals(filterValue);
+            });
+        });
+    }
+
+    /**
      * Loads bookings for the current customer.
      */
     private void loadCustomerBookings() {
@@ -225,9 +340,8 @@ public class CustomerDashboardController {
         TaskUtils.executeTaskWithProgress(
                 bookingService.getBookingsByCustomerId(customerId),
                 bookings -> {
-                    bookingsList.clear();
-                    bookingsList.addAll(bookings);
-                    bookingsTable.setItems(bookingsList);
+                    masterBookingsList.clear();
+                    masterBookingsList.addAll(bookings);
                 },
                 error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load bookings: " + error.getMessage()));
     }
@@ -253,6 +367,12 @@ public class CustomerDashboardController {
             return;
         }
 
+        // Check if booking is already cancelled
+        if (selectedBooking.getBookingStatus() == BookingStatus.CANCELLED) {
+            showAlert(Alert.AlertType.WARNING, "Already Cancelled", "This booking is already cancelled.");
+            return;
+        }
+
         // Show confirmation dialog
         Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
         confirm.setTitle("Cancel Booking");
@@ -261,19 +381,31 @@ public class CustomerDashboardController {
 
         confirm.showAndWait().ifPresent(response -> {
             if (response == ButtonType.OK) {
+                // Update the booking status to CANCELLED
+                selectedBooking.setBookingStatus(BookingStatus.CANCELLED);
+
                 TaskUtils.executeTaskWithProgress(
-                        bookingService.cancelBooking(selectedBooking.getBookingId()),
+                        bookingService.updateBooking(selectedBooking),
                         success -> {
                             if (success) {
+                                // Update the table view
+                                bookingsTable.refresh();
                                 showAlert(Alert.AlertType.INFORMATION, "Success", "Booking cancelled successfully.");
-                                loadCustomerBookings(); // Refresh the list
                             } else {
+                                // Revert the status if save failed
+                                selectedBooking.setBookingStatus(BookingStatus.BOOKED);
+                                bookingsTable.refresh();
                                 showAlert(Alert.AlertType.ERROR, "Error",
                                         "Could not cancel booking. Please try again later.");
                             }
                         },
-                        error -> showAlert(Alert.AlertType.ERROR, "Error",
-                                "Failed to cancel booking: " + error.getMessage()));
+                        error -> {
+                            // Revert the status if save failed
+                            selectedBooking.setBookingStatus(BookingStatus.BOOKED);
+                            bookingsTable.refresh();
+                            showAlert(Alert.AlertType.ERROR, "Error",
+                                    "Failed to cancel booking: " + error.getMessage());
+                        });
             }
         });
     }
