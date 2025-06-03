@@ -152,6 +152,12 @@ public class HallBookingController implements Initializable {
             if (!capacityField.getText().isEmpty()) {
                 minCapacity = Integer.parseInt(capacityField.getText());
             }
+
+            // Validate capacity against hall type if selected
+            if (selectedType != null && minCapacity > selectedType.getMaxCapacity()) {
+                showAlert("Maximum capacity for " + selectedType.name() + " is " + selectedType.getMaxCapacity() + ".");
+                return;
+            }
         } catch (NumberFormatException e) {
             showAlert("Please enter a valid number for capacity.");
             return;
@@ -274,8 +280,10 @@ public class HallBookingController implements Initializable {
                 return;
             }
 
-            // Set booking details with start time slightly in the future to avoid validation errors
-            // Add 1 minute to current time and reset seconds/nanos to avoid "Start time cannot be in the past" error
+            // Set booking details with start time slightly in the future to avoid
+            // validation errors
+            // Add 1 minute to current time and reset seconds/nanos to avoid "Start time
+            // cannot be in the past" error
             LocalTime startTime = LocalTime.now().plusMinutes(1).withSecond(0).withNano(0);
             LocalTime endTime = startTime.plusHours(1);
             double estimatedCost = selectedHall.getRatePerHour();
@@ -292,14 +300,14 @@ public class HallBookingController implements Initializable {
             Dialog<ButtonType> bookingDialog = new Dialog<>();
             bookingDialog.setDialogPane((DialogPane) dialogRoot);
             bookingDialog.setTitle("Book Hall - " + selectedHall.getHallId());
-            
+
             // Customize button text
             Button okButton = (Button) bookingDialog.getDialogPane().lookupButton(ButtonType.OK);
             if (okButton != null) {
                 okButton.setText("Confirm Booking");
                 okButton.getStyleClass().add("confirm-button");
             }
-            
+
             Button cancelButton = (Button) bookingDialog.getDialogPane().lookupButton(ButtonType.CANCEL);
             if (cancelButton != null) {
                 cancelButton.setText("Cancel");
@@ -312,58 +320,62 @@ public class HallBookingController implements Initializable {
             if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.OK_DONE) {
                 // Get special requests if any
                 String specialRequests = dialogController.getSpecialRequests();
-                
+
                 // Get user-selected date and times
                 LocalDate selectedDate = dialogController.getSelectedDate();
                 LocalTime selectedStartTime = dialogController.getSelectedStartTime();
                 LocalTime selectedEndTime = dialogController.getSelectedEndTime();
-                
+
                 // Validate selections
                 if (selectedDate == null || selectedStartTime == null || selectedEndTime == null) {
                     showAlert("Please select a valid date and time for your booking.");
                     return;
                 }
-                
+
                 // Create booking in the database with user-selected values
                 LocalDateTime startDateTime = LocalDateTime.of(selectedDate, selectedStartTime);
                 LocalDateTime endDateTime = LocalDateTime.of(selectedDate, selectedEndTime);
-                
+
                 // Get current user ID from session and hall ID
                 String hallId = selectedHall.getHallId();
-                
+
                 // Check if the hall is available for the selected time slot
-                boolean isAvailable = TaskUtils.executeTask(bookingService.isHallAvailable(hallId, startDateTime, endDateTime));
+                boolean isAvailable = TaskUtils
+                        .executeTask(bookingService.isHallAvailable(hallId, startDateTime, endDateTime));
                 if (!isAvailable) {
                     showAlert("This time slot is already booked. Please select a different time.");
                     return;
                 }
-                
+
                 // Execute the booking creation task
-                // Note: BookingService.createBooking automatically gets the current user ID from SessionManager
+                // Note: BookingService.createBooking automatically gets the current user ID
+                // from SessionManager
                 TaskUtils.executeTaskWithProgress(
-                    bookingService.createBooking(hallId, startDateTime, endDateTime),
-                    booking -> {
-                        Platform.runLater(() -> {
-                            // Process booking with specialRequests and other details
-                            showAlert("Booking confirmed for Hall " + selectedHall.getHallId() +
-                                    "\nBooking ID: " + booking.getBookingId() +
-                                    "\nDate: " + selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")) +
-                                    "\nTime: " + selectedStartTime.format(DateTimeFormatter.ofPattern("h:mm a")) + " - " +
-                                    selectedEndTime.format(DateTimeFormatter.ofPattern("h:mm a")) +
-                                    "\nTotal Cost: $" + String.format("%.2f", booking.getTotalCost()) +
-                                    "\nSpecial Requests: " +
-                                    (specialRequests == null || specialRequests.trim().isEmpty() ? "None" : specialRequests));
-                            
-                            // Refresh the hall list to show updated availability
-                            loadHalls();
+                        bookingService.createBooking(hallId, startDateTime, endDateTime),
+                        booking -> {
+                            Platform.runLater(() -> {
+                                // Process booking with specialRequests and other details
+                                showAlert("Booking confirmed for Hall " + selectedHall.getHallId() +
+                                        "\nBooking ID: " + booking.getBookingId() +
+                                        "\nDate: "
+                                        + selectedDate.format(DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy")) +
+                                        "\nTime: " + selectedStartTime.format(DateTimeFormatter.ofPattern("h:mm a"))
+                                        + " - " +
+                                        selectedEndTime.format(DateTimeFormatter.ofPattern("h:mm a")) +
+                                        "\nTotal Cost: $" + String.format("%.2f", booking.getTotalCost()) +
+                                        "\nSpecial Requests: " +
+                                        (specialRequests == null || specialRequests.trim().isEmpty() ? "None"
+                                                : specialRequests));
+
+                                // Refresh the hall list to show updated availability
+                                loadHalls();
+                            });
+                        },
+                        error -> {
+                            Platform.runLater(() -> {
+                                showAlert("Error creating booking: " + error.getMessage());
+                            });
                         });
-                    },
-                    error -> {
-                        Platform.runLater(() -> {
-                            showAlert("Error creating booking: " + error.getMessage());
-                        });
-                    }
-                );
             } else {
                 System.out.println("Booking Cancelled.");
             }

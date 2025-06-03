@@ -42,6 +42,21 @@ public class AlertUtils {
     public static void showError(String title, String content) {
         showAlert(AlertType.ERROR, title, null, content);
     }
+    
+    /**
+     * Shows an error alert with an exception.
+     *
+     * @param title the title of the alert
+     * @param header the header text (can be null)
+     * @param e the exception to show details for
+     */
+    public static void showError(String title, String header, Exception e) {
+        String content = e.getMessage();
+        if (content == null || content.trim().isEmpty()) {
+            content = "An unexpected error occurred: " + e.getClass().getSimpleName();
+        }
+        showAlert(AlertType.ERROR, title, header, content);
+    }
 
     /**
      * Shows a warning alert.

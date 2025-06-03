@@ -4,15 +4,19 @@ com\group4\services\HallService$7.class
 com\group4\controllers\AssignIssueDialogController.class
 com\group4\services\AdminService$2.class
 com\group4\controllers\MaintenanceController.class
+com\group4\controllers\MaintenanceDialogController.class
+com\group4\models\BookingStatus.class
 com\group4\services\BookingService$8.class
 com\group4\services\AuthenticationService$2.class
 com\group4\services\IssueService$5.class
 com\group4\controllers\ManagerDashboardController$2.class
 com\group4\controllers\AdminDashboardController$1.class
+com\group4\controllers\MaintenanceTabController$2.class
 com\group4\models\HallAvailability.class
 com\group4\services\HallService$4.class
 com\group4\models\Availability.class
 com\group4\services\IssueService$8.class
+com\group4\controllers\AdminDashboardController$4.class
 com\group4\controllers\HallBookingController.class
 com\group4\controllers\AvailabilityController$4.class
 com\group4\services\BookingService$5.class
@@ -36,6 +40,7 @@ com\group4\services\BookingService$2.class
 com\group4\utils\FileHandler$3.class
 com\group4\controllers\CustomerDashboardController$2.class
 com\group4\controllers\MaintenanceFormController$3.class
+com\group4\controllers\MaintenanceTabController$3$1.class
 com\group4\controllers\AssignIssueDialogController$2.class
 com\group4\controllers\HallBookingController$1.class
 com\group4\controllers\MaintenanceController$1.class
@@ -90,8 +95,10 @@ com\group4\TestApp.class
 com\group4\utils\SystemInitializer.class
 com\group4\services\IssueService.class
 com\group4\utils\DialogManager.class
+com\group4\controllers\AdminDashboardController$3.class
 com\group4\TestLogin.class
 com\group4\controllers\MaintenanceController$2.class
+com\group4\controllers\MaintenanceTabController$1.class
 com\group4\services\MaintenanceService$3.class
 com\group4\services\AuthenticationService$1.class
 com\group4\controllers\RegistrationController.class
@@ -141,5 +148,7 @@ com\group4\models\Maintenance.class
 com\group4\services\BookingService$7.class
 com\group4\Launcher.class
 com\group4\controllers\MaintenanceController$3.class
+com\group4\controllers\MaintenanceTabController.class
 com\group4\services\MaintenanceService$2.class
+com\group4\controllers\MaintenanceTabController$3.class
 com\group4\services\AdminService$4.class

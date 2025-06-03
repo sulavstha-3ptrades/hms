@@ -2,8 +2,10 @@ D:\Java\hms\src\main\java\com\group4\utils\DialogManager.java
 D:\Java\hms\src\main\java\com\group4\services\UserService.java
 D:\Java\hms\src\main\java\com\group4\controllers\AssignIssueDialogController.java
 D:\Java\hms\src\main\java\com\group4\services\IssueService.java
+D:\Java\hms\src\main\java\com\group4\controllers\MaintenanceTabController.java
 D:\Java\hms\src\main\java\com\group4\utils\FileHandler.java
 D:\Java\hms\src\main\java\com\group4\models\Issue.java
+D:\Java\hms\src\main\java\com\group4\controllers\MaintenanceDialogController.java
 D:\Java\hms\src\main\java\com\group4\utils\BookingConflictException.java
 D:\Java\hms\src\main\java\com\group4\utils\ImageUtils.java
 D:\Java\hms\src\main\java\com\group4\controllers\AvailabilityController.java
@@ -15,6 +17,7 @@ D:\Java\hms\src\main\java\com\group4\services\PasswordResetService.java
 D:\Java\hms\src\main\java\com\group4\controllers\ReceiptController.java
 D:\Java\hms\src\main\java\com\group4\controllers\ForgotPasswordController.java
 D:\Java\hms\src\main\java\com\group4\utils\SessionManager.java
+D:\Java\hms\src\main\java\com\group4\models\BookingStatus.java
 D:\Java\hms\src\main\java\com\group4\utils\PlatformUtils.java
 D:\Java\hms\src\main\java\com\group4\services\AuthenticationService.java
 D:\Java\hms\src\main\java\com\group4\services\AvailabilityService.java

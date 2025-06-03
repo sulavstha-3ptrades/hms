@@ -1,11 +1,8 @@
 package com.group4.controllers;
 
-import com.group4.App;
 import com.group4.models.Hall;
 import com.group4.models.HallType;
-import com.group4.models.User;
 import com.group4.services.HallService;
-import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
 
 import javafx.application.Platform;
@@ -21,10 +18,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-
 import javafx.beans.property.SimpleStringProperty;
 
 /**
@@ -77,6 +74,9 @@ public class HallManagementController {
     @FXML
     private Button deleteButton;
 
+    @FXML
+    private Button maintenanceButton;
+
     private HallService hallService;
     private ObservableList<Hall> hallList = FXCollections.observableArrayList();
     private boolean isEditMode = false;
@@ -108,15 +108,18 @@ public class HallManagementController {
                     if (newValue != null) {
                         editButton.setDisable(false);
                         deleteButton.setDisable(false);
+                        maintenanceButton.setDisable(false);
                     } else {
                         editButton.setDisable(true);
                         deleteButton.setDisable(true);
+                        maintenanceButton.setDisable(true);
                     }
                 });
 
-        // Disable edit and delete buttons initially
+        // Disable action buttons initially
         editButton.setDisable(true);
         deleteButton.setDisable(true);
+        maintenanceButton.setDisable(true);
 
         // Add text change listeners to clear error
         capacityField.textProperty().addListener((observable, oldValue, newValue) -> {
@@ -182,10 +185,10 @@ public class HallManagementController {
 
             // Disable buttons during operation
             setControlsDisabled(true);
-
+            Hall selectedHall;
             if (isEditMode) {
                 // Update existing hall
-                Hall selectedHall = hallsTable.getSelectionModel().getSelectedItem();
+                selectedHall = hallsTable.getSelectionModel().getSelectedItem();
                 selectedHall.setType(hallType);
                 selectedHall.setCapacity(capacity);
                 selectedHall.setRatePerHour(rate);
@@ -193,18 +196,11 @@ public class HallManagementController {
                 TaskUtils.executeTaskWithProgress(
                         hallService.updateHall(selectedHall),
                         success -> {
-                            if (success) {
-                                Platform.runLater(() -> {
-                                    loadHalls();
-                                    clearForm();
-                                    setControlsDisabled(false);
-                                });
-                            } else {
-                                Platform.runLater(() -> {
-                                    showError("Failed to update hall");
-                                    setControlsDisabled(false);
-                                });
-                            }
+                            Platform.runLater(() -> {
+                                loadHalls();
+                                clearForm();
+                                setControlsDisabled(false);
+                            });
                         },
                         error -> {
                             Platform.runLater(() -> {
@@ -272,80 +268,53 @@ public class HallManagementController {
     private void handleDelete() {
         Hall selectedHall = hallsTable.getSelectionModel().getSelectedItem();
         if (selectedHall != null) {
-            // Disable buttons during operation
-            setControlsDisabled(true);
-
-            // Delete the hall
             TaskUtils.executeTaskWithProgress(
                     hallService.deleteHall(selectedHall.getHallId()),
                     success -> {
                         if (success) {
-                            Platform.runLater(() -> {
-                                loadHalls();
-                                clearForm();
-                                setControlsDisabled(false);
-                            });
+                            loadHalls();
+                            clearForm();
                         } else {
-                            Platform.runLater(() -> {
-                                showError("Failed to delete hall");
-                                setControlsDisabled(false);
-                            });
+                            showError("Failed to delete hall. Please try again.");
                         }
                     },
-                    error -> {
-                        Platform.runLater(() -> {
-                            showError("Error deleting hall: " + error.getMessage());
-                            setControlsDisabled(false);
-                        });
-                    });
-        }
-    }
-
-    /**
-     * Handles the back button click.
-     */
-    @FXML
-    private void handleBack() {
-        try {
-            // Check if the user is coming from the admin dashboard
-            User currentUser = SessionManager.getInstance().getCurrentUser();
-            String targetView = "view/SchedulerDashboard.fxml";
-            
-            if (currentUser != null && "Admin".equals(currentUser.getRole())) {
-                targetView = "view/AdminDashboard.fxml";
-            }
-            
-            FXMLLoader loader = new FXMLLoader(App.class.getResource(targetView));
-            Parent root = loader.load();
-
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            Scene scene = new Scene(root);
-            stage.setScene(scene);
-            stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
-            showError("Error navigating back: " + e.getMessage());
+                    error -> showError("Error deleting hall: " + error.getMessage())
+            );
         }
     }
     
     /**
-     * Initializes the controller for editing an existing hall.
-     * 
-     * @param hall The hall to edit
+     * Handles the maintenance button click event.
+     * Opens the maintenance dialog for the selected hall.
      */
-    public void initForEdit(Hall hall) {
-        if (hall != null) {
-            // Populate form with selected hall data
-            hallIdField.setText(hall.getHallId());
-            hallTypeComboBox.setValue(hall.getType().name());
-            capacityField.setText(String.valueOf(hall.getCapacity()));
-            ratePerHourField.setText(String.valueOf(hall.getRatePerHour()));
-
-            // Enable edit mode
-            isEditMode = true;
-            saveButton.setText("Update");
+@FXML
+private void handleMaintenance() {
+    Hall selectedHall = hallsTable.getSelectionModel().getSelectedItem();
+    if (selectedHall != null) {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                getClass().getResource("/com/group4/view/MaintenanceDialog.fxml"));
+            Parent root = loader.load();
+            
+            MaintenanceDialogController controller = loader.getController();
+            controller.setupForAdd(selectedHall.getHallId());
+            
+            Stage dialog = new Stage();
+            dialog.setTitle("Schedule Maintenance - " + selectedHall.getHallId());
+            dialog.setScene(new Scene(root, 500, 400));
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.showAndWait();
+            
+            // Refresh the halls table after maintenance is scheduled
+            loadHalls();
+        } catch (Exception e) {
+            e.printStackTrace();
+            showError("Error opening maintenance dialog: " + e.getMessage());
         }
+    } else {
+        showError("Please select a hall to schedule maintenance");
     }
+}
 
     /**
      * Clears the form.

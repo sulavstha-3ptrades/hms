@@ -72,6 +72,25 @@ public class UserService {
         }
         return null;
     }
+    
+    /**
+     * Retrieves all users with the specified role.
+     *
+     * @param role The role to filter users by (e.g., "STAFF", "CUSTOMER")
+     * @return A list of users with the specified role
+     */
+    public List<User> getUsersByRole(String role) {
+        List<User> filteredUsers = new ArrayList<>();
+        List<User> allUsers = getAllUsers();
+        
+        for (User user : allUsers) {
+            if (user.getRole() != null && user.getRole().equalsIgnoreCase(role)) {
+                filteredUsers.add(user);
+            }
+        }
+        
+        return filteredUsers;
+    }
 
     /**
      * Retrieves a user by their email address.

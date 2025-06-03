@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<VBox xmlns="http://javafx.com/javafx/11" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.group4.controllers.MaintenanceTabController" spacing="10" style="-fx-padding: 15;">
+    
+    <style>
+        .header-label {
+            -fx-font-size: 18px;
+            -fx-font-weight: bold;
+            -fx-text-fill: #2c3e50;
+        }
+        .button-bar {
+            -fx-spacing: 10;
+            -fx-padding: 10 0 10 0;
+        }
+    </style>
+    
+    <Label text="Scheduled Maintenance" styleClass="header-label" />
+    
+    <HBox spacing="10" alignment="CENTER_RIGHT" styleClass="button-bar">
+        <Button text="Refresh" onAction="#handleRefresh" 
+                style="-fx-background-color: #3498db; -fx-text-fill: white;" />
+    </HBox>
+    
+    <TableView fx:id="maintenanceTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="hallIdColumn" text="Hall ID" prefWidth="100" />
+            <TableColumn fx:id="descriptionColumn" text="Description" prefWidth="300" />
+            <TableColumn fx:id="startTimeColumn" text="Start Time" prefWidth="175" />
+            <TableColumn fx:id="endTimeColumn" text="End Time" prefWidth="175" />
+            <TableColumn fx:id="actionsColumn" text="Actions" prefWidth="150" />
+        </columns>
+    </TableView>
+    
+</VBox>

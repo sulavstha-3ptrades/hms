@@ -18,6 +18,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import com.group4.models.BookingStatus;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -233,8 +234,14 @@ public class BookingService implements IBookingService {
                 LocalTime businessStart = LocalTime.of(8, 0);
                 LocalTime businessEnd = LocalTime.of(18, 0);
 
-                if (startTime.isBefore(businessStart) || endTime.isAfter(businessEnd)) {
-                    return false;
+                if (startTime.isBefore(businessStart)) {
+                    throw new IllegalArgumentException("Booking cannot start before 8 AM");
+                }
+                if (endTime.isAfter(businessEnd)) {
+                    throw new IllegalArgumentException("Booking cannot end after 6 PM");
+                }
+                if (endTime.isBefore(startTime) || endTime.equals(startTime)) {
+                    throw new IllegalArgumentException("End time must be after start time");
                 }
 
                 // Check for overlapping bookings
@@ -242,12 +249,13 @@ public class BookingService implements IBookingService {
 
                 for (String line : lines) {
                     Booking booking = Booking.fromDelimitedString(line);
-                    if (booking != null && booking.getHallId().equals(hallId)) {
+                    if (booking != null && booking.getHallId().equals(hallId)
+                            && booking.getBookingStatus() != BookingStatus.CANCELLED) {
 
                         // Check for overlap
                         if (!(endDateTime.isBefore(booking.getStartDateTime()) ||
                                 startDateTime.isAfter(booking.getEndDateTime()))) {
-                            return false;
+                            throw new IllegalStateException("Selected time slot overlaps with an existing booking");
                         }
                     }
                 }
@@ -288,11 +296,14 @@ public class BookingService implements IBookingService {
      * Creates a new booking.
      * 
      * @param hallId        The ID of the hall to book (must not be null or empty)
-     * @param startDateTime The start date and time (must not be null and must be in the future)
-     * @param endDateTime   The end date and time (must not be null and must be after startDateTime)
+     * @param startDateTime The start date and time (must not be null and must be in
+     *                      the future)
+     * @param endDateTime   The end date and time (must not be null and must be
+     *                      after startDateTime)
      * @return A Task that returns the created booking if successful
      * @throws IllegalArgumentException if any parameter is invalid
-     * @throws IllegalStateException if the hall is not available or user is not logged in
+     * @throws IllegalStateException    if the hall is not available or user is not
+     *                                  logged in
      */
     @Override
     public Task<Booking> createBooking(String hallId, LocalDateTime startDateTime, LocalDateTime endDateTime) {
@@ -311,14 +322,14 @@ public class BookingService implements IBookingService {
         }
 
         final String finalHallId = hallId.trim();
-        
+
         return new Task<Booking>() {
             @Override
             protected Booking call() throws Exception {
                 try {
-                    LOGGER.info(String.format("Creating new booking for hall %s from %s to %s", 
+                    LOGGER.info(String.format("Creating new booking for hall %s from %s to %s",
                             finalHallId, startDateTime, endDateTime));
-                    
+
                     // Check if the hall is available
                     if (!TaskUtils.executeTask(isHallAvailable(finalHallId, startDateTime, endDateTime))) {
                         String errorMsg = String.format("Hall %s is not available for the selected time", finalHallId);
@@ -335,27 +346,28 @@ public class BookingService implements IBookingService {
                     }
 
                     // Calculate the cost
-                    double totalCost = TaskUtils.executeTask(calculateBookingCost(finalHallId, startDateTime, endDateTime));
+                    double totalCost = TaskUtils
+                            .executeTask(calculateBookingCost(finalHallId, startDateTime, endDateTime));
                     LOGGER.info(String.format("Calculated total cost: $%.2f", totalCost));
 
                     // Generate a unique booking ID
-                    String bookingId = UUID.randomUUID().toString();
+                    String bookingId = "BOOKING-" + UUID.randomUUID().toString().substring(0, 8);
                     LOGGER.info("Generated booking ID: " + bookingId);
 
-                    // Create a new booking
+                    // Create a new booking with BOOKED status by default
                     Booking newBooking = new Booking(
-                        bookingId,
-                        currentUser.getUserId(),
-                        finalHallId,
-                        startDateTime,
-                        endDateTime,
-                        totalCost
-                    );
-                    
+                            bookingId,
+                            currentUser.getUserId(),
+                            finalHallId,
+                            startDateTime,
+                            endDateTime,
+                            totalCost,
+                            BookingStatus.BOOKED);
+
                     // Save the booking
                     FileHandler.appendLine(FileConstants.getBookingsFilePath(), newBooking.toDelimitedString());
                     LOGGER.info("Successfully created booking: " + bookingId);
-                    
+
                     return newBooking;
                 } catch (Exception e) {
                     String errorMsg = "Failed to create booking: " + e.getMessage();
@@ -363,13 +375,13 @@ public class BookingService implements IBookingService {
                     throw new RuntimeException(errorMsg, e);
                 }
             }
-            
+
             @Override
             protected void failed() {
                 super.failed();
                 LOGGER.log(Level.SEVERE, "Booking creation failed", getException());
             }
-            
+
             @Override
             protected void succeeded() {
                 super.succeeded();

@@ -41,6 +41,9 @@ import javafx.application.Platform;
 import com.group4.utils.ImageUtils;
 import javafx.beans.property.SimpleStringProperty;
 
+import com.group4.models.Booking; // Import Booking model
+import com.group4.services.BookingService; // Import BookingService
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -51,6 +54,15 @@ import java.util.Optional;
 import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.List; // Import List
+
+import javafx.beans.property.SimpleObjectProperty; // Import SimpleObjectProperty
+import javafx.scene.control.cell.PropertyValueFactory; // Import PropertyValueFactory
+import javafx.scene.control.TableCell; // Import TableCell
+import javafx.collections.FXCollections; // Import FXCollections
+import javafx.collections.ObservableList; // Import ObservableList
+import javafx.concurrent.Task; // Import Task
+import javafx.util.Callback; // Import Callback
 
 /**
  * Controller for the Admin Dashboard.
@@ -99,19 +111,19 @@ public class AdminDashboardController {
 
     @FXML
     private ComboBox<String> roleFilterComboBox;
-    
+
     @FXML
     private ComboBox<String> statusFilterComboBox;
-    
+
     @FXML
     private TextField nameSearchField;
-    
+
     @FXML
     private TextField emailSearchField;
-    
+
     @FXML
     private TextField contactSearchField;
-    
+
     @FXML
     private Button searchButton;
 
@@ -183,15 +195,55 @@ public class AdminDashboardController {
     @FXML
     private Button deleteMaintenanceButton;
 
+    // Booking History components
+    @FXML
+    private Tab bookingHistoryTab;
+    @FXML
+    private TableView<Booking> allBookingsTable;
+    @FXML
+    private TableColumn<Booking, String> allBookingIdColumn;
+    @FXML
+    private TableColumn<Booking, String> allBookingHallIdColumn;
+    @FXML
+    private TableColumn<Booking, String> allBookingCustomerColumn;
+    @FXML
+    private TableColumn<Booking, LocalDateTime> allBookingStartColumn;
+    @FXML
+    private TableColumn<Booking, LocalDateTime> allBookingEndColumn;
+    @FXML
+    private TableColumn<Booking, Double> allBookingTotalCostColumn;
+    @FXML
+    private TableColumn<Booking, String> allBookingStatusColumn;
+
+    // Booking History Filter components
+    @FXML
+    private TextField bookingIdFilterField;
+    @FXML
+    private TextField hallIdFilterField;
+    @FXML
+    private TextField customerFilterField;
+    @FXML
+    private ComboBox<String> bookingStatusFilterComboBox;
+    @FXML
+    private Button filterBookingsButton;
+    @FXML
+    private Button resetBookingFiltersButton;
+
     private AdminService adminService;
     private UserService userService;
     private HallService hallService;
     private MaintenanceService maintenanceService;
     private HallAvailabilityService hallAvailabilityService;
+    private BookingService bookingService; // Add BookingService instance
     private ObservableList<User> usersList = FXCollections.observableArrayList();
     private ObservableList<Hall> hallsList = FXCollections.observableArrayList();
     private ObservableList<Maintenance> maintenanceList = FXCollections.observableArrayList();
+    private ObservableList<Booking> allBookingsList = FXCollections.observableArrayList(); // Add ObservableList for
+                                                                                           // bookings
     private User currentUser;
+
+    private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"); // Add
+                                                                                                                 // DateTimeFormatter
 
     /**
      * Initializes the controller.
@@ -223,6 +275,72 @@ public class AdminDashboardController {
 
         // Initialize profile image
         initializeProfileImage();
+
+        // Initialize booking history tab
+        initializeBookingHistoryTab();
+    }
+
+    /**
+     * Initializes the booking history tab.
+     */
+    private void initializeBookingHistoryTab() {
+        // Initialize table columns
+        allBookingIdColumn.setCellValueFactory(cellData -> cellData.getValue().bookingIdProperty());
+        allBookingHallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
+
+        // Set up cell factory for customer name
+        allBookingCustomerColumn.setCellValueFactory(cellData -> {
+            String customerId = cellData.getValue().getCustomerId();
+            User customer = userService.getUserById(customerId); // Fetch user by ID
+            String customerName = (customer != null) ? customer.getFirstName() + " " + customer.getLastName()
+                    : "Unknown User";
+            return new SimpleStringProperty(customerName);
+        });
+
+        // Format date/time columns
+        allBookingStartColumn.setCellValueFactory(new PropertyValueFactory<>("startDateTime"));
+        allBookingStartColumn.setCellFactory(column -> new TableCell<Booking, LocalDateTime>() {
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("");
+                } else {
+                    setText(item.format(DATETIME_FORMATTER));
+                }
+            }
+        });
+
+        allBookingEndColumn.setCellValueFactory(new PropertyValueFactory<>("endDateTime"));
+        allBookingEndColumn.setCellFactory(column -> new TableCell<Booking, LocalDateTime>() {
+            @Override
+            protected void updateItem(LocalDateTime item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText("");
+                } else {
+                    setText(item.format(DATETIME_FORMATTER));
+                }
+            }
+        });
+
+        allBookingTotalCostColumn.setCellValueFactory(cellData -> cellData.getValue().totalCostProperty().asObject());
+        allBookingStatusColumn.setCellValueFactory(cellData -> cellData.getValue().bookingStatusProperty().asString()); // Assuming
+                                                                                                                        // BookingStatus
+                                                                                                                        // is
+                                                                                                                        // an
+                                                                                                                        // Enum
+                                                                                                                        // or
+                                                                                                                        // has
+                                                                                                                        // a
+                                                                                                                        // toString
+                                                                                                                        // method
+
+        // Set table data source
+        allBookingsTable.setItems(allBookingsList);
+
+        // Load all bookings
+        loadAllBookings();
     }
 
     /**
@@ -237,34 +355,34 @@ public class AdminDashboardController {
         emailColumn.setCellValueFactory(cellData -> cellData.getValue().emailProperty());
         contactNumberColumn.setCellValueFactory(cellData -> cellData.getValue().contactNumberProperty());
         statusColumn.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
-        
+
         // Custom cell factory for status column
         statusColumn.setCellFactory(column -> new TableCell<User, String>() {
             private final HBox container = new HBox(5);
             private final Circle statusDot = new Circle(5);
             private final Label statusLabel = new Label();
-            
+
             {
                 container.setAlignment(Pos.CENTER);
                 container.getChildren().addAll(statusDot, statusLabel);
                 statusLabel.setStyle("-fx-font-weight: bold;");
             }
-            
+
             @Override
             protected void updateItem(String status, boolean empty) {
                 super.updateItem(status, empty);
-                
+
                 if (empty || status == null) {
                     setGraphic(null);
                     setText(null);
                 } else {
                     boolean isActive = "Active".equalsIgnoreCase(status);
                     String color = isActive ? "#2ecc71" : "#e74c3c";
-                    
+
                     statusDot.setFill(Color.web(color));
                     statusLabel.setText(status);
                     statusLabel.setTextFill(Color.web(color));
-                    
+
                     setGraphic(container);
                     setText(null);
                 }
@@ -275,7 +393,7 @@ public class AdminDashboardController {
         roleFilterComboBox.setItems(FXCollections.observableArrayList(
                 "All", "Manager", "Scheduler", "Customer"));
         roleFilterComboBox.setValue("All");
-        
+
         // Initialize status filter
         statusFilterComboBox.setItems(FXCollections.observableArrayList(
                 "All", "Active", "Block"));
@@ -284,29 +402,28 @@ public class AdminDashboardController {
         // Add listeners to filters
         roleFilterComboBox.valueProperty().addListener((obs, oldValue, newValue) -> applyFilters());
         statusFilterComboBox.valueProperty().addListener((obs, oldValue, newValue) -> applyFilters());
-        
+
         // Add search button handler
         searchButton.setOnAction(event -> applyFilters());
-        
+
         // Add Enter key listener to search fields
         nameSearchField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 applyFilters();
             }
         });
-        
+
         emailSearchField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 applyFilters();
             }
         });
-        
+
         contactSearchField.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
                 applyFilters();
             }
         });
-        
 
     }
 
@@ -412,6 +529,28 @@ public class AdminDashboardController {
     }
 
     /**
+     * Loads all bookings from the database and populates the table.
+     */
+    private void loadAllBookings() {
+        TaskUtils.executeTaskWithProgress(
+                bookingService.getAllBookings(), // Assuming BookingService has getAllBookings()
+                bookings -> {
+                    allBookingsList.clear();
+                    // Fetch customer names for each booking
+                    for (Booking booking : bookings) {
+                        User customer = userService.getUserById(booking.getCustomerId());
+                        // Although the cell factory handles displaying the name,
+                        // we might want to store the name or the user object with the booking
+                        // if we need to filter/sort by customer name later.
+                        // For now, the cell factory is sufficient for display.
+                        allBookingsList.add(booking);
+                    }
+                    allBookingsTable.setItems(allBookingsList);
+                },
+                error -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to load bookings: " + error.getMessage()));
+    }
+
+    /**
      * Applies all active filters to the users table.
      * Filters users based on role, status, name, email, and contact number.
      */
@@ -423,22 +562,22 @@ public class AdminDashboardController {
         String contactSearch = contactSearchField.getText().toLowerCase();
 
         ObservableList<User> filteredList = FXCollections.observableArrayList();
-        
+
         for (User user : usersList) {
             // Skip admin users
             if ("Admin".equalsIgnoreCase(user.getRole())) {
                 continue;
             }
-            
+
             // Apply role filter
             if (roleFilter != null && !roleFilter.equals("All") && !user.getRole().equals(roleFilter)) {
                 continue;
             }
-            
+
             // Apply status filter
             if (statusFilter != null && !statusFilter.equals("All")) {
                 String userStatus = user.getStatus() != null ? user.getStatus().toUpperCase() : "";
-                
+
                 if (statusFilter.equalsIgnoreCase("Active") && !"ACTIVE".equals(userStatus)) {
                     continue;
                 }
@@ -446,7 +585,7 @@ public class AdminDashboardController {
                     continue;
                 }
             }
-            
+
             // Apply name search
             if (!nameSearch.isEmpty()) {
                 String fullName = (user.getFirstName() + " " + user.getLastName()).toLowerCase();
@@ -454,23 +593,23 @@ public class AdminDashboardController {
                     continue;
                 }
             }
-            
+
             // Apply email search
             if (!emailSearch.isEmpty() && !user.getEmail().toLowerCase().contains(emailSearch)) {
                 continue;
             }
-            
+
             // Apply contact search
             if (!contactSearch.isEmpty() && !user.getContactNumber().toLowerCase().contains(contactSearch)) {
                 continue;
             }
-            
+
             filteredList.add(user);
         }
-        
+
         usersTable.setItems(filteredList);
     }
-    
+
     @FXML
     private void handleSearch() {
         applyFilters();
@@ -1001,7 +1140,7 @@ public class AdminDashboardController {
         nameSearchField.clear();
         emailSearchField.clear();
         contactSearchField.clear();
-        
+
         // Reload all users
         loadAllUsers();
     }
@@ -1540,13 +1679,13 @@ public class AdminDashboardController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirm Deletion");
         alert.setHeaderText("Delete User");
-        alert.setContentText("Are you sure you want to delete user: " + 
-            selectedUser.getFirstName() + " " + selectedUser.getLastName() + "?");
+        alert.setContentText("Are you sure you want to delete user: " +
+                selectedUser.getFirstName() + " " + selectedUser.getLastName() + "?");
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             Task<Boolean> deleteTask = adminService.deleteUser(selectedUser.getUserId());
-            
+
             deleteTask.setOnSucceeded(e -> {
                 if (Boolean.TRUE.equals(deleteTask.getValue())) {
                     Platform.runLater(() -> {
@@ -1555,16 +1694,16 @@ public class AdminDashboardController {
                     });
                 } else {
                     Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.ERROR, "Error", 
-                            "Failed to delete user. The user may have associated records.");
+                        showAlert(Alert.AlertType.ERROR, "Error",
+                                "Failed to delete user. The user may have associated records.");
                     });
                 }
             });
 
             deleteTask.setOnFailed(e -> {
                 Platform.runLater(() -> {
-                    showAlert(Alert.AlertType.ERROR, "Error", 
-                        "An error occurred while deleting the user.");
+                    showAlert(Alert.AlertType.ERROR, "Error",
+                            "An error occurred while deleting the user.");
                 });
                 logger.log(Level.SEVERE, "Error deleting user", deleteTask.getException());
             });
@@ -1588,13 +1727,13 @@ public class AdminDashboardController {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirm Deletion");
         alert.setHeaderText("Delete Maintenance Schedule");
-        alert.setContentText("Are you sure you want to delete the maintenance schedule for " + 
-            selectedMaintenance.getHallId() + "?");
+        alert.setContentText("Are you sure you want to delete the maintenance schedule for " +
+                selectedMaintenance.getHallId() + "?");
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             Task<Boolean> deleteTask = maintenanceService.deleteMaintenance(selectedMaintenance.getMaintenanceId());
-            
+
             deleteTask.setOnSucceeded(e -> {
                 if (Boolean.TRUE.equals(deleteTask.getValue())) {
                     Platform.runLater(() -> {
@@ -1603,16 +1742,16 @@ public class AdminDashboardController {
                     });
                 } else {
                     Platform.runLater(() -> {
-                        showAlert(Alert.AlertType.ERROR, "Error", 
-                            "Failed to delete maintenance schedule. It may be referenced by other records.");
+                        showAlert(Alert.AlertType.ERROR, "Error",
+                                "Failed to delete maintenance schedule. It may be referenced by other records.");
                     });
                 }
             });
 
             deleteTask.setOnFailed(e -> {
                 Platform.runLater(() -> {
-                    showAlert(Alert.AlertType.ERROR, "Error", 
-                        "An error occurred while deleting the maintenance schedule.");
+                    showAlert(Alert.AlertType.ERROR, "Error",
+                            "An error occurred while deleting the maintenance schedule.");
                 });
                 logger.log(Level.SEVERE, "Error deleting maintenance schedule", deleteTask.getException());
             });

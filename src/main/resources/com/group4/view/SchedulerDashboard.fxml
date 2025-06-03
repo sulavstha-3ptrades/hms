@@ -6,6 +6,8 @@
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -113,6 +115,76 @@
                         <!-- Add reports content here -->
                      </children>
                   </AnchorPane>
+               </content>
+            </Tab>
+
+            <Tab fx:id="maintenanceTab" text="Maintenance">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <fx:include fx:id="maintenanceContent" source="MaintenanceTab.fxml" />
+                     </children>
+                  </AnchorPane>
+               </content>
+            </Tab>
+            
+            <Tab fx:id="issuesTab" text="Issues">
+               <content>
+                  <BorderPane prefHeight="200.0" prefWidth="200.0">
+                     <center>
+                        <TableView fx:id="issuesTable" prefHeight="200.0" prefWidth="200.0"
+                           BorderPane.alignment="CENTER">
+                           <columns>
+                              <TableColumn fx:id="issueIdColumn" prefWidth="80.0" text="Issue ID" />
+                              <TableColumn fx:id="customerIdColumn" prefWidth="100.0" text="Customer ID" />
+                              <TableColumn fx:id="hallIdColumn" prefWidth="80.0" text="Hall ID" />
+                              <TableColumn fx:id="descriptionColumn" prefWidth="320.0" text="Description" />
+                              <TableColumn fx:id="assignedStaffIdColumn" prefWidth="100.0" text="Assigned To" />
+                              <TableColumn fx:id="statusColumn" prefWidth="100.0" text="Status" />
+                           </columns>
+                        </TableView>
+                     </center>
+                     <bottom>
+                        <HBox alignment="CENTER" spacing="20.0" BorderPane.alignment="CENTER">
+                           <children>
+                              <Button fx:id="assignIssueButton" mnemonicParsing="false"
+                                 onAction="#handleAssignIssue" prefHeight="40.0"
+                                 prefWidth="150.0" text="Assign Issue">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="closeIssueButton" mnemonicParsing="false"
+                                 onAction="#handleCloseIssue" prefHeight="40.0"
+                                 prefWidth="150.0" text="Close Issue">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Button>
+                              <Button fx:id="refreshIssuesButton" mnemonicParsing="false"
+                                 onAction="#handleRefreshIssues" prefHeight="40.0"
+                                 prefWidth="150.0" text="Refresh">
+                                 <font>
+                                    <Font size="14.0" />
+                                 </font>
+                              </Button>
+                           </children>
+                           <padding>
+                              <Insets bottom="15.0" top="15.0" />
+                           </padding>
+                        </HBox>
+                     </bottom>
+                     <top>
+                        <Label text="All Issues" BorderPane.alignment="CENTER">
+                           <font>
+                              <Font name="System Bold" size="14.0" />
+                           </font>
+                           <BorderPane.margin>
+                              <Insets bottom="10.0" top="10.0" />
+                           </BorderPane.margin>
+                        </Label>
+                     </top>
+                  </BorderPane>
                </content>
             </Tab>
             

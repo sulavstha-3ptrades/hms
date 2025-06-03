@@ -178,10 +178,12 @@ public class MaintenanceService {
 
                 for (String line : lines) {
                     Maintenance maintenance = Maintenance.fromDelimitedString(line);
-                    if (maintenance != null && maintenance.getMaintenanceId().equals(maintenanceId)) {
-                        found = true;
-                    } else {
-                        updatedLines.add(line);
+                    if (maintenance != null) {
+                        if (maintenance.getMaintenanceId().equals(maintenanceId)) {
+                            found = true;
+                        } else {
+                            updatedLines.add(line);
+                        }
                     }
                 }
 

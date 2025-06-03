@@ -16,8 +16,6 @@ import javafx.scene.Node;
 
 public class AddHallFormController {
 
-
-
     @FXML
     private TextField hallIdField;
     @FXML
@@ -246,6 +244,14 @@ public class AddHallFormController {
             int capacity = Integer.parseInt(capacityField.getText().trim());
             if (capacity <= 0) {
                 errorLabel.setText("Capacity must be greater than 0.");
+                return false;
+            }
+
+            // Validate against maximum capacity for the selected hall type
+            HallType selectedType = hallTypeComboBox.getValue();
+            if (capacity > selectedType.getMaxCapacity()) {
+                errorLabel.setText(
+                        "Maximum capacity for " + selectedType.name() + " is " + selectedType.getMaxCapacity() + ".");
                 return false;
             }
         } catch (NumberFormatException e) {

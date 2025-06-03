@@ -122,10 +122,17 @@ public class BookingConfirmationController implements Initializable {
      * Initializes the time selection ComboBoxes with appropriate values.
      */
     private void initializeTimeComboBoxes() {
-        // Hours (12-hour format)
+        // Hours (8 AM to 6 PM)
         ObservableList<String> hours = FXCollections.observableArrayList();
-        for (int i = 1; i <= 12; i++) {
-            hours.add(String.format("%d", i));
+        for (int i = 8; i <= 18; i++) {
+            // Convert 24-hour format to 12-hour format
+            if (i == 0) {
+                hours.add("12");
+            } else if (i > 12) {
+                hours.add(String.format("%d", i - 12));
+            } else {
+                hours.add(String.format("%d", i));
+            }
         }
         startHourComboBox.setItems(hours);
         endHourComboBox.setItems(hours);
@@ -142,6 +149,10 @@ public class BookingConfirmationController implements Initializable {
         ObservableList<String> amPm = FXCollections.observableArrayList("AM", "PM");
         startAmPmComboBox.setItems(amPm);
         endAmPmComboBox.setItems(amPm);
+
+        // Set default values for AM/PM based on business hours
+        startAmPmComboBox.setValue("AM"); // 8 AM by default
+        endAmPmComboBox.setValue("PM"); // PM for end time
     }
 
     /**
@@ -278,6 +289,18 @@ public class BookingConfirmationController implements Initializable {
     }
 
     /**
+     * Validates if the given time is within business hours (8 AM to 6 PM)
+     * 
+     * @param time The time to validate
+     * @return true if the time is within business hours, false otherwise
+     */
+    private boolean isWithinBusinessHours(LocalTime time) {
+        LocalTime businessStart = LocalTime.of(8, 0);
+        LocalTime businessEnd = LocalTime.of(18, 0);
+        return !time.isBefore(businessStart) && !time.isAfter(businessEnd);
+    }
+
+    /**
      * Updates the duration and cost based on the selected start and end times.
      * Also checks for time conflicts with existing bookings.
      */
@@ -286,11 +309,22 @@ public class BookingConfirmationController implements Initializable {
         LocalTime endTime = getSelectedEndTime();
 
         if (startTime != null && endTime != null && currentHall != null) {
+            // Validate business hours
+            if (!isWithinBusinessHours(startTime) || !isWithinBusinessHours(endTime)) {
+                // Reset time selection and show error
+                resetTimeSelection();
+                showAlert("Booking hours are restricted to 8 AM - 6 PM");
+                return;
+            }
+
             // Ensure end time is after start time
             if (endTime.isBefore(startTime) || endTime.equals(startTime)) {
                 // If end time is before or equal to start time, set end time to start time + 1
                 // hour
                 endTime = startTime.plusHours(1);
+                if (!isWithinBusinessHours(endTime)) {
+                    endTime = LocalTime.of(18, 0); // Set to end of business hours
+                }
                 updateEndTimeControls(endTime);
             }
 
@@ -306,6 +340,31 @@ public class BookingConfirmationController implements Initializable {
             // Check for conflicts with existing bookings
             checkAndUpdateTimeConflicts();
         }
+    }
+
+    /**
+     * Resets the time selection to default values
+     */
+    private void resetTimeSelection() {
+        startHourComboBox.setValue("8");
+        startMinuteComboBox.setValue("00");
+        startAmPmComboBox.setValue("AM");
+        endHourComboBox.setValue("9");
+        endMinuteComboBox.setValue("00");
+        endAmPmComboBox.setValue("AM");
+    }
+
+    /**
+     * Shows an alert dialog with the specified message.
+     * 
+     * @param message The message to display
+     */
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Warning");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     /**

@@ -397,6 +397,55 @@
                   </VBox>
                </content>
             </Tab>
+            <Tab text="Booking History">
+               <content>
+                  <VBox alignment="TOP_CENTER" spacing="15" style="-fx-padding: 10 20 20 20;">
+                     <HBox alignment="CENTER_LEFT" spacing="20.0">
+                        <children>
+                           <Label text="All Bookings"
+                                  style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                        </children>
+                        <VBox.margin>
+                           <Insets bottom="10.0" top="10.0" />
+                        </VBox.margin>
+                     </HBox>
+                     <!-- Booking History Filters -->
+                     <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-padding: 0 0 10 0;">
+                        <children>
+                           <Label text="Filter by:" />
+                           <TextField fx:id="bookingIdFilterField" promptText="Booking ID" prefWidth="100"/>
+                           <TextField fx:id="hallIdFilterField" promptText="Hall ID" prefWidth="100"/>
+                           <TextField fx:id="customerFilterField" promptText="Customer Name" prefWidth="150"/>
+                           <ComboBox fx:id="bookingStatusFilterComboBox" promptText="Status" prefWidth="100">
+                              <items>
+                                 <FXCollections fx:factory="observableArrayList">
+                                    <String fx:value="All" />
+                                    <String fx:value="PENDING" />
+                                    <String fx:value="CONFIRMED" />
+                                    <String fx:value="CANCELLED" />
+                                    <String fx:value="COMPLETED" />
+                                 </FXCollections>
+                              </items>
+                           </ComboBox>
+                           <Button fx:id="filterBookingsButton" text="Filter" onAction="#handleFilterBookings"/>
+                           <Button fx:id="resetBookingFiltersButton" text="Reset" onAction="#handleResetBookingFilters"/>
+                        </children>
+                     </HBox>
+                     <TableView fx:id="allBookingsTable" prefHeight="400.0" prefWidth="100.0"
+                                VBox.vgrow="ALWAYS">
+                        <columns>
+                           <TableColumn fx:id="allBookingIdColumn" prefWidth="100.0" text="Booking ID" />
+                           <TableColumn fx:id="allBookingHallIdColumn" prefWidth="100.0" text="Hall ID" />
+                           <TableColumn fx:id="allBookingCustomerColumn" prefWidth="150.0" text="Customer" />
+                           <TableColumn fx:id="allBookingStartColumn" prefWidth="150.0" text="Start Time" />
+                           <TableColumn fx:id="allBookingEndColumn" prefWidth="150.0" text="End Time" />
+                           <TableColumn fx:id="allBookingTotalCostColumn" prefWidth="100.0" text="Total Cost" />
+                           <TableColumn fx:id="allBookingStatusColumn" prefWidth="100.0" text="Status" />
+                        </columns>
+                     </TableView>
+                  </VBox>
+               </content>
+            </Tab>
          </tabs>
       </TabPane>
    </center>
