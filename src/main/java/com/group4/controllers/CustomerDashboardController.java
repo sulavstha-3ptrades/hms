@@ -4,6 +4,7 @@ import com.group4.App;
 import com.group4.models.*;
 import com.group4.services.BookingService;
 import com.group4.services.HallService;
+import com.group4.services.UserService;
 import com.group4.utils.SessionManager;
 import com.group4.utils.TaskUtils;
 import com.group4.utils.ViewManager;
@@ -13,11 +14,13 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -82,9 +85,14 @@ public class CustomerDashboardController {
     @FXML
     private Button reportIssueButton;
 
+    @FXML
+    private Button editProfileButton;
+
     private BookingService bookingService;
     private ObservableList<Booking> bookingsList = FXCollections.observableArrayList();
     private static final DateTimeFormatter DATETIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private User currentUser;
+    private UserService userService;
 
     /**
      * Initializes the controller.
@@ -97,6 +105,7 @@ public class CustomerDashboardController {
         // Set up the profile image view
         setupProfileImageView();
         bookingService = new BookingService();
+        userService = new UserService();
 
         // Initialize table columns
         bookingIdColumn.setCellValueFactory(cellData -> cellData.getValue().bookingIdProperty());
@@ -144,7 +153,7 @@ public class CustomerDashboardController {
     private void loadCurrentUserInfo() {
         try {
             // Get the current user from the session
-            User currentUser = SessionManager.getInstance().getCurrentUser();
+            currentUser = SessionManager.getInstance().getCurrentUser();
             if (currentUser != null) {
                 // Set user name and role
                 userNameLabel.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
@@ -391,6 +400,102 @@ public class CustomerDashboardController {
         } catch (Exception e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to open report issue dialog: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleEditProfile() {
+        try {
+            // Store the current user data before showing the dialog
+            User originalUser = new User();
+            originalUser.setUserId(currentUser.getUserId());
+            originalUser.setFirstName(currentUser.getFirstName());
+            originalUser.setLastName(currentUser.getLastName());
+            originalUser.setEmail(currentUser.getEmail());
+            originalUser.setContactNumber(currentUser.getContactNumber());
+            originalUser.setRole(currentUser.getRole());
+            originalUser.setStatus(currentUser.getStatus());
+            originalUser.setProfilePicture(currentUser.getProfilePicture());
+
+            // Load the edit profile view
+            FXMLLoader loader = new FXMLLoader(App.class.getResource("view/EditProfile.fxml"));
+            Parent root = loader.load();
+
+            // Get the controller and pass the current user data
+            EditProfileController controller = loader.getController();
+            controller.setUserData(currentUser);
+
+            Stage dialog = new Stage();
+            dialog.setTitle("Edit Profile");
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            dialog.setScene(new Scene(root));
+            dialog.showAndWait();
+
+            // After dialog is closed, refresh the current user data
+            User updatedUser = userService.getUserById(currentUser.getUserId());
+            if (updatedUser != null) {
+                // Check if any profile data has changed
+                boolean profileChanged = !originalUser.equals(updatedUser);
+
+                if (profileChanged) {
+                    // Update the current user reference
+                    currentUser = updatedUser;
+
+                    // Update the session user if it's the same user
+                    if (SessionManager.getInstance().getCurrentUser().getUserId().equals(currentUser.getUserId())) {
+                        SessionManager.getInstance().setCurrentUser(currentUser);
+                    }
+
+                    // Force update the UI
+                    Platform.runLater(() -> {
+                        try {
+                            // Clear existing images
+                            if (profileImageView != null) {
+                                profileImageView.setImage(null);
+                            }
+
+                            // Force garbage collection
+                            System.gc();
+
+                            // Add a small delay to ensure the UI has time to update
+                            new java.util.Timer().schedule(
+                                    new java.util.TimerTask() {
+                                        @Override
+                                        public void run() {
+                                            Platform.runLater(() -> {
+                                                try {
+                                                    // Update UI elements
+                                                    loadCurrentUserInfo();
+
+                                                    // Show success message
+                                                    showAlert(Alert.AlertType.INFORMATION, "Success",
+                                                            "Profile updated successfully!");
+                                                } catch (Exception e) {
+                                                    e.printStackTrace();
+                                                    showAlert(Alert.AlertType.ERROR, "Error",
+                                                            "Error updating profile: " + e.getMessage());
+                                                }
+                                            });
+                                        }
+                                    },
+                                    100 // 100ms delay
+                            );
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            showAlert(Alert.AlertType.ERROR, "Error",
+                                    "Error in profile update handler: " + e.getMessage());
+                        }
+                    });
+                }
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Error", "Failed to load updated profile data");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to open edit profile: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", "An unexpected error occurred: " + e.getMessage());
         }
     }
 }

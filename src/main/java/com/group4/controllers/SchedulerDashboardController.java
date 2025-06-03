@@ -3,6 +3,7 @@ package com.group4.controllers;
 import com.group4.models.Issue;
 import com.group4.models.IssueStatus;
 import com.group4.models.User;
+import java.util.stream.Collectors;
 import com.group4.services.IssueService;
 import com.group4.services.UserService;
 import com.group4.utils.AlertUtils;
@@ -381,15 +382,25 @@ public class SchedulerDashboardController {
     }
     
     /**
-     * Loads issues data into the table.
+     * Loads issues data into the table, showing only issues assigned to the current scheduler.
      */
     private void loadIssuesData() {
+        if (currentUser == null) {
+            AlertUtils.showError("Error", "No user logged in");
+            return;
+        }
+        
+        final String currentUserId = currentUser.getUserId();
+        
         Task<List<Issue>> loadTask = new Task<List<Issue>>() {
             @Override
             protected List<Issue> call() throws Exception {
                 Task<List<Issue>> task = issueService.getAllIssues();
                 task.run();
-                return task.get();
+                // Filter issues to only show those assigned to the current user
+                return task.get().stream()
+                    .filter(issue -> currentUserId.equals(issue.getAssignedStaffId()))
+                    .collect(Collectors.toList());
             }
             
             @Override
@@ -398,6 +409,10 @@ public class SchedulerDashboardController {
                 Platform.runLater(() -> {
                     issuesList.setAll(issues);
                     issuesTable.setItems(issuesList);
+                    
+                    if (issues.isEmpty()) {
+                        AlertUtils.showInfo("No Issues", "You don't have any assigned issues.");
+                    }
                 });
             }
             
