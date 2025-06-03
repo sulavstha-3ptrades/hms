@@ -48,20 +48,32 @@ import com.group4.utils.ImageUtils;
  */
 public class ManagerDashboardController {
     // Profile Tab Components
-    @FXML private ImageView profileImageView;
-    @FXML private Label userNameLabel;
-    @FXML private Label userRoleLabel;
-    
-    @FXML private ImageView profileImageLarge;
-    @FXML private Label profileFullName;
-    @FXML private Label profileEmail;
-    @FXML private Label profileRole;
-    @FXML private Label profileContact;
-    @FXML private Label profileUsername;
-    @FXML private Label profileEmailField;
-    @FXML private Label profileContactField;
-    @FXML private Label profileCreatedDate;
-    
+    @FXML
+    private ImageView profileImageView;
+    @FXML
+    private Label userNameLabel;
+    @FXML
+    private Label userRoleLabel;
+
+    @FXML
+    private ImageView profileImageLarge;
+    @FXML
+    private Label profileFullName;
+    @FXML
+    private Label profileEmail;
+    @FXML
+    private Label profileRole;
+    @FXML
+    private Label profileContact;
+    @FXML
+    private Label profileUsername;
+    @FXML
+    private Label profileEmailField;
+    @FXML
+    private Label profileContactField;
+    @FXML
+    private Label profileCreatedDate;
+
     private User currentUser;
     private UserService userService;
 
@@ -132,7 +144,7 @@ public class ManagerDashboardController {
         bookingService = new BookingService();
         issueService = new IssueService();
         userService = new UserService();
-        
+
         // Get current user from session
         currentUser = SessionManager.getInstance().getCurrentUser();
 
@@ -145,7 +157,7 @@ public class ManagerDashboardController {
         loadSalesData();
         loadIssuesData();
     }
-    
+
     /**
      * Loads and displays the current user's information.
      */
@@ -158,7 +170,7 @@ public class ManagerDashboardController {
             if (userRoleLabel != null) {
                 userRoleLabel.setText(currentUser.getRole());
             }
-            
+
             // Update profile tab
             if (profileFullName != null) {
                 profileFullName.setText(currentUser.getFirstName() + " " + currentUser.getLastName());
@@ -184,12 +196,12 @@ public class ManagerDashboardController {
             if (profileCreatedDate != null) {
                 profileCreatedDate.setText(LocalDate.now().toString()); // TODO: Add created date to User model
             }
-            
+
             // Load profile image
             loadProfileImage();
         }
     }
-    
+
     /**
      * Loads the user's profile image.
      */
@@ -199,27 +211,27 @@ public class ManagerDashboardController {
             if (currentUser != null) {
                 currentUser = userService.getUserById(currentUser.getUserId());
             }
-            
+
             // Get the image path from the user object
             String imagePath = (currentUser != null) ? currentUser.getProfilePicture() : null;
             System.out.println("Loading profile image from path: " + imagePath);
-            
+
             // Clear the image cache first
             if (profileImageView != null) {
                 profileImageView.setImage(null);
             }
-            
+
             // Use ImageUtils to load the image (it will handle all path resolution)
             Image image = ImageUtils.loadImage(imagePath);
-            
+
             // Set the images
             setProfileImages(image);
-            
+
             // Force a UI refresh
             if (profileImageView != null) {
                 profileImageView.setImage(image);
             }
-            
+
         } catch (Exception e) {
             System.err.println("Error loading profile image: " + e.getMessage());
             e.printStackTrace();
@@ -228,16 +240,17 @@ public class ManagerDashboardController {
             setProfileImages(defaultAvatar);
         }
     }
-    
+
     /**
      * Sets the profile images for both the small and large image views.
+     * 
      * @param image The image to set
      */
     private void setProfileImages(Image image) {
         if (image == null) {
             return;
         }
-        
+
         Platform.runLater(() -> {
             if (profileImageView != null) {
                 profileImageView.setImage(image);
@@ -269,7 +282,7 @@ public class ManagerDashboardController {
         xAxis.setLabel("Period");
         yAxis.setLabel("Revenue ($)");
     }
-    
+
     /**
      * Sets up the issues table.
      */
@@ -278,13 +291,13 @@ public class ManagerDashboardController {
         customerIdColumn.setCellValueFactory(cellData -> cellData.getValue().customerIdProperty());
         hallIdColumn.setCellValueFactory(cellData -> cellData.getValue().hallIdProperty());
         descriptionColumn.setCellValueFactory(cellData -> cellData.getValue().descriptionProperty());
-        
+
         // Set up the assigned staff column with a cell factory for editing
         assignedStaffIdColumn.setCellValueFactory(cellData -> cellData.getValue().assignedStaffIdProperty());
         assignedStaffIdColumn.setCellFactory(column -> new TableCell<Issue, String>() {
             private final ComboBox<User> userComboBox = new ComboBox<>();
             private final List<User> allSchedulers = new ArrayList<>();
-            
+
             {
                 // Load all users and filter for SCHEDULER role
                 List<User> allUsers = userService.getAllUsers();
@@ -294,7 +307,7 @@ public class ManagerDashboardController {
                     }
                 }
                 userComboBox.getItems().addAll(allSchedulers);
-                
+
                 // Set the display text for users in the combo box
                 userComboBox.setCellFactory(lv -> new ListCell<User>() {
                     @Override
@@ -303,7 +316,7 @@ public class ManagerDashboardController {
                         setText(empty || user == null ? "" : user.getFirstName() + " " + user.getLastName());
                     }
                 });
-                
+
                 userComboBox.setButtonCell(new ListCell<User>() {
                     @Override
                     protected void updateItem(User user, boolean empty) {
@@ -311,19 +324,19 @@ public class ManagerDashboardController {
                         setText(empty || user == null ? "" : user.getFirstName() + " " + user.getLastName());
                     }
                 });
-                
+
                 userComboBox.setOnAction(event -> {
                     if (getTableRow() != null && getTableRow().getItem() != null && userComboBox.getValue() != null) {
                         Issue issue = getTableRow().getItem();
                         User selectedUser = userComboBox.getValue();
                         String previousStaffId = issue.getAssignedStaffId();
-                        
+
                         // Show loading state
                         setText("Saving...");
-                        
+
                         // Update the issue with the new assigned staff
                         issue.setAssignedStaffId(selectedUser.getUserId());
-                        
+
                         // Save the updated issue to the backend
                         Task<Boolean> updateTask = issueService.updateIssue(issue);
                         updateTask.setOnSucceeded(e -> {
@@ -332,10 +345,10 @@ public class ManagerDashboardController {
                                 Platform.runLater(() -> {
                                     updateItem(issue.getAssignedStaffId(), false);
                                     // Show success message with staff name
-                                    showAlert(Alert.AlertType.INFORMATION, "Success", 
-                                        String.format("Successfully assigned issue to %s %s", 
-                                            selectedUser.getFirstName(), 
-                                            selectedUser.getLastName()));
+                                    showAlert(Alert.AlertType.INFORMATION, "Success",
+                                            String.format("Successfully assigned issue to %s %s",
+                                                    selectedUser.getFirstName(),
+                                                    selectedUser.getLastName()));
                                     // Refresh the table to reflect changes
                                     loadIssuesData();
                                 });
@@ -344,29 +357,29 @@ public class ManagerDashboardController {
                                 issue.setAssignedStaffId(previousStaffId);
                                 Platform.runLater(() -> {
                                     updateItem(previousStaffId, false);
-                                    showAlert(Alert.AlertType.ERROR, "Error", 
-                                        "Failed to update issue assignment. Please try again.");
+                                    showAlert(Alert.AlertType.ERROR, "Error",
+                                            "Failed to update issue assignment. Please try again.");
                                 });
                             }
                         });
-                        
+
                         updateTask.setOnFailed(e -> {
                             // Revert to previous state on error
                             issue.setAssignedStaffId(previousStaffId);
                             Platform.runLater(() -> {
                                 updateItem(previousStaffId, false);
-                                showAlert(Alert.AlertType.ERROR, "Error", 
-                                    String.format("Failed to assign issue: %s", 
-                                        updateTask.getException().getMessage()));
+                                showAlert(Alert.AlertType.ERROR, "Error",
+                                        String.format("Failed to assign issue: %s",
+                                                updateTask.getException().getMessage()));
                             });
                         });
-                        
+
                         // Execute the task in a background thread
                         new Thread(updateTask).start();
                     }
                 });
             }
-            
+
             @Override
             protected void updateItem(String staffId, boolean empty) {
                 super.updateItem(staffId, empty);
@@ -379,20 +392,18 @@ public class ManagerDashboardController {
                         setText("Unassigned");
                     } else {
                         User staff = userService.getUserById(staffId);
-                        setText(staff != null ? 
-                            staff.getFirstName() + " " + staff.getLastName() : 
-                            "Unknown (" + staffId + ")");
+                        setText(staff != null ? staff.getFirstName() + " " + staff.getLastName()
+                                : "Unknown (" + staffId + ")");
                     }
-                    
+
                     // Only show the combo box when the cell is being edited
                     if (isEditing()) {
                         if (staffId != null && !staffId.trim().isEmpty()) {
                             userComboBox.getSelectionModel().select(
-                                userComboBox.getItems().stream()
-                                    .filter(u -> u.getUserId().equals(staffId))
-                                    .findFirst()
-                                    .orElse(null)
-                            );
+                                    userComboBox.getItems().stream()
+                                            .filter(u -> u.getUserId().equals(staffId))
+                                            .findFirst()
+                                            .orElse(null));
                         }
                         setText(null);
                         setGraphic(userComboBox);
@@ -401,7 +412,7 @@ public class ManagerDashboardController {
                     }
                 }
             }
-            
+
             @Override
             public void startEdit() {
                 super.startEdit();
@@ -409,68 +420,66 @@ public class ManagerDashboardController {
                     String staffId = getItem();
                     if (staffId != null && !staffId.trim().isEmpty()) {
                         userComboBox.getSelectionModel().select(
-                            userComboBox.getItems().stream()
-                                .filter(u -> u.getUserId().equals(staffId))
-                                .findFirst()
-                                .orElse(null)
-                        );
+                                userComboBox.getItems().stream()
+                                        .filter(u -> u.getUserId().equals(staffId))
+                                        .findFirst()
+                                        .orElse(null));
                     }
                     setText(null);
                     setGraphic(userComboBox);
                     userComboBox.requestFocus();
                 }
             }
-            
+
             @Override
             public void cancelEdit() {
                 super.cancelEdit();
                 updateItem(getItem(), false);
             }
         });
-        
+
         // Make the assigned staff column editable
         assignedStaffIdColumn.setEditable(true);
-        
+
         statusColumn.setCellValueFactory(cellData -> cellData.getValue().statusProperty());
-        
+
         // Make the table editable
         issuesTable.setEditable(true);
-        
+
         // Make status column editable with a choice box
         statusColumn.setCellFactory(column -> new TableCell<Issue, IssueStatus>() {
             private final ComboBox<IssueStatus> comboBox = new ComboBox<>();
-            
+
             {
                 // Include all available statuses
                 comboBox.getItems().addAll(
-                    IssueStatus.OPEN,
-                    IssueStatus.IN_PROGRESS,
-                    IssueStatus.RESOLVED,
-                    IssueStatus.CLOSED
-                );
-                
+                        IssueStatus.OPEN,
+                        IssueStatus.IN_PROGRESS,
+                        IssueStatus.RESOLVED,
+                        IssueStatus.CLOSED);
+
                 // Set default value to OPEN
                 comboBox.setValue(IssueStatus.OPEN);
-                
+
                 comboBox.setOnAction(event -> {
                     if (getTableRow() != null && getTableRow().getItem() != null) {
                         Issue issue = getTableRow().getItem();
                         IssueStatus newStatus = comboBox.getValue();
-                        
+
                         // Only proceed if the status has actually changed
                         if (newStatus != issue.getStatus()) {
                             IssueStatus oldStatus = issue.getStatus();
                             issue.setStatus(newStatus);
-                            
+
                             // Save the updated issue status
                             Task<Boolean> updateTask = issueService.updateIssue(issue);
                             updateTask.setOnSucceeded(e -> {
                                 if (Boolean.TRUE.equals(updateTask.getValue())) {
                                     Platform.runLater(() -> {
                                         updateItem(newStatus, false);
-                                        showAlert(Alert.AlertType.INFORMATION, "Success", 
-                                            String.format("Status updated from %s to %s successfully.", 
-                                                oldStatus, newStatus));
+                                        showAlert(Alert.AlertType.INFORMATION, "Success",
+                                                String.format("Status updated from %s to %s successfully.",
+                                                        oldStatus, newStatus));
                                         loadIssuesData();
                                     });
                                 } else {
@@ -487,11 +496,11 @@ public class ManagerDashboardController {
                                 issue.setStatus(oldStatus);
                                 Platform.runLater(() -> {
                                     updateItem(oldStatus, false);
-                                    showAlert(Alert.AlertType.ERROR, "Error", 
-                                        "Failed to update status: " + updateTask.getException().getMessage());
+                                    showAlert(Alert.AlertType.ERROR, "Error",
+                                            "Failed to update status: " + updateTask.getException().getMessage());
                                 });
                             });
-                            
+
                             new Thread(updateTask).start();
                         } else {
                             // If status didn't change, just cancel the edit
@@ -500,7 +509,7 @@ public class ManagerDashboardController {
                     }
                 });
             }
-            
+
             @Override
             protected void updateItem(IssueStatus item, boolean empty) {
                 super.updateItem(item, empty);
@@ -514,7 +523,7 @@ public class ManagerDashboardController {
                     }
                     // Show the status text when not editing
                     setText(item.toString());
-                    
+
                     // Only show the combo box when the cell is being edited
                     if (isEditing()) {
                         comboBox.setValue(item);
@@ -525,7 +534,7 @@ public class ManagerDashboardController {
                     }
                 }
             }
-            
+
             @Override
             public void startEdit() {
                 super.startEdit();
@@ -536,7 +545,7 @@ public class ManagerDashboardController {
                     comboBox.requestFocus();
                 }
             }
-            
+
             @Override
             public void cancelEdit() {
                 super.cancelEdit();
@@ -544,11 +553,11 @@ public class ManagerDashboardController {
                 setGraphic(null);
             }
         });
-        
+
         // Make the status column editable
         statusColumn.setEditable(true);
     }
-    
+
     /**
      * Loads sales data for the chart based on the selected period.
      */
@@ -645,84 +654,84 @@ public class ManagerDashboardController {
             // Load the assign issue dialog
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/group4/view/AssignIssueDialog.fxml"));
             DialogPane dialogPane = loader.load();
-            
+
             // Get the controller and set the issue
             AssignIssueDialogController controller = loader.getController();
             controller.setIssue(selectedIssue);
-            
+
             // Create and show the dialog
             Dialog<ButtonType> dialog = new Dialog<>();
             dialog.setDialogPane(dialogPane);
             dialog.setTitle("Assign Issue");
-            
+
             // Show the dialog and wait for user input
             Optional<ButtonType> result = dialog.showAndWait();
-            
+
             if (result.isPresent() && result.get().getButtonData() == ButtonBar.ButtonData.APPLY) {
                 // Assign the issue to the selected scheduler
                 User selectedScheduler = controller.getSelectedScheduler();
                 if (selectedScheduler != null) {
                     TaskUtils.executeTaskWithProgress(
-                        issueService.assignIssue(selectedIssue.getIssueId(), selectedScheduler.getUserId()),
-                        success -> {
-                            if (success) {
-                                Platform.runLater(() -> {
-                                    showAlert(Alert.AlertType.INFORMATION, "Success",
-                                            String.format("Issue assigned to %s %s",
-                                                    selectedScheduler.getFirstName(),
-                                                    selectedScheduler.getLastName()));
-                                    loadIssuesData();
-                                });
-                            } else {
-                                Platform.runLater(() -> 
-                                    showAlert(Alert.AlertType.ERROR, "Error", "Failed to assign issue."));
-                            }
-                        },
-                        error -> Platform.runLater(() -> 
-                            showAlert(Alert.AlertType.ERROR, "Error", 
-                                "Failed to assign issue: " + error.getMessage()))
-                    );
+                            issueService.assignIssue(selectedIssue.getIssueId(), selectedScheduler.getUserId()),
+                            success -> {
+                                if (success) {
+                                    Platform.runLater(() -> {
+                                        showAlert(Alert.AlertType.INFORMATION, "Success",
+                                                String.format("Issue assigned to %s %s",
+                                                        selectedScheduler.getFirstName(),
+                                                        selectedScheduler.getLastName()));
+                                        loadIssuesData();
+                                    });
+                                } else {
+                                    Platform.runLater(
+                                            () -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to assign issue."));
+                                }
+                            },
+                            error -> Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Error",
+                                    "Failed to assign issue: " + error.getMessage())));
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", 
-                "Failed to load assign issue dialog: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Error",
+                    "Failed to load assign issue dialog: " + e.getMessage());
         }
     }
 
     /**
-        // Create the staff list view
-        ListView<User> staffListView = new ListView<>(staffList);
-        staffListView.setCellFactory(param -> new ListCell<User>() {
-            @Override
-            protected void updateItem(User user, boolean empty) {
-                super.updateItem(user, empty);
-                if (empty || user == null) {
-                    setText(null);
-                } else {
-                    setText(user.getFirstName() + " " + user.getLastName() + " (" + user.getRole() + ")");
-                }
-            }
-        });
-
-        dialog.getDialogPane().setContent(staffListView);
-
-        // Convert the result to a user when the assign button is clicked
-        dialog.setResultConverter(dialogButton -> {
-            if (dialogButton == assignButtonType) {
-                return staffListView.getSelectionModel().getSelectedItem();
-            }
-            return null;
-        });
-
-        // Show the dialog and return the result
-        Optional<User> result = dialog.showAndWait();
-        return result.orElse(null);
-    }
-
-    /**
-     * Handles the close issue button click.
+     * // Create the staff list view
+     * ListView<User> staffListView = new ListView<>(staffList);
+     * staffListView.setCellFactory(param -> new ListCell<User>() {
+     * 
+     * @Override
+     *           protected void updateItem(User user, boolean empty) {
+     *           super.updateItem(user, empty);
+     *           if (empty || user == null) {
+     *           setText(null);
+     *           } else {
+     *           setText(user.getFirstName() + " " + user.getLastName() + " (" +
+     *           user.getRole() + ")");
+     *           }
+     *           }
+     *           });
+     * 
+     *           dialog.getDialogPane().setContent(staffListView);
+     * 
+     *           // Convert the result to a user when the assign button is clicked
+     *           dialog.setResultConverter(dialogButton -> {
+     *           if (dialogButton == assignButtonType) {
+     *           return staffListView.getSelectionModel().getSelectedItem();
+     *           }
+     *           return null;
+     *           });
+     * 
+     *           // Show the dialog and return the result
+     *           Optional<User> result = dialog.showAndWait();
+     *           return result.orElse(null);
+     *           }
+     * 
+     *           /**
+     *           Handles the close issue button click.
      */
     @FXML
     private void handleCloseIssue() {
@@ -748,12 +757,12 @@ public class ManagerDashboardController {
                                 loadIssuesData();
                             });
                         } else {
-                            Platform.runLater(() -> 
-                                showAlert(Alert.AlertType.ERROR, "Error", "Failed to close issue."));
+                            Platform.runLater(
+                                    () -> showAlert(Alert.AlertType.ERROR, "Error", "Failed to close issue."));
                         }
                     },
-                    error -> Platform.runLater(() -> 
-                        showAlert(Alert.AlertType.ERROR, "Error", "Failed to close issue: " + error.getMessage())));
+                    error -> Platform.runLater(() -> showAlert(Alert.AlertType.ERROR, "Error",
+                            "Failed to close issue: " + error.getMessage())));
         }
     }
 
@@ -764,7 +773,7 @@ public class ManagerDashboardController {
     private void handleRefreshIssues() {
         loadIssuesData();
     }
-    
+
     /**
      * Handles the edit profile button click.
      * Opens the edit profile dialog.
@@ -778,20 +787,20 @@ public class ManagerDashboardController {
             if (fxmlUrl == null) {
                 throw new IOException("Could not find FXML file at " + fxmlPath);
             }
-            
+
             FXMLLoader loader = new FXMLLoader(fxmlUrl);
             Parent root = loader.load();
-            
+
             // Get the controller and pass the current user data
             EditProfileController controller = loader.getController();
             if (controller == null) {
                 throw new IOException("Failed to initialize EditProfileController");
             }
             controller.setUserData(currentUser);
-            
+
             // Create the scene
             Scene scene = new Scene(root);
-            
+
             // Try to load the CSS file (but don't fail if it's not found)
             String cssPath = "/com/group4/css/styles.css";
             try {
@@ -804,25 +813,25 @@ public class ManagerDashboardController {
             } catch (Exception e) {
                 System.err.println("Warning: Error loading CSS file: " + e.getMessage());
             }
-            
+
             // Show the edit profile dialog
             Stage stage = new Stage();
             stage.setTitle("Edit Profile");
             stage.setScene(scene);
             stage.showAndWait();
-            
+
             // Refresh profile data after editing
             currentUser = SessionManager.getInstance().getCurrentUser();
             loadCurrentUserInfo();
-            
+
         } catch (Exception e) {
             e.printStackTrace();
-            showAlert(Alert.AlertType.ERROR, "Error", 
-                "Failed to open edit profile: " + e.getMessage() + 
-                "\nPlease contact support if the problem persists.");
+            showAlert(Alert.AlertType.ERROR, "Error",
+                    "Failed to open edit profile: " + e.getMessage() +
+                            "\nPlease contact support if the problem persists.");
         }
     }
-    
+
     /**
      * Handles the click event on the profile section in the header.
      * Navigates to the profile tab.
@@ -875,17 +884,17 @@ public class ManagerDashboardController {
             alert.setTitle(title);
             alert.setHeaderText(null);
             alert.setContentText(message);
-            
+
             // Set the owner to ensure the dialog appears in front
             if (issuesTable != null && issuesTable.getScene() != null) {
                 Stage stage = (Stage) issuesTable.getScene().getWindow();
                 alert.initOwner(stage);
-                
+
                 // Apply the scene's stylesheets to the dialog
                 DialogPane dialogPane = alert.getDialogPane();
                 dialogPane.getStylesheets().addAll(stage.getScene().getStylesheets());
                 dialogPane.getStyleClass().add("dialog-pane");
-                
+
                 // Apply specific styles based on alert type
                 switch (alertType) {
                     case INFORMATION:
@@ -905,7 +914,7 @@ public class ManagerDashboardController {
                         dialogPane.getStyleClass().add("info-dialog");
                         break;
                 }
-                
+
                 // Style buttons
                 for (ButtonType bt : dialogPane.getButtonTypes()) {
                     Node button = dialogPane.lookupButton(bt);
@@ -913,11 +922,11 @@ public class ManagerDashboardController {
                         button.getStyleClass().add("dialog-button");
                     }
                 }
-                
+
                 // Set minimum width for better readability
                 dialogPane.setMinWidth(400);
             }
-            
+
             // Make sure the dialog is always on top
             alert.initModality(Modality.APPLICATION_MODAL);
             alert.showAndWait();
